@@ -1,0 +1,316 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f4f7fa;
+  --foreground: #16232b;
+
+  /* Dr. Gutka brand palette (green/red sampled from the original logo, now used
+     as UI semantics for correct/incorrect; blue is the primary accent — kept
+     unchanged through the Dr. Gutka rebrand + Marrow reference UI) */
+  --color-brand-green: #017101;
+  --color-brand-green-light: #e6f5e6;
+  --color-brand-red: #ed220d;
+  --color-brand-red-light: #fdeceb;
+  --color-brand-blue: #0b5fd9;
+  --color-brand-blue-dark: #073d8c;
+  --color-brand-teal-from: #57b4ce;
+  --color-brand-teal-via: #79cbdb;
+  --color-brand-teal-to: #a6dfe6;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f4f7fa;
+  --color-border: #e6ebf0;
+  --color-text: #16232b;
+  --color-text-muted: #6b7a86;
+  --color-navy: #0c1f2e;
+  --color-navy-light: #12293c;
+
+  /* Marrow's own deep teal (sampled directly from their brand swatch) — used for
+     dark exam-card surfaces so cards read as part of the same family as the teal
+     header gradient, instead of an unrelated navy. */
+  --color-exam-card: #224c5a;
+  --color-exam-card-deep: #16313a;
+
+  /* Marketing homepage palette (sampled directly from marrow.com screenshots) */
+  --color-marketing-bar: #397184;
+  --color-marketing-accent: #50c2d9;
+  --color-marketing-navy: #0f2830;
+  --color-marketing-navy-light: #17323c;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-brand-green: var(--color-brand-green);
+  --color-brand-green-light: var(--color-brand-green-light);
+  --color-brand-red: var(--color-brand-red);
+  --color-brand-red-light: var(--color-brand-red-light);
+  --color-brand-blue: var(--color-brand-blue);
+  --color-brand-blue-dark: var(--color-brand-blue-dark);
+  --color-brand-teal-from: var(--color-brand-teal-from);
+  --color-brand-teal-via: var(--color-brand-teal-via);
+  --color-brand-teal-to: var(--color-brand-teal-to);
+  --color-surface: var(--color-surface);
+  --color-surface-muted: var(--color-surface-muted);
+  --color-border: var(--color-border);
+  --color-text: var(--color-text);
+  --color-text-muted: var(--color-text-muted);
+  --color-navy: var(--color-navy);
+  --color-navy-light: var(--color-navy-light);
+  --color-exam-card: var(--color-exam-card);
+  --color-exam-card-deep: var(--color-exam-card-deep);
+  --color-marketing-bar: var(--color-marketing-bar);
+  --color-marketing-accent: var(--color-marketing-accent);
+  --color-marketing-navy: var(--color-marketing-navy);
+  --color-marketing-navy-light: var(--color-marketing-navy-light);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+.hm-header-gradient {
+  background: linear-gradient(
+    120deg,
+    var(--color-brand-teal-from) 0%,
+    var(--color-brand-teal-via) 55%,
+    var(--color-brand-teal-to) 100%
+  );
+}
+
+.hm-app-shell {
+  width: 100%;
+  min-height: 100dvh;
+  background: var(--color-surface-muted);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Standard authenticated-page content container: full mobile width,
+   comfortably wide (not edge-to-edge) on tablet/desktop. Widens further at
+   real laptop/monitor breakpoints instead of flatlining at 1152px — without
+   this, the sidebar+content shell (AppShell.js) leaves a large dead gutter
+   on any screen wider than a small laptop, reading as an oversized mobile/
+   tablet layout instead of a proper desktop one. Capped at 1600px even on
+   ultra-wide monitors (deliberately not edge-to-edge) to keep line lengths
+   and card grids from sprawling too thin. */
+.hm-page {
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding: 1rem;
+}
+
+@media (min-width: 768px) {
+  .hm-page {
+    padding: 2rem 2.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .hm-page {
+    max-width: 82.5rem;
+  }
+}
+
+@media (min-width: 1536px) {
+  .hm-page {
+    max-width: 100rem;
+  }
+}
+
+/* Narrower variant for reading-focused / form-like pages (quiz solving,
+   test taking, profile) where full desktop width would hurt readability. */
+.hm-page-narrow {
+  width: 100%;
+  max-width: 44rem;
+  margin-inline: auto;
+  padding: 1rem;
+}
+
+@media (min-width: 768px) {
+  .hm-page-narrow {
+    padding: 1.5rem 2rem;
+  }
+}
+
+.hm-scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.hm-scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hm-input {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-border);
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  outline: none;
+  background: white;
+}
+.hm-input:focus {
+  border-color: var(--color-brand-blue);
+}
+
+.hm-richtext-content img {
+  max-width: 100%;
+  border-radius: 0.5rem;
+  margin: 0.35rem 0;
+}
+.hm-richtext-content ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+}
+.hm-richtext-content ol {
+  list-style: decimal;
+  padding-left: 1.25rem;
+}
+.hm-richtext-content a {
+  color: var(--color-brand-blue);
+  text-decoration: underline;
+}
+.hm-richtext-content blockquote {
+  border-left: 3px solid var(--color-border);
+  padding-left: 0.75rem;
+  margin: 0.5rem 0;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+.hm-richtext-content mark {
+  border-radius: 0.15rem;
+  padding: 0 0.1rem;
+}
+.hm-richtext-content sup,
+.hm-richtext-content sub {
+  font-size: 0.75em;
+}
+.hm-richtext-content table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 0.5rem 0;
+  border: 1px solid var(--color-border);
+}
+.hm-richtext-content th,
+.hm-richtext-content td {
+  border: inherit;
+  padding: 0.35rem 0.5rem;
+  text-align: left;
+  vertical-align: top;
+}
+.hm-richtext-content th {
+  background: var(--color-surface-muted);
+  font-weight: 600;
+}
+
+/* Table Design presets — each key matches TABLE_STYLE_PRESETS in Admin's RichEditor.js */
+.hm-richtext-content table[data-table-style="blue"] th {
+  background: #dbeafe;
+}
+.hm-richtext-content table[data-table-style="green"] th {
+  background: #dcfce7;
+}
+.hm-richtext-content table[data-table-style="gray"] th {
+  background: #e5e7eb;
+}
+.hm-richtext-content table[data-table-style="amber"] th {
+  background: #fef3c7;
+}
+.hm-richtext-content table[data-table-style="plain"] th {
+  background: transparent;
+}
+.hm-richtext-content table[data-banded-rows="true"] tbody tr:nth-child(even) td {
+  background: var(--color-surface-muted);
+}
+.hm-richtext-content table[data-table-style="blue"][data-banded-rows="true"] tbody tr:nth-child(even) td {
+  background: #eff6ff;
+}
+.hm-richtext-content table[data-table-style="green"][data-banded-rows="true"] tbody tr:nth-child(even) td {
+  background: #f0fdf4;
+}
+.hm-richtext-content table[data-table-style="amber"][data-banded-rows="true"] tbody tr:nth-child(even) td {
+  background: #fffbeb;
+}
+.hm-richtext-content table[data-banded-columns="true"] td:nth-child(even) {
+  background: var(--color-surface-muted);
+}
+.hm-richtext-content table[data-first-column="true"] td:first-child {
+  font-weight: 700;
+}
+.hm-richtext-content table[data-last-column="true"] td:last-child {
+  font-weight: 700;
+}
+.hm-richtext-content table[data-total-row="true"] tbody tr:last-child td {
+  border-top: 2px solid var(--color-text);
+  font-weight: 700;
+}
+.hm-richtext-content .hm-equation-render {
+  display: inline-block;
+  vertical-align: middle;
+  padding: 0 0.15rem;
+}
+.hm-richtext-content .hm-image-figure {
+  display: inline-block;
+  margin: 0.35rem 0;
+  max-width: 100%;
+}
+.hm-richtext-content .hm-image-figure img {
+  margin: 0;
+  max-width: 100%;
+  height: auto;
+}
+.hm-richtext-content .hm-image-crop-container {
+  max-width: 100%;
+}
+.hm-richtext-content .hm-drawing-figure svg {
+  max-width: 100%;
+  height: auto;
+}
+.hm-richtext-content .hm-image-figure figcaption {
+  margin-top: 0.25rem;
+  font-size: 0.8em;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+.hm-richtext-content .hm-media-node {
+  margin: 0.5rem 0;
+}
+.hm-richtext-content .hm-media-node video,
+.hm-richtext-content .hm-media-node iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.hm-card {
+  border-radius: 1rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.hm-hero-gradient {
+  background: linear-gradient(
+    180deg,
+    var(--color-marketing-bar) 0%,
+    #487d8d 15%,
+    #7ea2af 35%,
+    #b4c8d0 55%,
+    #cedbe0 70%,
+    var(--color-surface-muted) 100%
+  );
+}
+
+.hm-marketing-bar {
+  background: var(--color-marketing-bar);
+}
+
+.hm-navy-section {
+  background: radial-gradient(circle at 15% 20%, var(--color-marketing-navy-light) 0%, var(--color-marketing-navy) 60%);
+}

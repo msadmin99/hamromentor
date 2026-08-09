@@ -1,0 +1,289 @@
+"use client";
+
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import AppShell from "@/components/AppShell";
+import Header from "@/components/Header";
+import RequireAuth from "@/components/RequireAuth";
+import { videoEmbedUrl } from "@/components/RichContent";
+import { api } from "@/lib/api";
+
+const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
+
+function formatDuration(seconds) {
+  const m = Math.floor((seconds || 0) / 60);
+  const s = Math.floor((seconds || 0) % 60);
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+function PlayerContent() {
+  const { id } = useParams();
+  const router = useRouter();
+  const videoRef = useRef(null);
+  const seekedRef = useRef(false);
+
+  const [video, setVideo] = useState(null);
+  const [error, setError] = useState("");
+  const [siblings, setSiblings] = useState([]);
+  const [notes, setNotes] = useState([]);
+  const [noteText, setNoteText] = useState("");
+  const [autoNext, setAutoNext] = useState(true);
+  const [bookmarked, setBookmarked] = useState(false);
+  const [rate, setRate] = useState(1);
+
+  useEffect(() => {
+    api
+      .get(`/videos/${id}/`)
+      .then((v) => {
+        setVideo(v);
+        setBookmarked(!!v.progress?.is_bookmarked);
+        if (v.chapter) api.get(`/videos/?chapter=${v.chapter}`).then(setSiblings).catch(() => {});
+      })
+      .catch((e) => setError(e.message));
+    api.get(`/video-notes/?video=${id}`).then(setNotes).catch(() => {});
+  }, [id]);
+
+  useEffect(() => {
+    if (!video?.has_access || video.source_type !== "upload") return;
+    const el = videoRef.current;
+    if (!el) return;
+
+    function onLoadedMetadata() {
+      if (!seekedRef.current && video.progress?.last_position_seconds) {
+        el.currentTime = video.progress.last_position_seconds;
+        seekedRef.current = true;
+      }
+    }
+    function pingProgress(markComplete) {
+      api
+        .post(`/videos/${id}/progress/`, { position_seconds: Math.floor(el.currentTime), mark_complete: markComplete })
+        .catch(() => {});
+    }
+    function onEnded() {
+      pingProgress(true);
+      if (autoNext) {
+        const idx = siblings.findIndex((s) => s.id === video.id);
+        const next = idx >= 0 ? siblings[idx + 1] : null;
+        if (next) router.push(`/videos/${next.id}`);
+      }
+    }
+
+    el.addEventListener("loadedmetadata", onLoadedMetadata);
+    el.addEventListener("ended", onEnded);
+    const interval = setInterval(() => {
+      if (!el.paused) pingProgress(false);
+    }, 10000);
+
+    return () => {
+      el.removeEventListener("loadedmetadata", onLoadedMetadata);
+      el.removeEventListener("ended", onEnded);
+      clearInterval(interval);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [video, siblings, autoNext, id]);
+
+  async function toggleBookmark() {
+    const data = await api.post(`/videos/${id}/bookmark/`);
+    setBookmarked(data.is_bookmarked);
+  }
+
+  async function markComplete() {
+    await api.post(`/videos/${id}/progress/`, { position_seconds: video.duration_seconds, mark_complete: true });
+    setVideo((v) => ({ ...v, progress: { ...v.progress, is_completed: true } }));
+  }
+
+  async function addNote() {
+    if (!noteText.trim()) return;
+    const timestamp = video.source_type === "upload" && videoRef.current ? Math.floor(videoRef.current.currentTime) : null;
+    const created = await api.post("/video-notes/", { video: Number(id), text: noteText.trim(), timestamp_seconds: timestamp });
+    setNotes((n) => [...n, created]);
+    setNoteText("");
+  }
+
+  if (error) {
+    return (
+      <AppShell>
+        <Header title="Video" showBack />
+        <p className="hm-page-narrow text-sm text-brand-red">{error}</p>
+      </AppShell>
+    );
+  }
+  if (!video) {
+    return (
+      <AppShell>
+        <Header title="Video" showBack />
+        <p className="hm-page-narrow text-sm text-[var(--color-text-muted)]">Loading…</p>
+      </AppShell>
+    );
+  }
+
+  if (!video.has_access) {
+    return (
+      <AppShell>
+        <Header title={video.title} showBack />
+        <div className="hm-page-narrow flex flex-col items-center gap-3 py-10 text-center">
+          <span className="text-4xl">🔒</span>
+          <p className="text-lg font-bold text-[var(--color-text)]">This video needs an upgrade</p>
+          <p className="text-sm text-[var(--color-text-muted)]">
+            Subscribe or enroll to unlock &quot;{video.title}&quot; and the rest of this course&apos;s video lectures.
+          </p>
+          <Link href="/plans" className="hm-btn-primary mt-2">
+            View Plans
+          </Link>
+        </div>
+      </AppShell>
+    );
+  }
+
+  const embedUrl = video.source_type !== "upload" ? videoEmbedUrl(video.play_url) : null;
+
+  return (
+    <AppShell>
+      <Header title={video.title} showBack />
+
+      <div className="hm-page-narrow flex flex-col gap-4">
+        <div className="aspect-video w-full overflow-hidden rounded-xl bg-black">
+          {video.source_type === "upload" ? (
+            <video ref={videoRef} src={video.play_url} controls className="h-full w-full" />
+          ) : embedUrl ? (
+            <iframe
+              src={embedUrl}
+              title={video.title}
+              className="h-full w-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          ) : (
+            <a
+              href={video.play_url}
+              target="_blank"
+              rel="noreferrer"
+              className="flex h-full w-full items-center justify-center text-sm font-semibold text-white"
+            >
+              Watch on external site ↗
+            </a>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {video.source_type === "upload" && (
+              <select
+                value={rate}
+                onChange={(e) => {
+                  const r = Number(e.target.value);
+                  setRate(r);
+                  if (videoRef.current) videoRef.current.playbackRate = r;
+                }}
+                className="hm-input w-24 text-xs"
+              >
+                {PLAYBACK_RATES.map((r) => (
+                  <option key={r} value={r}>
+                    {r}×
+                  </option>
+                ))}
+              </select>
+            )}
+            <label className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
+              <input type="checkbox" checked={autoNext} onChange={(e) => setAutoNext(e.target.checked)} />
+              Auto next
+            </label>
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={toggleBookmark} className="hm-btn-outline text-xs">
+              {bookmarked ? "🔖 Bookmarked" : "🔖 Bookmark"}
+            </button>
+            {video.source_type !== "upload" && !video.progress?.is_completed && (
+              <button onClick={markComplete} className="hm-btn-outline text-xs">
+                Mark as Completed
+              </button>
+            )}
+            {video.progress?.is_completed && <span className="text-xs font-semibold text-brand-green">✅ Completed</span>}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-sm font-bold text-[var(--color-text)]">{video.title}</p>
+          <p className="text-xs text-[var(--color-text-muted)]">
+            {video.instructor_display} · {video.subject_name} · {formatDuration(video.duration_seconds)}
+          </p>
+          {video.description && <p className="mt-2 text-sm text-[var(--color-text)]">{video.description}</p>}
+        </div>
+
+        {video.linked_tests_detail?.length > 0 && (
+          <section>
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">Linked Quizzes</p>
+            <div className="flex flex-col gap-2">
+              {video.linked_tests_detail.map((t) => (
+                <Link key={t.id} href={`/tests/${t.id}`} className="hm-card flex items-center justify-between p-3 text-sm">
+                  <span className="font-semibold text-[var(--color-text)]">{t.title}</span>
+                  <span className="text-xs font-bold text-brand-blue">Open →</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {video.resources?.length > 0 && (
+          <section>
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">Resources</p>
+            <div className="flex flex-col gap-2">
+              {video.resources.map((r) => {
+                const downloadAllowed =
+                  (r.resource_type !== "notes" || video.allow_notes_download) &&
+                  (r.resource_type !== "slides" || video.allow_slides_download);
+                const link = r.file || r.external_url;
+                return (
+                  <div key={r.id} className="hm-card flex items-center justify-between p-3 text-sm">
+                    <span className="text-[var(--color-text)]">{r.title}</span>
+                    {downloadAllowed && link ? (
+                      <a href={link} target="_blank" rel="noreferrer" className="text-xs font-bold text-brand-blue">
+                        Download →
+                      </a>
+                    ) : (
+                      <span className="text-xs text-[var(--color-text-muted)]">Not downloadable</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        <section>
+          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">My Notes</p>
+          <div className="flex flex-col gap-2">
+            {notes.map((n) => (
+              <div key={n.id} className="hm-card p-3 text-sm">
+                {n.timestamp_seconds != null && (
+                  <span className="mr-2 font-mono text-xs text-brand-blue">{formatDuration(n.timestamp_seconds)}</span>
+                )}
+                {n.text}
+              </div>
+            ))}
+          </div>
+          <div className="mt-2 flex items-center gap-2">
+            <input
+              value={noteText}
+              onChange={(e) => setNoteText(e.target.value)}
+              placeholder="Add a note…"
+              className="hm-input flex-1"
+            />
+            <button onClick={addNote} className="hm-btn-primary text-xs">
+              Add
+            </button>
+          </div>
+        </section>
+      </div>
+    </AppShell>
+  );
+}
+
+export default function VideoPlayerPage() {
+  return (
+    <RequireAuth>
+      <PlayerContent />
+    </RequireAuth>
+  );
+}

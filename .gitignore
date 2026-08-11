@@ -32,6 +32,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# .env.production holds only the public API URL (no secrets — NEXT_PUBLIC_
+# vars are exposed to the browser anyway), so it's safe and useful to commit.
+!.env.production
 
 # vercel
 .vercel

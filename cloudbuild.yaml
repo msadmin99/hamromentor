@@ -10,7 +10,7 @@ steps:
       - deploy
       - hamromentor-frontend
       - --image=asia-south1-docker.pkg.dev/hamromentor-app/hamromentor-repo/frontend:$COMMIT_SHA
-      - --region=asia-south1
+      - --region=us-central1
       - --platform=managed
       - --allow-unauthenticated
 images:

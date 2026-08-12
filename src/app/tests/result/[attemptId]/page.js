@@ -133,7 +133,7 @@ function ResultContent() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1 text-sm font-medium text-[var(--color-text)]">
                     <span className="mr-1.5 text-[var(--color-text-muted)]">{i + 1}.</span>
-                    <RichContent html={q.text} latex={q.latex} image={q.image} />
+                    <RichContent html={q.text} latex={q.latex} image={q.image} imageData={q.image_data} />
                   </div>
                   <span
                     className={`flex-none rounded-md px-2 py-0.5 text-[10px] font-bold ${
@@ -152,7 +152,7 @@ function ResultContent() {
                     return (
                       <div key={opt.id} className={`rounded-lg border px-3 py-2 text-xs ${classes}`}>
                         {isSelected && <span className="mb-1 block font-semibold">(your answer)</span>}
-                        <RichContent html={opt.text} latex={opt.latex} image={opt.image} />
+                        <RichContent html={opt.text} latex={opt.latex} image={opt.image} imageData={opt.image_data} />
                       </div>
                     );
                   })}
@@ -161,6 +161,7 @@ function ResultContent() {
                   html={q.explanation}
                   latex={q.explanation_latex}
                   image={q.explanation_image}
+                  imageData={q.explanation_image_data}
                   video={q.explanation_video_url}
                   className="mt-3 text-xs leading-relaxed text-[var(--color-text-muted)]"
                 />

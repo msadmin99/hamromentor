@@ -53,10 +53,46 @@ function renderInlineLatex(html) {
   return out;
 }
 
+/** Builds `srcset`/fallback-src for a media_library `image_data` object
+ * ({url, variants: {"480_webp": url, "768_avif": url, ...}, width, height}).
+ * Returns null if there's nothing renderable. */
+function buildResponsiveImage(imageData) {
+  if (!imageData) return null;
+  const variants = imageData.variants || {};
+  const byFormat = { webp: [], avif: [] };
+  for (const [key, url] of Object.entries(variants)) {
+    const match = key.match(/^(\d+)_(webp|avif)$/);
+    if (!match) continue;
+    byFormat[match[2]].push({ width: Number(match[1]), url });
+  }
+  byFormat.webp.sort((a, b) => a.width - b.width);
+  byFormat.avif.sort((a, b) => a.width - b.width);
+
+  const webpSrcSet = byFormat.webp.map((v) => `${v.url} ${v.width}w`).join(", ");
+  const avifSrcSet = byFormat.avif.map((v) => `${v.url} ${v.width}w`).join(", ");
+  const fallbackSrc = imageData.url || byFormat.webp[byFormat.webp.length - 1]?.url;
+  if (!fallbackSrc) return null;
+
+  return { webpSrcSet, avifSrcSet, fallbackSrc, width: imageData.width, height: imageData.height };
+}
+
 /** Renders a question/option/explanation's rich content: HTML (from the admin's
  * rich-text editor, or plain legacy text — both render fine), optional LaTeX,
- * an optional image, and an optional embedded video. */
-export default function RichContent({ html, latex, image, video, className = "" }) {
+ * an optional image, and an optional embedded video.
+ *
+ * `imageData` (preferred) is the {url, variants, width, height} shape the
+ * backend returns once an image has gone through the media_library
+ * optimization pipeline — renders a responsive <picture> with AVIF/WebP
+ * srcset so the browser only downloads a size appropriate to its viewport.
+ * `image` (legacy) is a plain URL string, still supported as a fallback for
+ * images that predate that pipeline.
+ *
+ * `priority`: set true for the single above-the-fold/LCP image on a page
+ * (e.g. the current question during a test) to skip lazy-loading — every
+ * other image (option images, images in a scrollable question list, etc.)
+ * should leave this false so the browser doesn't fetch dozens of images
+ * that are never scrolled into view. */
+export default function RichContent({ html, latex, image, imageData, video, className = "", priority = false }) {
   const renderedHtml = useMemo(() => renderInlineLatex(html), [html]);
 
   const latexHtml = useMemo(() => {
@@ -69,8 +105,9 @@ export default function RichContent({ html, latex, image, video, className = "" 
   }, [latex]);
 
   const embedUrl = useMemo(() => videoEmbedUrl(video), [video]);
+  const responsive = useMemo(() => buildResponsiveImage(imageData), [imageData]);
 
-  if (!renderedHtml && !latexHtml && !image && !embedUrl) return null;
+  if (!renderedHtml && !latexHtml && !image && !responsive && !embedUrl) return null;
 
   return (
     <div className={className}>
@@ -78,9 +115,26 @@ export default function RichContent({ html, latex, image, video, className = "" 
       {latexHtml && (
         <div className="mt-1.5 overflow-x-auto" dangerouslySetInnerHTML={{ __html: latexHtml }} />
       )}
-      {image && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={image} alt="" className="mt-3 max-w-full rounded-lg" />
+      {responsive ? (
+        <picture>
+          {responsive.avifSrcSet && <source type="image/avif" srcSet={responsive.avifSrcSet} sizes="(max-width: 640px) 100vw, 640px" />}
+          {responsive.webpSrcSet && <source type="image/webp" srcSet={responsive.webpSrcSet} sizes="(max-width: 640px) 100vw, 640px" />}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={responsive.fallbackSrc}
+            alt=""
+            width={responsive.width || undefined}
+            height={responsive.height || undefined}
+            loading={priority ? "eager" : "lazy"}
+            fetchPriority={priority ? "high" : "auto"}
+            className="mt-3 max-w-full rounded-lg"
+          />
+        </picture>
+      ) : (
+        image && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={image} alt="" loading={priority ? "eager" : "lazy"} className="mt-3 max-w-full rounded-lg" />
+        )
       )}
       {embedUrl && (
         <div className="mt-3 aspect-video w-full overflow-hidden rounded-lg">

@@ -47,7 +47,7 @@ export default function QuestionSolver({ questions, onFinish, finishLabel = "Fin
           {index + 1} of {questions.length} · {question.subject_name}
         </p>
         <div className="text-[15px] font-medium leading-relaxed text-[var(--color-text)]">
-          <RichContent html={question.text} latex={question.latex} image={question.image} />
+          <RichContent html={question.text} latex={question.latex} image={question.image} imageData={question.image_data} priority />
         </div>
 
         <div className="mt-4 flex flex-col gap-2.5">
@@ -70,7 +70,7 @@ export default function QuestionSolver({ questions, onFinish, finishLabel = "Fin
               >
                 <div className="flex min-w-0 flex-1 gap-1.5 text-[var(--color-text)]">
                   <span className="flex-none font-semibold">{String.fromCharCode(65 + i)})</span>
-                  <RichContent html={opt.text} latex={opt.latex} image={opt.image} className="min-w-0 flex-1" />
+                  <RichContent html={opt.text} latex={opt.latex} image={opt.image} imageData={opt.image_data} className="min-w-0 flex-1" />
                 </div>
                 {result && (isCorrectOption || isWrongSelected) && (
                   <span className="text-xs font-bold">
@@ -91,6 +91,7 @@ export default function QuestionSolver({ questions, onFinish, finishLabel = "Fin
               html={result.explanation}
               latex={result.explanation_latex}
               image={result.explanation_image}
+              imageData={result.explanation_image_data}
               video={result.explanation_video_url}
               className="text-sm leading-relaxed text-[var(--color-text-muted)]"
             />

@@ -134,7 +134,7 @@ function AttemptContent() {
                   </p>
                 )}
                 <div className="text-[15px] font-medium leading-relaxed text-[var(--color-text)]">
-                  <RichContent html={q.text} latex={q.latex} image={q.image} />
+                  <RichContent html={q.text} latex={q.latex} image={q.image} imageData={q.image_data} priority={qi === 0} />
                 </div>
                 <div className="mt-4 flex flex-col gap-2.5">
                   {q.options.map((opt, i) => {
@@ -149,7 +149,7 @@ function AttemptContent() {
                       >
                         <div className="flex gap-1.5 text-[var(--color-text)]">
                           <span className="flex-none font-semibold">{String.fromCharCode(65 + i)})</span>
-                          <RichContent html={opt.text} latex={opt.latex} image={opt.image} className="min-w-0 flex-1" />
+                          <RichContent html={opt.text} latex={opt.latex} image={opt.image} imageData={opt.image_data} className="min-w-0 flex-1" />
                         </div>
                       </button>
                     );

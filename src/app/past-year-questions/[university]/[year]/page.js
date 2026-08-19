@@ -15,24 +15,25 @@ import { api } from "@/lib/api";
 import { useCourse } from "@/lib/course-context";
 
 function PastYearQuestionsYearContent() {
-  const { year } = useParams();
+  const { university, year } = useParams();
+  const decodedUniversity = decodeURIComponent(university);
   const { activeCourse } = useCourse();
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
-    const params = new URLSearchParams({ exam_type: "pyq", year });
+    const params = new URLSearchParams({ exam_type: "pyq", year, university: decodedUniversity });
     if (activeCourse?.id) params.set("course", activeCourse.id);
     api
       .get(`/tests/?${params.toString()}`)
       .then(setTests)
       .finally(() => setLoading(false));
-  }, [year, activeCourse?.id]);
+  }, [year, decodedUniversity, activeCourse?.id]);
 
   return (
     <AppShell>
-      <Header title={`Past Year Questions — ${year}`} showBack />
+      <Header title={`${decodedUniversity} — ${year}`} showBack />
 
       <div className="hm-page flex flex-col gap-4">
         <PlatformStats examType="pyq" typeLabel="Question Sets" stats={computePlatformStats(tests)} />
@@ -41,7 +42,9 @@ function PastYearQuestionsYearContent() {
           <div className="flex flex-col gap-4">
             {loading && <p className="text-sm text-[var(--color-text-muted)]">Loading…</p>}
             {!loading && tests.length === 0 && (
-              <p className="text-sm text-[var(--color-text-muted)]">No question sets found for {year}.</p>
+              <p className="text-sm text-[var(--color-text-muted)]">
+                No question sets found for {decodedUniversity} {year}.
+              </p>
             )}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
               {tests.map((t) => (

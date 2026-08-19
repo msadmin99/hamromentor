@@ -107,6 +107,11 @@ export default function ExamCard({ test }) {
           {difficulty && (
             <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${difficulty.className}`}>{difficulty.label}</span>
           )}
+          {test.exam_type === "pyq" && test.academic_year && (
+            <span className="rounded bg-[var(--color-surface-muted)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--color-text-muted)]">
+              📅 {test.academic_year}
+            </span>
+          )}
           <span className="text-[11px] text-[var(--color-text-muted)]">
             {test.card_status === "completed" && test.best_score != null
               ? `Best score: ${test.best_score}`

@@ -42,7 +42,12 @@ function InvoiceContent() {
     );
   }
 
-  const itemLabel = purchase.kind === "grand_test" ? purchase.grand_test_title : purchase.plan_name;
+  const itemLabel =
+    purchase.kind === "grand_test"
+      ? purchase.grand_test_title
+      : purchase.kind === "teacher_course"
+        ? purchase.teacher_course_title
+        : purchase.plan_name;
 
   return (
     <AppShell showNav={false}>
@@ -64,7 +69,7 @@ function InvoiceContent() {
               <p className="text-xs text-[var(--color-text-muted)]">Invoice / Payment Receipt</p>
             </div>
             <div className="text-right">
-              <p className="text-xs font-bold text-[var(--color-text)]">Invoice #{purchase.id}</p>
+              <p className="text-xs font-bold text-[var(--color-text)]">Invoice {purchase.order_id}</p>
               <p className="text-xs text-[var(--color-text-muted)]">{formatDate(purchase.created_at)}</p>
             </div>
           </div>

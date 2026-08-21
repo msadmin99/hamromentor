@@ -9,7 +9,7 @@ const DISCOUNT_SOURCE_LABELS = {
   referral: "Referral discount applied",
 };
 
-export default function CheckoutModal({ kind, plan, grandTest, onClose, onSubmitted }) {
+export default function CheckoutModal({ kind, plan, grandTest, teacherCourse, onClose, onSubmitted }) {
   const router = useRouter();
   const [couponCode, setCouponCode] = useState("");
   const [priceInfo, setPriceInfo] = useState(null);
@@ -18,19 +18,24 @@ export default function CheckoutModal({ kind, plan, grandTest, onClose, onSubmit
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const baseAmount = kind === "subscription" ? plan.price : grandTest.price;
+  const item = kind === "subscription" ? plan : kind === "teacher_course" ? teacherCourse : grandTest;
+  const itemLabel = kind === "teacher_course" ? item.title : kind === "subscription" ? item.name : item.title;
+  const baseAmount = kind === "teacher_course" && item.is_free ? 0 : item.price;
   const finalAmount = priceInfo?.valid ? priceInfo.final_amount : baseAmount;
+
+  function idFields() {
+    return {
+      plan_id: kind === "subscription" ? plan.id : undefined,
+      grand_test_id: kind === "grand_test" ? grandTest.id : undefined,
+      teacher_course_id: kind === "teacher_course" ? teacherCourse.id : undefined,
+    };
+  }
 
   useEffect(() => {
     // Auto-quote with no typed code — surfaces an auto-apply promotion or a
     // referred student's friend discount before they've entered anything.
     api
-      .post("/coupons/apply/", {
-        code: "",
-        kind,
-        plan_id: kind === "subscription" ? plan.id : undefined,
-        grand_test_id: kind === "grand_test" ? grandTest.id : undefined,
-      })
+      .post("/coupons/apply/", { code: "", kind, ...idFields() })
       .then((data) => {
         if (data.discount_amount > 0) setPriceInfo(data);
       })
@@ -47,12 +52,7 @@ export default function CheckoutModal({ kind, plan, grandTest, onClose, onSubmit
     setCheckingCoupon(true);
     setCouponError("");
     try {
-      const data = await api.post("/coupons/apply/", {
-        code: couponCode,
-        kind,
-        plan_id: kind === "subscription" ? plan.id : undefined,
-        grand_test_id: kind === "grand_test" ? grandTest.id : undefined,
-      });
+      const data = await api.post("/coupons/apply/", { code: couponCode, kind, ...idFields() });
       setPriceInfo(data);
     } catch (err) {
       setCouponError(err.message);
@@ -68,12 +68,15 @@ export default function CheckoutModal({ kind, plan, grandTest, onClose, onSubmit
     try {
       const purchase = await api.post("/purchases/", {
         kind,
-        plan_id: kind === "subscription" ? plan.id : undefined,
-        grand_test_id: kind === "grand_test" ? grandTest.id : undefined,
+        ...idFields(),
         coupon_code: priceInfo?.valid && priceInfo.discount_source === "coupon" ? couponCode : "",
       });
       onSubmitted?.();
-      router.push(`/checkout/${purchase.id}`);
+      if (purchase.status === "approved") {
+        router.push(`/invoice/${purchase.id}`);
+      } else {
+        router.push(`/checkout/${purchase.id}`);
+      }
     } catch (err) {
       setError(err.message);
       setSubmitting(false);
@@ -83,7 +86,7 @@ export default function CheckoutModal({ kind, plan, grandTest, onClose, onSubmit
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
       <div className="hm-card w-full max-w-sm p-6" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-base font-bold text-[var(--color-text)]">{kind === "subscription" ? plan.name : grandTest.title}</h2>
+        <h2 className="text-base font-bold text-[var(--color-text)]">{itemLabel}</h2>
 
         <div className="mt-4 flex items-center gap-2">
           <input

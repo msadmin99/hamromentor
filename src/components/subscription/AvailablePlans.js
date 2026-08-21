@@ -8,6 +8,7 @@ const PRODUCT_TABS = [
   { key: "daily_test", label: "Daily Test", icon: "📅" },
   { key: "mock_test", label: "Mock Test", icon: "🎁" },
   { key: "video", label: "Video Lectures", icon: "🎥" },
+  { key: "pyq", label: "Past Year Questions", icon: "🗂" },
 ];
 
 // Pass a changing `key` prop (e.g. key={initialProduct}) from the parent when

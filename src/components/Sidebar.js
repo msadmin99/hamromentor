@@ -27,6 +27,7 @@ const NAV = [
   { href: "/grand-test", label: "Grand Test", Icon: GrandTestIcon },
   { href: "/past-year-questions", label: "Past Year Questions", Icon: ArchiveIcon },
   { href: "/videos", label: "Videos", Icon: VideosIcon },
+  { href: "/courses", label: "Video Lecture Courses", Icon: VideosIcon },
   { href: "/performance", label: "My Performance", Icon: ChartIcon },
   { href: "/subscriptions", label: "My Subscriptions", Icon: WalletIcon },
 ];

@@ -2,17 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-
-// Deterministic per-card accent, cycled by position — Subject has no color
-// field in the DB (only icon/name/slug), so this stays purely presentational.
-const THEMES = [
-  { iconBg: "bg-emerald-100", fg: "text-emerald-600", bar: "bg-emerald-500", corner: "bg-emerald-300" },
-  { iconBg: "bg-violet-100", fg: "text-violet-600", bar: "bg-violet-500", corner: "bg-violet-300" },
-  { iconBg: "bg-sky-100", fg: "text-sky-600", bar: "bg-sky-500", corner: "bg-sky-300" },
-  { iconBg: "bg-amber-100", fg: "text-amber-600", bar: "bg-amber-500", corner: "bg-amber-300" },
-  { iconBg: "bg-rose-100", fg: "text-rose-600", bar: "bg-rose-500", corner: "bg-rose-300" },
-  { iconBg: "bg-cyan-100", fg: "text-cyan-600", bar: "bg-cyan-500", corner: "bg-cyan-300" },
-];
+import { themeForIndex } from "@/lib/theme";
 
 const INITIAL_COUNT = 5;
 
@@ -91,7 +81,7 @@ export default function SubjectGrid({ subjects }) {
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {visible.map((s, i) => (
-          <SubjectCard key={s.id} subject={s} theme={THEMES[i % THEMES.length]} />
+          <SubjectCard key={s.id} subject={s} theme={themeForIndex(i)} />
         ))}
         <CustomModuleCard />
       </div>

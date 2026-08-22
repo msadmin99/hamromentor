@@ -116,6 +116,33 @@ export function ChevronDownIcon(props) {
   );
 }
 
+export function ChevronRightIcon(props) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" {...props}>
+      <path d="M9 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function TopicIcon(props) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+      <rect x="4" y="5" width="16" height="14" rx="2" />
+      <path d="M8 9.5h8M8 13h5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function TrophyIcon(props) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+      <path d="M7 4h10v4.2a5 5 0 01-10 0V4z" strokeLinejoin="round" />
+      <path d="M7 5H4.5a1 1 0 00-1 1.2c.4 2 1.6 3.3 3.6 3.6M17 5h2.5a1 1 0 011 1.2c-.4 2-1.6 3.3-3.6 3.6" strokeLinecap="round" />
+      <path d="M12 13.2V17M9 20.5h6M9.5 20.5c0-2 .8-3.1 2.5-3.5 1.7.4 2.5 1.5 2.5 3.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function SearchIcon(props) {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>

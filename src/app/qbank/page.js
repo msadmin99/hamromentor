@@ -7,11 +7,14 @@ import CourseSwitcher from "@/components/CourseSwitcher";
 import ExamCard from "@/components/ExamCard";
 import Header from "@/components/Header";
 import RequireAuth from "@/components/RequireAuth";
-import { SearchIcon } from "@/components/icons";
-import PlatformStats from "@/components/testpage/PlatformStats";
-import TestPageFooter from "@/components/testpage/TestPageFooter";
-import TestPageSidebar from "@/components/testpage/TestPageSidebar";
+import { BookmarkIcon, SearchIcon, UserIcon } from "@/components/icons";
+import QBankHero from "@/components/qbank/QBankHero";
+import QBankQuickStats from "@/components/qbank/QBankQuickStats";
+import SubjectGrid from "@/components/qbank/SubjectGrid";
+import TestGuidelines from "@/components/testpage/TestGuidelines";
 import UpgradeBanner from "@/components/testpage/UpgradeBanner";
+import UserTestStats from "@/components/testpage/UserTestStats";
+import WhyTakeTests from "@/components/testpage/WhyTakeTests";
 import { computePlatformStats } from "@/components/testpage/examTypeMeta";
 import { api } from "@/lib/api";
 import { useCourse } from "@/lib/course-context";
@@ -39,70 +42,85 @@ function QBankContent() {
       .catch(() => {});
   }, [activeCourse?.id]);
 
+  function scrollToSubjects() {
+    document.getElementById("subjects")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   return (
     <AppShell>
-      <Header title="QBank Edition 8" right={<SearchIcon />} courseSwitcher={<CourseSwitcher />} />
+      <Header
+        title="QBank Edition 8"
+        right={
+          <>
+            <Link href="/qbank/bookmarks" aria-label="Bookmarks">
+              <BookmarkIcon />
+            </Link>
+            <SearchIcon />
+            <Link href="/profile" aria-label="Profile">
+              <UserIcon />
+            </Link>
+          </>
+        }
+        courseSwitcher={<CourseSwitcher />}
+      />
 
       <div className="hm-page flex flex-col gap-4">
-        <PlatformStats examType="qbank" typeLabel="Practice Tests" stats={computePlatformStats(practiceTests)} />
+        <QBankHero onStartPracticing={scrollToSubjects} />
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
-          <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-2 gap-3 sm:max-w-md">
-              <div className="hm-card p-3">
-                <p className="text-sm font-semibold text-[var(--color-text)]">🔖 Bookmarks</p>
-                <p className="text-xs text-[var(--color-text-muted)]">Saved for later</p>
-              </div>
-              <div className="hm-card p-3">
-                <p className="text-sm font-semibold text-[var(--color-text)]">➕ Custom Module</p>
-                <p className="text-xs text-[var(--color-text-muted)]">Customised MCQs</p>
-              </div>
+        <QBankQuickStats stats={computePlatformStats(practiceTests)} />
+
+        <div className="grid grid-cols-2 gap-3 sm:max-w-md">
+          <Link href="/qbank/bookmarks" className="hm-card flex items-center justify-between gap-2 p-3.5">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-[var(--color-text)]">🔖 Bookmarks</p>
+              <p className="truncate text-xs text-[var(--color-text-muted)]">Saved for later</p>
             </div>
-
-            {loading && <p className="text-sm text-[var(--color-text-muted)]">Loading subjects…</p>}
-
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
-              {subjects.map((s) => (
-                <Link
-                  key={s.id}
-                  href={s.has_access ? `/qbank/${s.slug}` : "/plans"}
-                  className="hm-card relative flex items-start gap-2.5 p-3"
-                >
-                  {!s.has_access && (
-                    <span className="absolute right-2 top-2 rounded-md bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-700">
-                      🔒 PRO
-                    </span>
-                  )}
-                  <span className="text-xl">{s.icon}</span>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-[var(--color-text)]">{s.name}</p>
-                    <p className="text-xs text-brand-blue">
-                      {s.solved_modules}/{s.module_count} modules
-                    </p>
-                  </div>
-                </Link>
-              ))}
+            <span className="flex-none text-[var(--color-text-muted)]" aria-hidden="true">
+              ›
+            </span>
+          </Link>
+          <div className="hm-card flex items-center justify-between gap-2 p-3.5 opacity-70">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-[var(--color-text)]">➕ Custom Module</p>
+              <p className="truncate text-xs text-[var(--color-text-muted)]">Create your own MCQs</p>
             </div>
-
-            {practiceTests.length > 0 && (
-              <section>
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
-                  Practice Tests
-                </p>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-                  {practiceTests.map((t) => (
-                    <ExamCard key={t.id} test={t} />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            <UpgradeBanner />
+            <span className="flex-none rounded-md bg-[var(--color-surface-muted)] px-1.5 py-0.5 text-[9px] font-bold text-[var(--color-text-muted)]">
+              SOON
+            </span>
           </div>
-          <TestPageSidebar examType="qbank" />
         </div>
 
-        <TestPageFooter />
+        {loading && <p className="text-sm text-[var(--color-text-muted)]">Loading subjects…</p>}
+        {!loading && <SubjectGrid subjects={subjects} />}
+
+        <UpgradeBanner />
+
+        {practiceTests.length > 0 && (
+          <section>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+              Practice Tests
+            </p>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+              {practiceTests.map((t) => (
+                <ExamCard key={t.id} test={t} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        <UserTestStats
+          examType="qbank"
+          headerExtra={
+            <Link href="/performance" className="flex-none text-xs font-bold text-brand-blue">
+              Detailed Insights ›
+            </Link>
+          }
+        />
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <WhyTakeTests examType="qbank" />
+          <TestGuidelines />
+        </div>
       </div>
     </AppShell>
   );

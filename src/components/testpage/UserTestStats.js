@@ -12,7 +12,7 @@ function formatDuration(totalSeconds) {
   return `${m}m`;
 }
 
-export default function UserTestStats({ examType }) {
+export default function UserTestStats({ examType, headerExtra }) {
   const { activeCourse } = useCourse();
   const [stats, setStats] = useState(null);
   const meta = EXAM_TYPE_PAGE_META[examType] || {};
@@ -28,7 +28,10 @@ export default function UserTestStats({ examType }) {
 
   return (
     <div className="hm-card p-4">
-      <p className="text-sm font-bold text-[var(--color-text)]">📈 Your {meta.shortLabel || "Test"} Stats</p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-bold text-[var(--color-text)]">📈 Your {meta.shortLabel || "Test"} Stats</p>
+        {headerExtra}
+      </div>
       <div className="mt-3 grid grid-cols-2 gap-3">
         <div>
           <p className="text-xl font-extrabold text-[var(--color-marketing-bar)]">{stats ? stats.total_taken : "—"}</p>

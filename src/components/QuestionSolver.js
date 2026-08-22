@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { BookmarkIcon } from "./icons";
 import ReferencesList from "./ReferencesList";
 import RichContent from "./RichContent";
 import { api } from "@/lib/api";
@@ -10,9 +11,29 @@ export default function QuestionSolver({ questions, onFinish, finishLabel = "Fin
   const [result, setResult] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [bookmarked, setBookmarked] = useState(false);
+  const [bookmarking, setBookmarking] = useState(false);
 
   const question = questions[index];
   const isLast = index === questions.length - 1;
+
+  useEffect(() => {
+    setBookmarked(!!question?.is_bookmarked);
+  }, [question?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function toggleBookmark() {
+    if (bookmarking) return;
+    const next = !bookmarked;
+    setBookmarked(next); // optimistic — this is a low-stakes toggle, not worth a loading flicker
+    setBookmarking(true);
+    try {
+      await api.post(`/questions/${question.id}/bookmark/`, { bookmark: next });
+    } catch {
+      setBookmarked(!next); // revert on failure
+    } finally {
+      setBookmarking(false);
+    }
+  }
 
   async function selectOption(option) {
     if (result) return;
@@ -43,9 +64,20 @@ export default function QuestionSolver({ questions, onFinish, finishLabel = "Fin
   return (
     <div className="flex flex-1 flex-col">
       <div className="hm-page-narrow flex-1 overflow-y-auto">
-        <p className="mb-3 text-xs font-semibold text-[var(--color-text-muted)]">
-          {index + 1} of {questions.length} · {question.subject_name}
-        </p>
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <p className="text-xs font-semibold text-[var(--color-text-muted)]">
+            {index + 1} of {questions.length} · {question.subject_name}
+          </p>
+          <button
+            type="button"
+            onClick={toggleBookmark}
+            aria-label={bookmarked ? "Remove bookmark" : "Bookmark this question"}
+            aria-pressed={bookmarked}
+            className={`flex-none rounded-full p-1 transition ${bookmarked ? "text-brand-blue" : "text-[var(--color-text-muted)]"}`}
+          >
+            <BookmarkIcon fill={bookmarked ? "currentColor" : "none"} />
+          </button>
+        </div>
         <div className="text-[15px] font-medium leading-relaxed text-[var(--color-text)]">
           <RichContent html={question.text} latex={question.latex} image={question.image} imageData={question.image_data} priority />
         </div>

@@ -6,7 +6,7 @@ import { EXAM_TYPE_META } from "./testpage/examTypeMeta";
 const STATUS_META = {
   available: { label: "Available", icon: "✨", className: "bg-brand-green-light text-brand-green" },
   upcoming: { label: "Upcoming", icon: "🕒", className: "bg-amber-100 text-amber-700" },
-  completed: { label: "Completed", icon: "✅", className: "bg-blue-50 text-brand-blue-dark" },
+  completed: { label: "Completed", icon: "✅", className: "bg-brand-blue/10 text-brand-blue-dark" },
   missed: { label: "Missed", icon: "🔔", className: "bg-brand-red-light text-brand-red" },
 };
 

@@ -144,7 +144,7 @@ function AttemptContent() {
                         key={opt.id}
                         onClick={() => selectOption(q, opt.id)}
                         className={`rounded-xl border px-4 py-3 text-left text-sm ${
-                          selected ? "border-brand-blue bg-blue-50" : "border-[var(--color-border)]"
+                          selected ? "border-brand-blue bg-brand-blue/10" : "border-[var(--color-border)]"
                         }`}
                       >
                         <div className="flex gap-1.5 text-[var(--color-text)]">

@@ -22,7 +22,7 @@ export default function KpiCards({ kpis }) {
   if (!kpis) return null;
 
   const cards = [
-    { label: "Overall Accuracy", value: `${kpis.overall_accuracy}%`, icon: "🎯", tint: "bg-blue-50" },
+    { label: "Overall Accuracy", value: `${kpis.overall_accuracy}%`, icon: "🎯", tint: "bg-brand-blue/10" },
     { label: "Overall Score", value: kpis.overall_score, icon: "🏆", tint: "bg-amber-50" },
     { label: "Questions Attempted", value: kpis.questions_attempted, icon: "📝", tint: "bg-purple-50" },
     { label: "Correct", value: kpis.questions_correct, icon: "✅", tint: "bg-green-50" },

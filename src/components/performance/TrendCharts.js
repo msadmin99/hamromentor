@@ -44,7 +44,7 @@ export default function TrendCharts({ trend }) {
               <XAxis dataKey="date" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
               <Tooltip />
-              <Line type="monotone" dataKey={metric} stroke="#2563eb" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+              <Line type="monotone" dataKey={metric} stroke="var(--color-brand-blue)" strokeWidth={2} dot={{ r: 3 }} connectNulls />
             </LineChart>
           </ResponsiveContainer>
         ) : (

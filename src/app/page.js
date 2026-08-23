@@ -69,7 +69,7 @@ export default async function LandingPage() {
             >
               {s.hero_cta_primary_text}
             </Link>
-            <a href={s.hero_cta_secondary_link} className="text-sm font-bold text-[#3f5f95]">
+            <a href={s.hero_cta_secondary_link} className="text-sm font-bold text-[var(--color-exam-card-deep)]">
               {s.hero_cta_secondary_text}
             </a>
           </div>

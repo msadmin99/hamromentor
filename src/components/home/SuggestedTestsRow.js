@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ArchiveIcon, DailyTestIcon, GrandTestIcon, MockTestIcon, QBankIcon } from "@/components/icons";
 
 const EXAM_TYPE_META = {
-  qbank: { Icon: QBankIcon, bg: "bg-blue-50", fg: "text-brand-blue" },
+  qbank: { Icon: QBankIcon, bg: "bg-brand-blue/10", fg: "text-brand-blue" },
   daily: { Icon: DailyTestIcon, bg: "bg-orange-50", fg: "text-orange-600" },
   mock: { Icon: MockTestIcon, bg: "bg-violet-50", fg: "text-violet-600" },
   grand: { Icon: GrandTestIcon, bg: "bg-amber-50", fg: "text-amber-700" },

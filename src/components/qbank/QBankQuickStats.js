@@ -1,7 +1,7 @@
 "use client";
 
 const STATS_META = [
-  { key: "available", icon: "📄", label: "Practice Tests Available", iconBg: "bg-blue-100", fg: "text-blue-600" },
+  { key: "available", icon: "📄", label: "Practice Tests Available", iconBg: "bg-brand-blue/10", fg: "text-brand-blue" },
   { key: "attempted", icon: "✅", label: "Tests Attempted", iconBg: "bg-brand-green-light", fg: "text-brand-green" },
   { key: "upcoming", icon: "🗓️", label: "Upcoming (Scheduled)", iconBg: "bg-orange-100", fg: "text-orange-600" },
   { key: "reviewed", icon: "📖", label: "Test Reviewed", iconBg: "bg-purple-100", fg: "text-purple-600" },

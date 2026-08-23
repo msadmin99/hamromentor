@@ -79,7 +79,7 @@ function SessionContent() {
         <div className="hm-card p-5">
           <div className="flex items-center justify-between">
             <h1 className="text-lg font-bold text-[var(--color-text)]">{session.exam_template_title}</h1>
-            <span className="rounded-md bg-blue-50 px-2 py-1 text-[10px] font-bold text-brand-blue">
+            <span className="rounded-md bg-brand-blue/10 px-2 py-1 text-[10px] font-bold text-brand-blue">
               {STATUS_LABELS[session.status] || session.status}
             </span>
           </div>
@@ -112,7 +112,7 @@ function SessionContent() {
             </p>
           )}
           {!cancelled && notStarted && (
-            <p className="mt-4 rounded-lg bg-blue-50 px-3 py-2 text-xs font-medium text-brand-blue">
+            <p className="mt-4 rounded-lg bg-brand-blue/10 px-3 py-2 text-xs font-medium text-brand-blue">
               This session starts on {formatDateTime(session.start_datetime)} — check back then.
             </p>
           )}

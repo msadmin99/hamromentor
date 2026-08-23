@@ -38,7 +38,7 @@ export default function ChapterHero({ chapter, solveHref, icon, theme }) {
 
       <div className="relative mt-5 grid grid-cols-3 divide-x divide-[var(--color-border)] border-t border-[var(--color-border)] pt-4">
         <div className="flex items-center gap-2 pr-2">
-          <span className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-blue-100 text-sm text-blue-600" aria-hidden="true">
+          <span className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-brand-blue/10 text-sm text-brand-blue" aria-hidden="true">
             📄
           </span>
           <div className="min-w-0 leading-tight">

@@ -61,7 +61,7 @@ function HistoryContent() {
                   </span>
                 )}
                 {a.session_name && (
-                  <span className="flex-none rounded-md bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold text-brand-blue">
+                  <span className="flex-none rounded-md bg-brand-blue/10 px-1.5 py-0.5 text-[10px] font-bold text-brand-blue">
                     {a.session_name}
                   </span>
                 )}

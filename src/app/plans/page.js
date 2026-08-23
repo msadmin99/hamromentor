@@ -1,98 +1,113 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
-import CheckoutModal from "@/components/CheckoutModal";
 import Header from "@/components/Header";
 import RequireAuth from "@/components/RequireAuth";
+import CourseSection from "@/components/plans/CourseSection";
+import MembershipSection from "@/components/plans/MembershipSection";
+import PlansFAQ from "@/components/plans/PlansFAQ";
+import PlansHero from "@/components/plans/PlansHero";
+import SingleTestSection from "@/components/plans/SingleTestSection";
+import TestBundleSection from "@/components/plans/TestBundleSection";
+import TrustBadges from "@/components/plans/TrustBadges";
+import YourPurchasesCallout from "@/components/plans/YourPurchasesCallout";
 import { api } from "@/lib/api";
 
-const PRODUCT_TABS = [
-  { key: "qbank", label: "Question Bank", icon: "📚" },
-  { key: "daily_test", label: "Daily Test", icon: "📅" },
-  { key: "mock_test", label: "Mock Test", icon: "🎁" },
-  { key: "video", label: "Video Lectures", icon: "🎥" },
-];
+const QBANK_FEATURES = ["Unlimited Practice", "Detailed Solutions", "All Subjects", "Performance Insights", "Bookmark & Revision Tools"];
+const PYQ_FEATURES = ["IOM", "BPKIHS", "KU", "MOE", "Chapter-wise PYQs", "Detailed Solutions"];
+const MOCK_FEATURES = ["Full Length Tests", "Exam-style Questions", "Detailed Analysis", "Performance Tracking"];
+const DAILY_FEATURES = ["Daily New Tests", "Subject-wise & Mixed Tests", "Quick Analysis", "Track Daily Progress"];
 
 function PlansContent() {
-  const searchParams = useSearchParams();
-  const requestedProduct = searchParams.get("product");
   const [courses, setCourses] = useState([]);
   const [courseId, setCourseId] = useState("");
-  const [tab, setTab] = useState(
-    PRODUCT_TABS.some((t) => t.key === requestedProduct) ? requestedProduct : "qbank",
-  );
-  const [plans, setPlans] = useState([]);
-  const [checkoutPlan, setCheckoutPlan] = useState(null);
+  const [mySubscriptions, setMySubscriptions] = useState(null);
+  const [enrolledCourseIds, setEnrolledCourseIds] = useState(new Set());
 
   useEffect(() => {
     api.get("/courses/").then((data) => {
       setCourses(data);
       if (data.length) setCourseId(String(data[0].id));
     });
+    api.get("/my-subscriptions/").then(setMySubscriptions).catch(() => setMySubscriptions({ subscriptions: [], grand_test_access: [] }));
+    api
+      .get("/course-enrollments/mine/")
+      .then((data) => setEnrolledCourseIds(new Set(data.map((e) => e.course))))
+      .catch(() => {});
   }, []);
-
-  useEffect(() => {
-    if (!courseId) return;
-    api.get(`/subscription-plans/?course=${courseId}&product_type=${tab}`).then(setPlans);
-  }, [courseId, tab]);
 
   return (
     <AppShell>
-      <Header title="Upgrade to Pro" showBack />
-      <div className="hm-page-narrow flex flex-col gap-4">
-        <p className="text-sm text-[var(--color-text-muted)]">
-          Free content stays free — subscribe to unlock everything else for your course.
-        </p>
+      <Header title="Membership & Store" showBack />
 
-        <select value={courseId} onChange={(e) => setCourseId(e.target.value)} className="hm-input">
-          {courses.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+      <div className="hm-page flex flex-col gap-6 pb-16">
+        <PlansHero />
 
-        <div className="flex rounded-lg border border-[var(--color-border)] p-0.5">
-          {PRODUCT_TABS.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={`flex-1 rounded-md px-3 py-2 text-xs font-semibold ${
-                tab === t.key ? "bg-brand-blue text-white" : "text-[var(--color-text-muted)]"
-              }`}
-            >
-              {t.icon} {t.label}
-            </button>
-          ))}
-        </div>
+        {courses.length > 1 && (
+          <select value={courseId} onChange={(e) => setCourseId(e.target.value)} className="hm-input sm:max-w-xs">
+            {courses.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+        )}
 
-        <div className="flex flex-col gap-3">
-          {plans.map((p) => (
-            <div key={p.id} className="hm-card p-4">
-              <p className="font-bold text-[var(--color-text)]">{p.name}</p>
-              <p className="text-xs text-[var(--color-text-muted)]">
-                {p.duration_value} {p.duration_unit}(s)
-                {p.mock_test_quota != null && ` · ${p.mock_test_quota} mock tests`}
-              </p>
-              <div className="mt-3 flex items-center justify-between">
-                <span className="text-lg font-extrabold text-[var(--color-text)]">Rs. {p.price}</span>
-                <button onClick={() => setCheckoutPlan(p)} className="rounded-xl bg-brand-blue px-5 py-2 text-sm font-bold text-white">
-                  Buy
-                </button>
-              </div>
-            </div>
-          ))}
-          {plans.length === 0 && (
-            <div className="rounded-xl border border-dashed border-[var(--color-border)] p-8 text-center text-sm text-[var(--color-text-muted)]">
-              No {PRODUCT_TABS.find((t) => t.key === tab)?.label} plans available yet for this course.
-            </div>
-          )}
-        </div>
+        {courseId && (
+          <>
+            <MembershipSection
+              productType="qbank"
+              heading="Practice Question Bank"
+              subtitle="Unlimited subject-wise MCQ practice with instant, detailed solutions."
+              features={QBANK_FEATURES}
+              courseId={courseId}
+              subscriptions={mySubscriptions?.subscriptions}
+            />
+
+            <TestBundleSection
+              productType="mock_test"
+              heading="Mock Test"
+              subtitle="Full-length exam simulations designed for real exam preparation."
+              features={MOCK_FEATURES}
+              courseId={courseId}
+              subscriptions={mySubscriptions?.subscriptions}
+            />
+
+            <TestBundleSection
+              productType="daily_test"
+              heading="Daily Test"
+              subtitle="Build consistency with daily exam-oriented practice."
+              features={DAILY_FEATURES}
+              courseId={courseId}
+              subscriptions={mySubscriptions?.subscriptions}
+            />
+
+            <SingleTestSection courseId={courseId} grandTestAccess={mySubscriptions?.grand_test_access} />
+
+            <MembershipSection
+              productType="pyq"
+              heading="Past Year Questions"
+              subtitle="Practice authentic past questions from major medical examinations."
+              features={PYQ_FEATURES}
+              courseId={courseId}
+              subscriptions={mySubscriptions?.subscriptions}
+            />
+          </>
+        )}
+
+        <CourseSection enrolledCourseIds={enrolledCourseIds} />
+
+        <TrustBadges />
+
+        <PlansFAQ />
+
+        <YourPurchasesCallout />
       </div>
 
-      {checkoutPlan && <CheckoutModal kind="subscription" plan={checkoutPlan} onClose={() => setCheckoutPlan(null)} />}
+      <div className="sticky bottom-0 z-10 border-t border-[var(--color-border)] bg-white/95 px-4 py-2.5 backdrop-blur md:hidden">
+        <a href="mailto:atech1627@gmail.com" className="block text-center text-xs font-bold text-brand-blue">
+          Need help choosing? Contact Support →
+        </a>
+      </div>
     </AppShell>
   );
 }

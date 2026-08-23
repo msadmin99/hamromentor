@@ -8,6 +8,7 @@ import Header from "@/components/Header";
 import RequireAuth from "@/components/RequireAuth";
 import PlatformStats from "@/components/testpage/PlatformStats";
 import TestPageFooter from "@/components/testpage/TestPageFooter";
+import TestPageHero from "@/components/testpage/TestPageHero";
 import TestPageSidebar from "@/components/testpage/TestPageSidebar";
 import UpgradeBanner from "@/components/testpage/UpgradeBanner";
 import { computePlatformStats } from "@/components/testpage/examTypeMeta";
@@ -35,9 +36,11 @@ function PastYearQuestionsUniversityContent() {
 
   return (
     <AppShell>
-      <Header title={decodedUniversity} subtitle="Past year question sets, every year" showBack />
+      <Header title={decodedUniversity} showBack />
 
       <div className="hm-page flex flex-col gap-4">
+        <TestPageHero examType="pyq" />
+
         <PlatformStats examType="pyq" typeLabel="Question Sets" stats={computePlatformStats(tests)} />
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">

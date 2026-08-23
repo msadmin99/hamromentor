@@ -4,18 +4,29 @@
   --background: #f4f7fa;
   --foreground: #16232b;
 
-  /* Dr. Gutka brand palette (green/red sampled from the original logo, now used
-     as UI semantics for correct/incorrect; blue is the primary accent — kept
-     unchanged through the Dr. Gutka rebrand + Marrow reference UI) */
+  /* Dr. Gutka brand palette (green/red sampled from the original logo, used
+     as UI semantics for correct/incorrect). Blue and the teal header gradient
+     below are sampled directly from reference screenshots (Blue.png /
+     Marrow Colour.png) so every button/header across the app matches exactly
+     — previously the app-wide header gradient (brand-teal-*) was a lighter,
+     unrelated cyan while only the marketing homepage/exam cards used Marrow's
+     real teal; these are now intentionally the same family as
+     --color-marketing-* / --color-exam-card below, kept as separate named
+     tokens (not var() aliases) so the two contexts can still diverge later
+     without surprising each other. */
   --color-brand-green: #017101;
   --color-brand-green-light: #e6f5e6;
   --color-brand-red: #ed220d;
   --color-brand-red-light: #fdeceb;
-  --color-brand-blue: #0b5fd9;
-  --color-brand-blue-dark: #073d8c;
-  --color-brand-teal-from: #57b4ce;
-  --color-brand-teal-via: #79cbdb;
-  --color-brand-teal-to: #a6dfe6;
+  --color-brand-blue: #2a5ed2;
+  --color-brand-blue-dark: #1b3d89;
+  /* navy -> exam-card -> marketing-bar: monotonically lighter but every stop
+     still clears 4.5:1 contrast against white (5.43:1 at the lightest end) —
+     --color-marketing-accent (#50c2d9) was considered and rejected here, it
+     only reaches 2.1:1 against white and isn't safe for header text/icons. */
+  --color-brand-teal-from: #0f2830;
+  --color-brand-teal-via: #224c5a;
+  --color-brand-teal-to: #397184;
   --color-surface: #ffffff;
   --color-surface-muted: #f4f7fa;
   --color-border: #e6ebf0;

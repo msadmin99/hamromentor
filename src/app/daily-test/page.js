@@ -8,6 +8,7 @@ import Header from "@/components/Header";
 import RequireAuth from "@/components/RequireAuth";
 import PlatformStats from "@/components/testpage/PlatformStats";
 import TestPageFooter from "@/components/testpage/TestPageFooter";
+import TestPageHero from "@/components/testpage/TestPageHero";
 import TestPageSidebar from "@/components/testpage/TestPageSidebar";
 import UpgradeBanner from "@/components/testpage/UpgradeBanner";
 import { computePlatformStats } from "@/components/testpage/examTypeMeta";
@@ -35,13 +36,11 @@ function DailyTestContent() {
 
   return (
     <AppShell>
-      <Header
-        title="Daily Test"
-        subtitle="Released for a fixed 24-hour window — attempt before it expires"
-        courseSwitcher={<CourseSwitcher />}
-      />
+      <Header title="Daily Test" courseSwitcher={<CourseSwitcher />} />
 
       <div className="hm-page flex flex-col gap-4">
+        <TestPageHero examType="daily" />
+
         <PlatformStats examType="daily" typeLabel="Daily Tests" stats={computePlatformStats(tests)} />
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">

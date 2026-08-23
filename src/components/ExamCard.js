@@ -1,14 +1,7 @@
 "use client";
 
 import Link from "next/link";
-
-const EXAM_TYPE_META = {
-  qbank: { label: "Question Bank", emoji: "📖", subtitle: "Master Every Topic", tagline: "Practice makes perfect." },
-  daily: { label: "Daily Test", emoji: "⏰", subtitle: "Stay Consistent", tagline: "One test a day, sharper every day." },
-  mock: { label: "Mock Test", emoji: "📝", subtitle: "Practice & Improve", tagline: "Focused. Smart. Exam Ready." },
-  grand: { label: "Grand Test", emoji: "🏆", subtitle: "Compete & Rank", tagline: "Compete. Rank. Excel." },
-  pyq: { label: "Past Year Questions", emoji: "📚", subtitle: "Revise & Recall", tagline: "Learn from the past. Ace the future." },
-};
+import { EXAM_TYPE_META } from "./testpage/examTypeMeta";
 
 const STATUS_META = {
   available: { label: "Available", icon: "✨", className: "bg-brand-green-light text-brand-green" },

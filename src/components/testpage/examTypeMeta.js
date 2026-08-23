@@ -1,3 +1,14 @@
+// Card-level copy (ExamCard's badge + CTA gradient, and now TestPageHero's
+// headline) — extracted from ExamCard.js so both consume the same strings
+// instead of keeping two separate "Mock Test" copy blocks in sync by hand.
+export const EXAM_TYPE_META = {
+  qbank: { label: "Question Bank", emoji: "📖", subtitle: "Master Every Topic", tagline: "Practice makes perfect." },
+  daily: { label: "Daily Test", emoji: "⏰", subtitle: "Stay Consistent", tagline: "One test a day, sharper every day." },
+  mock: { label: "Mock Test", emoji: "📝", subtitle: "Practice & Improve", tagline: "Focused. Smart. Exam Ready." },
+  grand: { label: "Grand Test", emoji: "🏆", subtitle: "Compete & Rank", tagline: "Compete. Rank. Excel." },
+  pyq: { label: "Past Year Questions", emoji: "📚", subtitle: "Revise & Recall", tagline: "Learn from the past. Ace the future." },
+};
+
 // Shared copy/icon config for the test-listing page architecture (Illustration,
 // PlatformStats, UserTestStats, WhyTakeTests) — one place to tweak per-exam-type
 // text instead of duplicating it across Practice Question Bank / Mock Test /
@@ -16,6 +27,7 @@ export const EXAM_TYPE_PAGE_META = {
   mock: {
     shortLabel: "Mock Test",
     icon: "📝",
+    tagline: "Timed practice sets across every subject",
     reasons: [
       "Experience real exam environment",
       "Improve time management",
@@ -26,6 +38,7 @@ export const EXAM_TYPE_PAGE_META = {
   daily: {
     shortLabel: "Daily Test",
     icon: "⏰",
+    tagline: "Released for a fixed 24-hour window — attempt before it expires",
     reasons: [
       "Build a consistent study habit",
       "Fresh questions released every day",
@@ -36,6 +49,7 @@ export const EXAM_TYPE_PAGE_META = {
   grand: {
     shortLabel: "Grand Test",
     icon: "🏆",
+    tagline: "Live, exam-window tests — enrolled students get direct access, others can buy a seat",
     reasons: [
       "Full-length, exam-pattern tests",
       "Compete with peers on the leaderboard",
@@ -46,6 +60,7 @@ export const EXAM_TYPE_PAGE_META = {
   pyq: {
     shortLabel: "Past Year Questions",
     icon: "📚",
+    tagline: "Practice previous exam papers, grouped by university",
     reasons: [
       "Practice actual previous year papers",
       "Understand recurring exam patterns",

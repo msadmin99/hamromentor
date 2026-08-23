@@ -10,6 +10,10 @@ import RequireAuth from "@/components/RequireAuth";
 import { BookmarkIcon, SearchIcon, UserIcon } from "@/components/icons";
 import QBankHero from "@/components/qbank/QBankHero";
 import QBankQuickStats from "@/components/qbank/QBankQuickStats";
+import QBankSearch from "@/components/qbank/QBankSearch";
+import RecommendedForYou from "@/components/qbank/RecommendedForYou";
+import SmartPractice from "@/components/qbank/SmartPractice";
+import StatusCards from "@/components/qbank/StatusCards";
 import SubjectGrid from "@/components/qbank/SubjectGrid";
 import TestGuidelines from "@/components/testpage/TestGuidelines";
 import UpgradeBanner from "@/components/testpage/UpgradeBanner";
@@ -23,6 +27,7 @@ function QBankContent() {
   const { activeCourse } = useCourse();
   const [subjects, setSubjects] = useState([]);
   const [practiceTests, setPracticeTests] = useState([]);
+  const [dashboardStats, setDashboardStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -40,6 +45,13 @@ function QBankContent() {
       .get(`/tests/?${testParams.toString()}`)
       .then(setPracticeTests)
       .catch(() => {});
+
+    const dashParams = new URLSearchParams();
+    if (activeCourse?.id) dashParams.set("course", activeCourse.id);
+    api
+      .get(`/questions/dashboard/?${dashParams.toString()}`)
+      .then(setDashboardStats)
+      .catch(() => setDashboardStats(null));
   }, [activeCourse?.id]);
 
   function scrollToSubjects() {
@@ -67,9 +79,24 @@ function QBankContent() {
       <div className="hm-page flex flex-col gap-4">
         <QBankHero onStartPracticing={scrollToSubjects} />
 
-        <QBankQuickStats stats={computePlatformStats(practiceTests)} />
+        <QBankSearch />
+
+        <RecommendedForYou />
+
+        <StatusCards stats={dashboardStats} />
+
+        <SmartPractice />
 
         <div className="grid grid-cols-2 gap-3 sm:max-w-md">
+          <Link href="/qbank/mistakes" className="hm-card flex items-center justify-between gap-2 p-3.5">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-[var(--color-text)]">❌ My Mistakes</p>
+              <p className="truncate text-xs text-[var(--color-text-muted)]">Turn mistakes into marks</p>
+            </div>
+            <span className="flex-none text-[var(--color-text-muted)]" aria-hidden="true">
+              ›
+            </span>
+          </Link>
           <Link href="/qbank/bookmarks" className="hm-card flex items-center justify-between gap-2 p-3.5">
             <div className="min-w-0">
               <p className="text-sm font-semibold text-[var(--color-text)]">🔖 Bookmarks</p>
@@ -79,19 +106,15 @@ function QBankContent() {
               ›
             </span>
           </Link>
-          <div className="hm-card flex items-center justify-between gap-2 p-3.5 opacity-70">
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-[var(--color-text)]">➕ Custom Module</p>
-              <p className="truncate text-xs text-[var(--color-text-muted)]">Create your own MCQs</p>
-            </div>
-            <span className="flex-none rounded-md bg-[var(--color-surface-muted)] px-1.5 py-0.5 text-[9px] font-bold text-[var(--color-text-muted)]">
-              SOON
-            </span>
-          </div>
         </div>
 
-        {loading && <p className="text-sm text-[var(--color-text-muted)]">Loading subjects…</p>}
-        {!loading && <SubjectGrid subjects={subjects} />}
+        <QBankQuickStats stats={computePlatformStats(practiceTests)} />
+
+        <div>
+          <p className="mb-2 text-sm font-bold text-[var(--color-text)]">Browse Questions</p>
+          {loading && <p className="text-sm text-[var(--color-text-muted)]">Loading subjects…</p>}
+          {!loading && <SubjectGrid subjects={subjects} />}
+        </div>
 
         <UpgradeBanner />
 

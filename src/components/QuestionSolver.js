@@ -6,13 +6,14 @@ import ReferencesList from "./ReferencesList";
 import RichContent from "./RichContent";
 import { api } from "@/lib/api";
 
-export default function QuestionSolver({ questions, onFinish, finishLabel = "Finish" }) {
+export default function QuestionSolver({ questions, onFinish, finishLabel = "Finish", timeLimitMinutes }) {
   const [index, setIndex] = useState(0);
   const [result, setResult] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [bookmarking, setBookmarking] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState(timeLimitMinutes ? Math.round(timeLimitMinutes * 60) : null);
 
   const question = questions[index];
   const isLast = index === questions.length - 1;
@@ -20,6 +21,19 @@ export default function QuestionSolver({ questions, onFinish, finishLabel = "Fin
   useEffect(() => {
     setBookmarked(!!question?.is_bookmarked);
   }, [question?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Optional Timed Practice (Practice Session Builder's "Time" setting) — off
+  // by default for every other caller (bookmarks/single-question/chapter solve),
+  // so this is additive, not a behavior change for existing usage.
+  useEffect(() => {
+    if (secondsLeft === null) return undefined;
+    if (secondsLeft <= 0) {
+      onFinish?.();
+      return undefined;
+    }
+    const timer = setTimeout(() => setSecondsLeft((s) => (s === null ? null : s - 1)), 1000);
+    return () => clearTimeout(timer);
+  }, [secondsLeft]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function toggleBookmark() {
     if (bookmarking) return;
@@ -68,15 +82,22 @@ export default function QuestionSolver({ questions, onFinish, finishLabel = "Fin
           <p className="text-xs font-semibold text-[var(--color-text-muted)]">
             {index + 1} of {questions.length} · {question.subject_name}
           </p>
-          <button
-            type="button"
-            onClick={toggleBookmark}
-            aria-label={bookmarked ? "Remove bookmark" : "Bookmark this question"}
-            aria-pressed={bookmarked}
-            className={`flex-none rounded-full p-1 transition ${bookmarked ? "text-brand-blue" : "text-[var(--color-text-muted)]"}`}
-          >
-            <BookmarkIcon fill={bookmarked ? "currentColor" : "none"} />
-          </button>
+          <div className="flex flex-none items-center gap-3">
+            {secondsLeft !== null && (
+              <span className={`text-xs font-bold tabular-nums ${secondsLeft <= 30 ? "text-brand-red" : "text-brand-blue"}`}>
+                ⏱ {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, "0")}
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={toggleBookmark}
+              aria-label={bookmarked ? "Remove bookmark" : "Bookmark this question"}
+              aria-pressed={bookmarked}
+              className={`flex-none rounded-full p-1 transition ${bookmarked ? "text-brand-blue" : "text-[var(--color-text-muted)]"}`}
+            >
+              <BookmarkIcon fill={bookmarked ? "currentColor" : "none"} />
+            </button>
+          </div>
         </div>
         <div className="text-[15px] font-medium leading-relaxed text-[var(--color-text)]">
           <RichContent html={question.text} latex={question.latex} image={question.image} imageData={question.image_data} priority />

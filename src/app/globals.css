@@ -93,11 +93,18 @@ body {
 
 .hm-app-shell {
   width: 100%;
-  min-height: 100dvh;
+  /* height, not min-height — see AppShell.js's h-dvh comment. Solve/practice
+     pages built on .hm-app-shell rely on their own inner flex-1 region
+     (QuestionSolver's question pane) being the sole scrollable area so the
+     Header above it and the answer/next bar below it stay in place; a
+     min-height here would let the whole shell grow past the viewport and
+     scroll as one page instead. */
+  height: 100dvh;
   background: var(--color-surface-muted);
   position: relative;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 /* Standard authenticated-page content container: full mobile width,

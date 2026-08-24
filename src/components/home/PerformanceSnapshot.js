@@ -58,7 +58,7 @@ export default function PerformanceSnapshot({ kpis, trend }) {
           </div>
         </RadialProgress>
 
-        <div className="flex flex-row gap-4 lg:flex-col">
+        <div className="flex flex-col gap-4 sm:flex-row lg:flex-col">
           <div className="flex items-center gap-2">
             <span aria-hidden="true">📝</span>
             <div className="leading-tight">

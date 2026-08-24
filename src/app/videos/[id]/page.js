@@ -216,9 +216,9 @@ function PlayerContent() {
             <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">Linked Quizzes</p>
             <div className="flex flex-col gap-2">
               {video.linked_tests_detail.map((t) => (
-                <Link key={t.id} href={`/tests/${t.id}`} className="hm-card flex items-center justify-between p-3 text-sm">
-                  <span className="font-semibold text-[var(--color-text)]">{t.title}</span>
-                  <span className="text-xs font-bold text-brand-blue">Open →</span>
+                <Link key={t.id} href={`/tests/${t.id}`} className="hm-card flex items-center justify-between gap-3 p-3 text-sm">
+                  <span className="min-w-0 truncate font-semibold text-[var(--color-text)]">{t.title}</span>
+                  <span className="flex-none text-xs font-bold text-brand-blue">Open →</span>
                 </Link>
               ))}
             </div>
@@ -235,14 +235,14 @@ function PlayerContent() {
                   (r.resource_type !== "slides" || video.allow_slides_download);
                 const link = r.file || r.external_url;
                 return (
-                  <div key={r.id} className="hm-card flex items-center justify-between p-3 text-sm">
-                    <span className="text-[var(--color-text)]">{r.title}</span>
+                  <div key={r.id} className="hm-card flex items-center justify-between gap-3 p-3 text-sm">
+                    <span className="min-w-0 truncate text-[var(--color-text)]">{r.title}</span>
                     {downloadAllowed && link ? (
-                      <a href={link} target="_blank" rel="noreferrer" className="text-xs font-bold text-brand-blue">
+                      <a href={link} target="_blank" rel="noreferrer" className="flex-none text-xs font-bold text-brand-blue">
                         Download →
                       </a>
                     ) : (
-                      <span className="text-xs text-[var(--color-text-muted)]">Not downloadable</span>
+                      <span className="flex-none text-xs text-[var(--color-text-muted)]">Not downloadable</span>
                     )}
                   </div>
                 );

@@ -7,14 +7,16 @@ export default function Header({ title, subtitle, showBack = false, right = null
 
   return (
     <header className="hm-header-gradient sticky top-0 z-20 text-white shadow-sm">
-      <div className={`mx-auto w-full max-w-6xl px-4 pt-4 md:px-10 ${subtitle || courseSwitcher ? "pb-2" : "pb-5"}`}>
+      <div
+        className={`mx-auto w-full max-w-6xl px-4 pt-[calc(env(safe-area-inset-top)+1rem)] md:px-10 ${subtitle || courseSwitcher ? "pb-2" : "pb-5"}`}
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
             {showBack && (
               <button
                 onClick={() => router.back()}
                 aria-label="Go back"
-                className="rounded-full p-1 -ml-1 hover:bg-white/15 active:bg-white/25 transition"
+                className="rounded-full p-2.5 -ml-2.5 hover:bg-white/15 active:bg-white/25 transition sm:p-1 sm:-ml-1"
               >
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                   <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />

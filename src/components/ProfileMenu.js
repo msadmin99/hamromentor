@@ -83,10 +83,10 @@ export default function ProfileMenu({ user, onClose, align = "left" }) {
 
   return (
     <>
-      <div className="fixed inset-0 z-40" onClick={onClose} />
+      <div className="fixed inset-0 z-40 bg-black/40 sm:bg-transparent" onClick={onClose} />
       <div
-        className={`hm-header-gradient absolute bottom-full z-50 mb-2 w-72 overflow-hidden rounded-2xl shadow-2xl ${
-          align === "right" ? "right-0" : "left-0"
+        className={`hm-header-gradient fixed inset-x-0 bottom-0 z-50 max-h-[85dvh] w-full overflow-y-auto rounded-t-2xl shadow-2xl sm:absolute sm:inset-x-auto sm:bottom-full sm:mb-2 sm:max-h-none sm:w-72 sm:overflow-hidden sm:rounded-2xl ${
+          align === "right" ? "sm:right-0" : "sm:left-0"
         }`}
       >
         <div className="flex items-center gap-3 px-4 py-4">

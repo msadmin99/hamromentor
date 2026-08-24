@@ -187,7 +187,7 @@ function CheckoutContent() {
         )}
 
         <div className="hm-card p-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="font-mono text-xs text-[var(--color-text-muted)]">Order {purchase.order_id}</span>
             {remainingSeconds !== null && (
               <span className={`rounded-md px-2 py-1 text-xs font-bold ${remainingSeconds < 60 ? "bg-brand-red-light text-brand-red" : "bg-[var(--color-surface-muted)] text-[var(--color-text-muted)]"}`}>
@@ -214,7 +214,7 @@ function CheckoutContent() {
                     key={m.id}
                     type="button"
                     onClick={() => setSelectedMethodId(m.id)}
-                    className={`rounded-lg border px-3 py-1.5 text-xs font-semibold ${
+                    className={`rounded-lg border px-3 py-2.5 text-xs font-semibold sm:py-1.5 ${
                       selectedMethodId === m.id
                         ? "border-brand-blue bg-brand-blue/10 text-brand-blue"
                         : "border-[var(--color-border)] text-[var(--color-text-muted)]"

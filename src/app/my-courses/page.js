@@ -26,15 +26,15 @@ function MyCoursesContent() {
           <Link
             key={e.id}
             href={`/courses/${e.course}`}
-            className="hm-card flex items-center justify-between p-4 transition hover:-translate-y-0.5 hover:shadow-lg"
+            className="hm-card flex items-center justify-between gap-3 p-4 transition hover:-translate-y-0.5 hover:shadow-lg"
           >
-            <div>
-              <p className="font-bold text-[var(--color-text)]">{e.course_title}</p>
+            <div className="min-w-0">
+              <p className="truncate font-bold text-[var(--color-text)]">{e.course_title}</p>
               <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                 {e.expires_at ? `Access until ${new Date(e.expires_at).toLocaleDateString()}` : "Lifetime access"}
               </p>
             </div>
-            <span className="rounded-xl bg-brand-blue px-4 py-2 text-xs font-bold text-white">Continue →</span>
+            <span className="flex-none rounded-xl bg-brand-blue px-4 py-2 text-xs font-bold text-white">Continue →</span>
           </Link>
         ))}
         {enrollments?.length === 0 && (

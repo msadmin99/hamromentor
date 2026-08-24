@@ -109,9 +109,9 @@ function AttemptContent() {
     <div className="hm-app-shell">
       <header className="hm-header-gradient sticky top-0 z-20 text-white">
         <div className="hm-page">
-          <div className="flex items-center justify-between text-sm font-semibold">
-            <span>{attempt.test_title}</span>
-            <span className="rounded-md bg-black/20 px-2 py-1 font-mono text-xs">{formatTime(remaining)}</span>
+          <div className="flex items-center justify-between gap-2 text-sm font-semibold">
+            <span className="min-w-0 truncate">{attempt.test_title}</span>
+            <span className="flex-none rounded-md bg-black/20 px-2 py-1 font-mono text-xs">{formatTime(remaining)}</span>
           </div>
           <p className="mt-1 text-xs text-white/85">
             {perPage === 1
@@ -169,7 +169,7 @@ function AttemptContent() {
           })}
         </div>
 
-        <div className="mt-5 grid grid-cols-8 gap-2 sm:grid-cols-10">
+        <div className="mt-5 grid grid-cols-6 gap-2 sm:grid-cols-10">
           {attempt.questions.map((q, i) => {
             const state = answers[q.id] ? "answered" : marked[q.id] ? "marked" : "unanswered";
             const stateClasses = {

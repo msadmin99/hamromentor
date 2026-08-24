@@ -93,8 +93,11 @@ export default function CheckoutModal({ kind, plan, grandTest, teacherCourse, co
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div className="hm-card w-full max-w-sm p-6" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4" onClick={onClose}>
+      <div
+        className="max-h-[90dvh] w-full overflow-y-auto rounded-t-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 sm:max-h-[85dvh] sm:max-w-sm sm:rounded-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <h2 className="text-base font-bold text-[var(--color-text)]">{itemLabel}</h2>
 
         {isCombo && (

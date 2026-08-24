@@ -39,7 +39,7 @@ function CoursesContent() {
         {(courses || []).map((c) => (
           <Link key={c.id} href={`/teacher/courses/${c.id}/edit`} className="hm-card flex flex-col gap-2 p-4">
             <div className="flex items-start justify-between gap-2">
-              <p className="text-sm font-semibold text-[var(--color-text)]">{c.title}</p>
+              <p className="min-w-0 truncate text-sm font-semibold text-[var(--color-text)]">{c.title}</p>
               <span className={`flex-none rounded-md px-2 py-1 text-[10px] font-bold ${STATUS_STYLES[c.status] || ""}`}>
                 {c.status.replace("_", " ").toUpperCase()}
               </span>

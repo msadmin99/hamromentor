@@ -134,7 +134,7 @@ function HomeContent() {
                       {banner.tag}
                     </span>
                   )}
-                  <h2 className="max-w-[75%] text-2xl font-extrabold leading-tight">{banner.title}</h2>
+                  <h2 className="max-w-[90%] text-2xl font-extrabold leading-tight sm:max-w-[75%]">{banner.title}</h2>
                   {banner.subtitle && <p className="mt-3 text-sm text-white/85">{banner.subtitle}</p>}
                 </div>
               </section>

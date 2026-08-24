@@ -103,7 +103,7 @@ function NewCourseContent() {
             className="hm-input"
           />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label className="mb-1 block text-xs font-semibold text-[var(--color-text-muted)]">Level</label>
             <select value={form.level} onChange={(e) => setForm((f) => ({ ...f, level: e.target.value }))} className="hm-input">

@@ -17,12 +17,12 @@ export default function PurchasedCourses({ enrollments }) {
       </p>
       <div className="mt-3 flex flex-col gap-2">
         {purchased.map((e) => (
-          <div key={e.id} className="flex items-center justify-between rounded-lg border border-[var(--color-border)] p-3">
-            <div>
-              <p className="text-sm font-semibold text-[var(--color-text)]">{e.course_name}</p>
+          <div key={e.id} className="flex items-center justify-between gap-3 rounded-lg border border-[var(--color-border)] p-3">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-[var(--color-text)]">{e.course_name}</p>
               <p className="text-xs text-[var(--color-text-muted)]">Code: {e.student_code}</p>
             </div>
-            <p className="text-xs text-[var(--color-text-muted)]">Valid until {formatDate(e.expires_at)}</p>
+            <p className="flex-none text-xs text-[var(--color-text-muted)]">Valid until {formatDate(e.expires_at)}</p>
           </div>
         ))}
         {purchased.length === 0 && <p className="text-sm text-[var(--color-text-muted)]">No purchased course packages yet.</p>}

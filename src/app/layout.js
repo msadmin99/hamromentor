@@ -45,6 +45,11 @@ export const viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
+  // Lets env(safe-area-inset-*) resolve to the real notch/home-indicator
+  // insets instead of 0 — needed since this is an installable standalone
+  // PWA (see manifest.js) where that area is real content space, not just
+  // browser chrome. No effect on desktop, where the insets are already 0.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }) {

@@ -56,9 +56,9 @@ function ProfileContent() {
 
 function Row({ label, value }) {
   return (
-    <div className="flex items-center justify-between px-4 py-3 text-sm">
-      <span className="text-[var(--color-text-muted)]">{label}</span>
-      <span className="font-medium text-[var(--color-text)]">{value}</span>
+    <div className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+      <span className="flex-none text-[var(--color-text-muted)]">{label}</span>
+      <span className="min-w-0 truncate font-medium text-[var(--color-text)]">{value}</span>
     </div>
   );
 }

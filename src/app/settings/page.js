@@ -137,14 +137,14 @@ function SettingsContent() {
                 key={e.id}
                 onClick={() => switchCourse(e.course)}
                 disabled={switching}
-                className={`flex items-center justify-between rounded-xl border px-3 py-2.5 text-left text-sm font-medium disabled:opacity-60 ${
+                className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-2.5 text-left text-sm font-medium disabled:opacity-60 ${
                   e.course === activeCourse?.id
                     ? "border-brand-blue bg-brand-blue/5 text-brand-blue"
                     : "border-[var(--color-border)] text-[var(--color-text)]"
                 }`}
               >
-                {e.course_name}
-                {e.course === activeCourse?.id && <span className="text-xs font-bold">Active</span>}
+                <span className="min-w-0 truncate">{e.course_name}</span>
+                {e.course === activeCourse?.id && <span className="flex-none text-xs font-bold">Active</span>}
               </button>
             ))}
             {enrollments.length === 0 && (

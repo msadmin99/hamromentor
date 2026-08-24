@@ -73,7 +73,7 @@ function AddLessonForm({ sectionId, onAdded, onCancel }) {
 
   return (
     <div className="mt-2 rounded-lg border border-dashed border-[var(--color-border)] p-3">
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <select value={lessonType} onChange={(e) => setLessonType(e.target.value)} className="hm-input text-xs">
           {LESSON_TYPES.map((t) => (
             <option key={t.key} value={t.key}>
@@ -133,11 +133,11 @@ function AddLessonForm({ sectionId, onAdded, onCancel }) {
 
       {error && <p className="mt-2 text-xs font-medium text-brand-red">{error}</p>}
 
-      <div className="mt-2 flex gap-2">
-        <button onClick={submit} disabled={saving} className="rounded-lg bg-brand-blue px-3 py-1.5 text-xs font-bold text-white">
+      <div className="mt-2 flex gap-3">
+        <button onClick={submit} disabled={saving} className="rounded-lg bg-brand-blue px-3 py-2 text-xs font-bold text-white sm:py-1.5">
           {saving ? "Adding…" : "Add lesson"}
         </button>
-        <button onClick={onCancel} className="rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs font-semibold">
+        <button onClick={onCancel} className="rounded-lg border border-[var(--color-border)] px-3 py-2 text-xs font-semibold sm:py-1.5">
           Cancel
         </button>
       </div>
@@ -222,14 +222,14 @@ function EditCourseContent() {
               </div>
               <ul className="mt-2 flex flex-col gap-1.5">
                 {section.lessons.map((l) => (
-                  <li key={l.id} className="flex items-center justify-between rounded-lg bg-[var(--color-surface-muted)] px-3 py-2 text-xs">
-                    <span>
+                  <li key={l.id} className="flex items-center justify-between gap-2 rounded-lg bg-[var(--color-surface-muted)] px-3 py-2 text-xs">
+                    <span className="min-w-0 truncate">
                       <span className="mr-2 rounded-md bg-white px-1.5 py-0.5 font-bold text-[var(--color-text-muted)]">{l.lesson_type}</span>
                       {l.title}
                       {l.video_title && <span className="text-[var(--color-text-muted)]"> — {l.video_title}</span>}
                       {l.test_title && <span className="text-[var(--color-text-muted)]"> — {l.test_title}</span>}
                     </span>
-                    <button onClick={() => removeLesson(l.id)} className="font-semibold text-brand-red">
+                    <button onClick={() => removeLesson(l.id)} className="flex-none font-semibold text-brand-red">
                       Remove
                     </button>
                   </li>

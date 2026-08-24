@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BookmarkIcon } from "./icons";
 import ReferencesList from "./ReferencesList";
 import RichContent from "./RichContent";
@@ -14,12 +14,14 @@ export default function QuestionSolver({ questions, onFinish, finishLabel = "Fin
   const [bookmarked, setBookmarked] = useState(false);
   const [bookmarking, setBookmarking] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(timeLimitMinutes ? Math.round(timeLimitMinutes * 60) : null);
+  const scrollRef = useRef(null);
 
   const question = questions[index];
   const isLast = index === questions.length - 1;
 
   useEffect(() => {
     setBookmarked(!!question?.is_bookmarked);
+    scrollRef.current?.scrollTo({ top: 0 });
   }, [question?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Optional Timed Practice (Practice Session Builder's "Time" setting) — off
@@ -76,8 +78,8 @@ export default function QuestionSolver({ questions, onFinish, finishLabel = "Fin
   if (!question) return null;
 
   return (
-    <div className="flex flex-1 flex-col">
-      <div className="hm-page-narrow flex-1 overflow-y-auto">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div ref={scrollRef} className="hm-page-narrow min-h-0 flex-1 overflow-y-auto">
         <div className="mb-3 flex items-center justify-between gap-2">
           <p className="text-xs font-semibold text-[var(--color-text-muted)]">
             {index + 1} of {questions.length} · {question.subject_name}

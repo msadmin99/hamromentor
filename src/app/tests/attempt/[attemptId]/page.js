@@ -122,7 +122,7 @@ function AttemptContent() {
         </div>
       </header>
 
-      <div className="hm-page flex-1 overflow-y-auto">
+      <div className="hm-page min-h-0 flex-1 overflow-y-auto">
         <div className="flex flex-col gap-6">
           {pageQuestions.map((q, qi) => {
             const globalIndex = page * perPage + qi;

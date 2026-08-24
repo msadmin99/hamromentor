@@ -58,16 +58,24 @@ function QBankContent() {
     document.getElementById("subjects")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  function focusSearch() {
+    const input = document.getElementById("qbank-search-input");
+    input?.scrollIntoView({ behavior: "smooth", block: "center" });
+    input?.focus({ preventScroll: true });
+  }
+
   return (
     <AppShell>
       <Header
-        title="QBank Edition 8"
+        title="Dr Gutka"
         right={
           <>
             <Link href="/qbank/bookmarks" aria-label="Bookmarks">
               <BookmarkIcon />
             </Link>
-            <SearchIcon />
+            <button type="button" onClick={focusSearch} aria-label="Search questions">
+              <SearchIcon />
+            </button>
             <Link href="/profile" aria-label="Profile">
               <UserIcon />
             </Link>

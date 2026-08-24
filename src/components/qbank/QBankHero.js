@@ -38,7 +38,7 @@ export default function QBankHero({ onStartPracticing }) {
           <p className="text-sm font-semibold text-[var(--color-text)]">
             {greeting}, {name}! 👋
           </p>
-          {/* Header.js already renders the page's <h1> ("QBank Edition 8") — this is a section heading, not a second page title. */}
+          {/* Header.js already renders the page's <h1> ("Dr Gutka") — this is a section heading, not a second page title. */}
           <h2 className="mt-1 text-2xl font-extrabold leading-tight text-[var(--color-text)] sm:text-3xl">
             Let&apos;s make <span className="text-brand-blue">today</span> count!
           </h2>

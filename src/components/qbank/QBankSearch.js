@@ -93,6 +93,7 @@ export default function QBankSearch() {
       <div className="relative">
         <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
         <input
+          id="qbank-search-input"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search questions, topics, chapters…"

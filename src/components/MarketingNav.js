@@ -2,18 +2,27 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { hasAuthenticatedBefore } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import Logo from "./Logo";
 
 const FALLBACK_LINKS = [
   { label: "Courses", url: "#courses" },
-  { label: "Plans", url: "#courses" },
+  { label: "Plans", url: "/plans" },
 ];
 
 export default function MarketingNav({ links, ctaText = "Login/Signup", appBadgeText = "📱 App coming soon" }) {
   const { user, loading } = useAuth();
   const [open, setOpen] = useState(false);
   const navLinks = links && links.length > 0 ? links : FALLBACK_LINKS;
+
+  // Logged in -> straight to the dashboard, no login prompt. Logged out but
+  // this browser has authenticated before (login or register, tracked via
+  // markAuthenticatedBefore) -> login, since they likely already have an
+  // account. Never authenticated here before -> register, since forcing a
+  // brand-new visitor through a login form first is just a dead end.
+  const dashboardHref = user ? "/home" : hasAuthenticatedBefore() ? "/login" : "/register";
+  const dashboardLabel = user ? "Go to Dashboard" : ctaText;
 
   return (
     <header className="sticky top-0 z-30 hm-marketing-bar">
@@ -32,19 +41,12 @@ export default function MarketingNav({ links, ctaText = "Login/Signup", appBadge
           <span className="rounded-lg border border-white/25 px-3 py-2 text-xs font-semibold text-white/70">
             {appBadgeText}
           </span>
-          {!loading && user ? (
+          {!loading && (
             <Link
-              href="/#courses"
+              href={dashboardHref}
               className="rounded-full bg-[var(--color-marketing-accent)] px-5 py-2.5 text-sm font-bold text-[var(--color-marketing-navy)]"
             >
-              Go to Dashboard
-            </Link>
-          ) : (
-            <Link
-              href="/login"
-              className="rounded-full bg-[var(--color-marketing-accent)] px-5 py-2.5 text-sm font-bold text-[var(--color-marketing-navy)]"
-            >
-              {ctaText}
+              {dashboardLabel}
             </Link>
           )}
         </div>
@@ -63,19 +65,13 @@ export default function MarketingNav({ links, ctaText = "Login/Signup", appBadge
               {l.label}
             </a>
           ))}
-          {!loading && user ? (
+          {!loading && (
             <Link
-              href="/#courses"
+              href={dashboardHref}
+              onClick={() => setOpen(false)}
               className="mt-2 rounded-full bg-[var(--color-marketing-accent)] px-5 py-2.5 text-center text-sm font-bold text-[var(--color-marketing-navy)]"
             >
-              Go to Dashboard
-            </Link>
-          ) : (
-            <Link
-              href="/login"
-              className="mt-2 rounded-full bg-[var(--color-marketing-accent)] px-5 py-2.5 text-center text-sm font-bold text-[var(--color-marketing-navy)]"
-            >
-              {ctaText}
+              {dashboardLabel}
             </Link>
           )}
         </div>

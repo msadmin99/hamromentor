@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { api, clearTokens, getDeviceId, setTokens } from "./api";
+import { api, clearTokens, getDeviceId, markAuthenticatedBefore, setTokens } from "./api";
 
 const AuthContext = createContext(null);
 
@@ -41,6 +41,7 @@ export function AuthProvider({ children }) {
     );
     setTokens(data.tokens);
     setUser(data.user);
+    markAuthenticatedBefore();
     return data.user;
   }, []);
 
@@ -48,6 +49,7 @@ export function AuthProvider({ children }) {
     const data = await api.post("/auth/register/", payload, { auth: false });
     setTokens(data.tokens);
     setUser(data.user);
+    markAuthenticatedBefore();
     return data.user;
   }, []);
 

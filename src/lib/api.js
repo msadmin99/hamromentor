@@ -30,6 +30,20 @@ export function getDeviceId() {
   return id;
 }
 
+// Set once on a successful login/register, never cleared on logout — lets
+// the marketing nav tell "returning but logged-out" apart from "never
+// registered on this browser" so it can send each to the right page
+// (login vs. register) instead of guessing.
+export function markAuthenticatedBefore() {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem("hm_has_authenticated", "1");
+}
+
+export function hasAuthenticatedBefore() {
+  if (typeof window === "undefined") return false;
+  return window.localStorage.getItem("hm_has_authenticated") === "1";
+}
+
 async function refreshAccessToken() {
   const { refresh } = getTokens();
   if (!refresh) return null;

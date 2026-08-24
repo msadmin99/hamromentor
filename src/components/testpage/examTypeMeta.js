@@ -9,7 +9,7 @@ export const EXAM_TYPE_META = {
   pyq: { label: "Past Year Questions", emoji: "📚", subtitle: "Revise & Recall", tagline: "Learn from the past. Ace the future." },
 };
 
-// Shared copy/icon config for the test-listing page architecture (Illustration,
+// Shared copy/icon config for the test-listing page architecture (TestPageHero,
 // PlatformStats, UserTestStats, WhyTakeTests) — one place to tweak per-exam-type
 // text instead of duplicating it across Practice Question Bank / Mock Test /
 // Daily Test / Grand Test / Past Year Questions.

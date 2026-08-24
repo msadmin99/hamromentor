@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
 import Header from "@/components/Header";
 import RequireAuth from "@/components/RequireAuth";
+import BuildYourOwnCombo from "@/components/plans/BuildYourOwnCombo";
+import ComboPlansSection from "@/components/plans/ComboPlansSection";
 import CourseSection from "@/components/plans/CourseSection";
 import MembershipSection from "@/components/plans/MembershipSection";
 import PlansFAQ from "@/components/plans/PlansFAQ";
@@ -54,6 +56,10 @@ function PlansContent() {
 
         {courseId && (
           <>
+            <ComboPlansSection courseId={courseId} />
+
+            <BuildYourOwnCombo courseId={courseId} />
+
             <MembershipSection
               productType="qbank"
               heading="Practice Question Bank"

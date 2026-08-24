@@ -9,7 +9,7 @@ const DISCOUNT_SOURCE_LABELS = {
   referral: "Referral discount applied",
 };
 
-export default function CheckoutModal({ kind, plan, grandTest, teacherCourse, onClose, onSubmitted }) {
+export default function CheckoutModal({ kind, plan, grandTest, teacherCourse, combo, onClose, onSubmitted }) {
   const router = useRouter();
   const [couponCode, setCouponCode] = useState("");
   const [priceInfo, setPriceInfo] = useState(null);
@@ -18,12 +18,20 @@ export default function CheckoutModal({ kind, plan, grandTest, teacherCourse, on
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  const isCombo = kind === "combo";
   const item = kind === "subscription" ? plan : kind === "teacher_course" ? teacherCourse : grandTest;
-  const itemLabel = kind === "teacher_course" ? item.title : kind === "subscription" ? item.name : item.title;
-  const baseAmount = kind === "teacher_course" && item.is_free ? 0 : item.price;
-  const finalAmount = priceInfo?.valid ? priceInfo.final_amount : baseAmount;
+  const itemLabel = isCombo ? combo.label : kind === "teacher_course" ? item.title : kind === "subscription" ? item.name : item.title;
+  const baseAmount = isCombo ? combo.individualValue : kind === "teacher_course" && item.is_free ? 0 : item.price;
+  // Combo pricing is fixed by the combo itself (no coupon stacking — see the
+  // Combo Plans plan file) — never re-quoted via /coupons/apply/.
+  const finalAmount = isCombo ? combo.finalPrice : priceInfo?.valid ? priceInfo.final_amount : baseAmount;
 
   function idFields() {
+    if (isCombo) {
+      return combo.comboPlanId
+        ? { combo_plan_id: combo.comboPlanId }
+        : { plan_ids: combo.planIds };
+    }
     return {
       plan_id: kind === "subscription" ? plan.id : undefined,
       grand_test_id: kind === "grand_test" ? grandTest.id : undefined,
@@ -32,6 +40,7 @@ export default function CheckoutModal({ kind, plan, grandTest, teacherCourse, on
   }
 
   useEffect(() => {
+    if (isCombo) return;
     // Auto-quote with no typed code — surfaces an auto-apply promotion or a
     // referred student's friend discount before they've entered anything.
     api
@@ -88,26 +97,53 @@ export default function CheckoutModal({ kind, plan, grandTest, teacherCourse, on
       <div className="hm-card w-full max-w-sm p-6" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-base font-bold text-[var(--color-text)]">{itemLabel}</h2>
 
-        <div className="mt-4 flex items-center gap-2">
-          <input
-            value={couponCode}
-            onChange={(e) => setCouponCode(e.target.value)}
-            placeholder="Coupon code (optional)"
-            className="hm-input flex-1"
-          />
-          <button onClick={applyCoupon} disabled={checkingCoupon} className="rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm font-semibold">
-            {checkingCoupon ? "…" : "Apply"}
-          </button>
-        </div>
-        {couponError && <p className="mt-1 text-xs font-medium text-brand-red">{couponError}</p>}
-        {priceInfo?.valid && priceInfo.discount_amount > 0 && (
-          <p className="mt-1 text-xs font-semibold text-brand-green">
-            {DISCOUNT_SOURCE_LABELS[priceInfo.discount_source] || "Discount applied"} — Rs. {priceInfo.discount_amount} off
-          </p>
+        {isCombo && (
+          <ul className="mt-3 flex flex-col gap-1">
+            {combo.items.map((it) => (
+              <li key={it.name} className="flex items-center justify-between text-xs text-[var(--color-text-muted)]">
+                <span>{it.name}</span>
+                <span>Rs. {it.price}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {!isCombo && (
+          <>
+            <div className="mt-4 flex items-center gap-2">
+              <input
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value)}
+                placeholder="Coupon code (optional)"
+                className="hm-input flex-1"
+              />
+              <button onClick={applyCoupon} disabled={checkingCoupon} className="rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm font-semibold">
+                {checkingCoupon ? "…" : "Apply"}
+              </button>
+            </div>
+            {couponError && <p className="mt-1 text-xs font-medium text-brand-red">{couponError}</p>}
+            {priceInfo?.valid && priceInfo.discount_amount > 0 && (
+              <p className="mt-1 text-xs font-semibold text-brand-green">
+                {DISCOUNT_SOURCE_LABELS[priceInfo.discount_source] || "Discount applied"} — Rs. {priceInfo.discount_amount} off
+              </p>
+            )}
+          </>
         )}
 
         <div className="mt-4 rounded-xl bg-[var(--color-surface-muted)] p-3 text-sm">
-          {priceInfo?.valid && (
+          {isCombo && (
+            <>
+              <div className="flex items-center justify-between text-[var(--color-text-muted)]">
+                <span>Individual value</span>
+                <span className="line-through">Rs. {baseAmount}</span>
+              </div>
+              <div className="flex items-center justify-between text-brand-green">
+                <span>You save ({combo.discountPercent}%)</span>
+                <span>− Rs. {combo.youSave}</span>
+              </div>
+            </>
+          )}
+          {!isCombo && priceInfo?.valid && (
             <div className="flex items-center justify-between text-[var(--color-text-muted)]">
               <span>Price</span>
               <span className="line-through">Rs. {baseAmount}</span>

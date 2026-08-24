@@ -21,6 +21,9 @@ const MAX_SCREENSHOT_BYTES = 5 * 1024 * 1024;
 function ItemLabel({ purchase }) {
   if (purchase.kind === "grand_test") return <span>{purchase.grand_test_title}</span>;
   if (purchase.kind === "teacher_course") return <span>{purchase.teacher_course_title}</span>;
+  if (purchase.kind === "combo") {
+    return <span>{purchase.combo_plan_name || `Custom Combo (${purchase.combo_items?.length || 0} items)`}</span>;
+  }
   return <span>{purchase.plan_name}</span>;
 }
 

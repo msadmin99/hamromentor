@@ -47,7 +47,9 @@ function InvoiceContent() {
       ? purchase.grand_test_title
       : purchase.kind === "teacher_course"
         ? purchase.teacher_course_title
-        : purchase.plan_name;
+        : purchase.kind === "combo"
+          ? purchase.combo_plan_name || "Custom Combo"
+          : purchase.plan_name;
 
   return (
     <AppShell showNav={false}>
@@ -105,10 +107,26 @@ function InvoiceContent() {
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b border-[var(--color-border)]">
-                <td className="py-2 text-[var(--color-text)]">{itemLabel}</td>
-                <td className="py-2 text-right text-[var(--color-text)]">Rs. {purchase.original_amount}</td>
-              </tr>
+              {purchase.kind === "combo" ? (
+                <>
+                  {purchase.combo_plan_name && (
+                    <tr className="border-b border-[var(--color-border)]">
+                      <td colSpan={2} className="py-2 text-sm font-semibold text-[var(--color-text)]">{itemLabel}</td>
+                    </tr>
+                  )}
+                  {(purchase.combo_items || []).map((item) => (
+                    <tr key={item.id} className="border-b border-[var(--color-border)]">
+                      <td className="py-2 pl-3 text-[var(--color-text-muted)]">{item.plan_name}</td>
+                      <td className="py-2 text-right text-[var(--color-text)]">Rs. {item.price}</td>
+                    </tr>
+                  ))}
+                </>
+              ) : (
+                <tr className="border-b border-[var(--color-border)]">
+                  <td className="py-2 text-[var(--color-text)]">{itemLabel}</td>
+                  <td className="py-2 text-right text-[var(--color-text)]">Rs. {purchase.original_amount}</td>
+                </tr>
+              )}
               {Number(purchase.discount_amount) > 0 && (
                 <tr className="border-b border-[var(--color-border)]">
                   <td className="py-2 text-[var(--color-text-muted)]">

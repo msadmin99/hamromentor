@@ -7,6 +7,7 @@ import Header from "@/components/Header";
 import QuestionSolver from "@/components/QuestionSolver";
 import RequireAuth from "@/components/RequireAuth";
 import { api } from "@/lib/api";
+import { useCourse } from "@/lib/course-context";
 
 const DIFFICULTY_OPTIONS = [
   { key: "any", label: "Any" },
@@ -39,6 +40,7 @@ function toggleInArray(arr, value) {
 function PracticeContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { activeCourse } = useCourse();
   const autoStart = searchParams.get("auto") === "1";
 
   const [subjects, setSubjects] = useState([]);
@@ -62,8 +64,10 @@ function PracticeContent() {
   const [showForm, setShowForm] = useState(!autoStart);
 
   useEffect(() => {
-    api.get("/subjects/").then(setSubjects).catch(() => {});
-  }, []);
+    const params = new URLSearchParams();
+    if (activeCourse?.id) params.set("course", activeCourse.id);
+    api.get(`/subjects/${params.toString() ? `?${params.toString()}` : ""}`).then(setSubjects).catch(() => {});
+  }, [activeCourse?.id]);
 
   useEffect(() => {
     setChapter("");
@@ -73,7 +77,11 @@ function PracticeContent() {
       return;
     }
     const match = subjects.find((s) => String(s.id) === String(subject) || s.slug === subject);
-    if (match) api.get(`/subjects/${match.slug}/`).then(setSubjectDetail).catch(() => {});
+    if (match) {
+      const params = new URLSearchParams();
+      if (activeCourse?.id) params.set("course", activeCourse.id);
+      api.get(`/subjects/${match.slug}/${params.toString() ? `?${params.toString()}` : ""}`).then(setSubjectDetail).catch(() => {});
+    }
   }, [subject]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const selectedChapter = subjectDetail?.chapters?.find((c) => String(c.id) === String(chapter));
@@ -88,6 +96,7 @@ function PracticeContent() {
         difficulty,
         status: statuses,
       };
+      if (activeCourse?.id) payload.course = activeCourse.id;
       if (subject) payload.subject = subject;
       if (chapter) payload.chapter = chapter;
       if (topics.length) payload.topics = topics.map(Number);

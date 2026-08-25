@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import RichContent from "@/components/RichContent";
 import { SearchIcon } from "@/components/icons";
 import { api } from "@/lib/api";
+import { useCourse } from "@/lib/course-context";
 
 const TABS = [
   { key: "", label: "All" },
@@ -50,6 +51,7 @@ function QuestionResultCard({ q }) {
 }
 
 export default function QBankSearch() {
+  const { activeCourse } = useCourse();
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState("");
   const [results, setResults] = useState(null);
@@ -64,6 +66,11 @@ export default function QBankSearch() {
     const params = new URLSearchParams({ page_size: "20" });
     if (query.trim()) params.set("search", query.trim());
     if (tab) params.set("status", tab);
+    // The backend already enforces course-eligibility server-side regardless
+    // (see academics.views.QuestionViewSet.get_queryset) — this just narrows
+    // results to the student's active course instead of every course they
+    // happen to be eligible across.
+    if (activeCourse?.id) params.set("course", activeCourse.id);
     api
       .get(`/questions/browse/?${params.toString()}`)
       .then((data) => {

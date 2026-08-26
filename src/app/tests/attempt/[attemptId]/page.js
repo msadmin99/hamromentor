@@ -24,6 +24,14 @@ function AttemptContent() {
   const [remaining, setRemaining] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const submittedRef = useRef(false);
+  // Approximates "time on this question" as time since its page was shown —
+  // exact for the common questions_per_page=1 case, a coarser page-level
+  // figure when several questions share one page.
+  const pageShownAtRef = useRef(Date.now());
+
+  useEffect(() => {
+    pageShownAtRef.current = Date.now();
+  }, [page]);
 
   useEffect(() => {
     api.get(`/attempts/${attemptId}/`).then((data) => {
@@ -88,6 +96,7 @@ function AttemptContent() {
         question_id: question.id,
         option_id: optionId,
         mark_for_review: !!marked[question.id],
+        time_taken_seconds: Math.round((Date.now() - pageShownAtRef.current) / 1000),
       });
     } catch {
       // best-effort; final state reconciled at submit time isn't possible for unsent answers,

@@ -176,3 +176,12 @@ export function UserIcon({ active, ...props }) {
     </svg>
   );
 }
+
+export function FlagIcon(props) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+      <path d="M5 4v16" strokeLinecap="round" />
+      <path d="M5 4.5h11.5l-2.5 4 2.5 4H5" strokeLinejoin="round" />
+    </svg>
+  );
+}

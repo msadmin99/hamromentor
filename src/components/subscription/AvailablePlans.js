@@ -19,9 +19,28 @@ export default function AvailablePlans({ courseId, initialProduct, onBuy }) {
   const [plans, setPlans] = useState([]);
   const [discounts, setDiscounts] = useState({});
 
+  // A student with no active course (most commonly: brand new, never
+  // enrolled in anything yet) previously made this whole section do
+  // nothing at all — exactly the audience "Browse Plans" most needs to
+  // work for. Falls back to a course picker fetching the full catalog,
+  // same source /plans already uses, rather than requiring an active
+  // course just to look at what's available.
+  const [allCourses, setAllCourses] = useState([]);
+  const [pickedCourseId, setPickedCourseId] = useState("");
   useEffect(() => {
-    if (!courseId) return;
-    api.get(`/subscription-plans/?course=${courseId}&product_type=${tab}`).then((data) => {
+    if (courseId || allCourses.length) return;
+    api.get("/courses/").then((data) => {
+      setAllCourses(data);
+      if (data.length) setPickedCourseId(String(data[0].id));
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [courseId]);
+
+  const effectiveCourseId = courseId || pickedCourseId;
+
+  useEffect(() => {
+    if (!effectiveCourseId) return;
+    api.get(`/subscription-plans/?course=${effectiveCourseId}&product_type=${tab}`).then((data) => {
       setPlans(data);
       data.forEach((plan) => {
         api
@@ -34,7 +53,7 @@ export default function AvailablePlans({ courseId, initialProduct, onBuy }) {
           .catch(() => {});
       });
     });
-  }, [courseId, tab]);
+  }, [effectiveCourseId, tab]);
 
   return (
     <div className="hm-card p-4">
@@ -54,6 +73,18 @@ export default function AvailablePlans({ courseId, initialProduct, onBuy }) {
           ))}
         </div>
       </div>
+
+      {!courseId && allCourses.length > 0 && (
+        <select
+          value={pickedCourseId}
+          onChange={(e) => setPickedCourseId(e.target.value)}
+          className="hm-input mt-3 sm:max-w-xs"
+        >
+          {allCourses.map((c) => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
+      )}
 
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {plans.map((p) => {

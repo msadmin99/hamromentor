@@ -85,3 +85,22 @@ export function computePlatformStats(tests) {
     reviewed: tests.filter((t) => t.card_status === "completed").length,
   };
 }
+
+// Status-tab categorization for the Mock/Daily Test catalog redesign — a
+// real TestAttempt exists but isn't submitted yet ("in_progress", from
+// TestListSerializer.card_status) is its own bucket; everything else
+// that hasn't been completed (available/upcoming/missed) counts as "Not
+// Attempted" rather than restating each of those sub-states as a tab.
+export function statusBreakdown(tests) {
+  const completed = tests.filter((t) => t.card_status === "completed").length;
+  const inProgress = tests.filter((t) => t.card_status === "in_progress").length;
+  const notAttempted = tests.length - completed - inProgress;
+  return { all: tests.length, notAttempted, inProgress, completed };
+}
+
+export function matchesStatusTab(test, tab) {
+  if (tab === "not_attempted") return test.card_status !== "completed" && test.card_status !== "in_progress";
+  if (tab === "in_progress") return test.card_status === "in_progress";
+  if (tab === "completed") return test.card_status === "completed";
+  return true;
+}

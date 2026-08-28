@@ -7,9 +7,10 @@ import { useCourse } from "@/lib/course-context";
 
 const DIFFICULTY_LABEL = { easy: "Easy", medium: "Medium", hard: "Hard" };
 
-/** Featured Mock Test hero — real "most comprehensive" pick from
- * GET /tests/recommended/?exam_type=mock, with a real distinct-attempt
- * count instead of a fabricated "98% students attempted". */
+/** Featured Mock Test — real "most comprehensive" pick from
+ * GET /tests/recommended/?exam_type=mock. Restyled to a light, minimal
+ * card (border + subtle icon) matching the reference's premium/understated
+ * direction instead of a heavy dark gradient hero. */
 export default function MockRecommendedCard() {
   const { activeCourse } = useCourse();
   const [rec, setRec] = useState(undefined);
@@ -32,9 +33,9 @@ export default function MockRecommendedCard() {
   if (rec === undefined) {
     return (
       <div className="hm-card animate-pulse p-6">
-        <div className="h-3 w-32 rounded bg-white/20" />
-        <div className="mt-3 h-7 w-64 rounded bg-white/20" />
-        <div className="mt-6 h-10 w-40 rounded-xl bg-white/20" />
+        <div className="h-3 w-32 rounded bg-[var(--color-surface-muted)]" />
+        <div className="mt-3 h-7 w-64 rounded bg-[var(--color-surface-muted)]" />
+        <div className="mt-6 h-10 w-40 rounded-xl bg-[var(--color-surface-muted)]" />
       </div>
     );
   }
@@ -48,47 +49,36 @@ export default function MockRecommendedCard() {
     );
   }
 
-  const badges = [];
-  if (rec.attempted_count) badges.push(`${rec.attempted_count} student${rec.attempted_count === 1 ? "" : "s"} attempted`);
-  badges.push("High Yield");
-  badges.push("Balanced Coverage");
-
   return (
-    <div
-      className="relative overflow-hidden rounded-2xl p-6 text-white shadow-md"
-      style={{ background: "linear-gradient(135deg, var(--color-brand-blue-dark) 0%, var(--color-brand-blue) 100%)" }}
-    >
-      <span className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/5" aria-hidden="true" />
-      <p className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-white/70">
-        <span aria-hidden="true">🎯</span> Recommended For You
-      </p>
-      <h3 className="text-2xl font-extrabold">{test.title}</h3>
-      <p className="mt-1 max-w-md text-sm text-white/80">{test.description || "Most comprehensive test available for your course."}</p>
+    <div className="hm-card flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+      <div className="min-w-0">
+        <p className="mb-1.5 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-brand-blue">
+          <span aria-hidden="true">🎯</span> Real Exam Simulation
+        </p>
+        <h3 className="text-xl font-extrabold text-[var(--color-text)]">{test.title}</h3>
+        <p className="mt-1 max-w-md text-sm text-[var(--color-text-muted)]">
+          {test.description || "Full-length mock test covering your complete syllabus."}
+        </p>
 
-      <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
-        <span className="font-bold">
-          {test.question_count} <span className="font-normal text-white/70">Questions</span>
-        </span>
-        <span className="font-bold">
-          {test.duration_minutes} min <span className="font-normal text-white/70">Duration</span>
-        </span>
-        {test.difficulty && <span className="font-bold">{DIFFICULTY_LABEL[test.difficulty] || test.difficulty}</span>}
-      </div>
-
-      <div className="mt-3 flex flex-wrap gap-2">
-        {badges.map((b) => (
-          <span key={b} className="rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-semibold">
-            {b}
+        <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm">
+          <span className="font-semibold text-[var(--color-text)]">
+            {test.question_count} <span className="font-normal text-[var(--color-text-muted)]">Questions</span>
           </span>
-        ))}
+          <span className="font-semibold text-[var(--color-text)]">
+            {test.duration_minutes} <span className="font-normal text-[var(--color-text-muted)]">Minutes</span>
+          </span>
+          {test.difficulty && <span className="font-semibold text-[var(--color-text)]">{DIFFICULTY_LABEL[test.difficulty] || test.difficulty}</span>}
+          {rec.attempted_count > 0 && (
+            <span className="font-normal text-[var(--color-text-muted)]">{rec.attempted_count} students attempted</span>
+          )}
+        </div>
       </div>
 
       <Link
         href={`/tests/${test.id}`}
-        className="mt-5 inline-flex items-center gap-1.5 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-brand-blue-dark transition hover:brightness-95"
+        className="flex-none rounded-xl bg-brand-blue px-6 py-3 text-center text-sm font-bold text-white transition hover:brightness-110"
       >
-        Start Recommended Test
-        <span aria-hidden="true">→</span>
+        Start Test →
       </Link>
     </div>
   );

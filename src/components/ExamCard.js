@@ -8,6 +8,7 @@ const STATUS_META = {
   upcoming: { label: "Upcoming", icon: "🕒", className: "bg-amber-100 text-amber-700" },
   completed: { label: "Completed", icon: "✅", className: "bg-brand-blue/10 text-brand-blue-dark" },
   missed: { label: "Missed", icon: "🔔", className: "bg-brand-red-light text-brand-red" },
+  in_progress: { label: "In Progress", icon: "⏳", className: "bg-amber-100 text-amber-700" },
 };
 
 const DIFFICULTY_META = {
@@ -38,14 +39,17 @@ export default function ExamCard({ test }) {
   const attemptsLeft = Math.max(0, (test.max_attempts ?? 1) - (test.attempts_used ?? 0));
   const href = `/tests/${test.id}`;
 
-  let cta = "Start Now";
+  let cta = "Start Test";
   let ctaIcon = "🎯";
   if (locked) {
     cta = "Unlock Test";
     ctaIcon = "🔒";
   } else if (test.card_status === "completed") {
-    cta = "Review";
+    cta = "Review Test";
     ctaIcon = "📖";
+  } else if (test.card_status === "in_progress") {
+    cta = "Continue Test";
+    ctaIcon = "▶️";
   } else if (test.card_status === "missed") {
     cta = "View details";
     ctaIcon = "👀";
@@ -89,6 +93,20 @@ export default function ExamCard({ test }) {
         <span className="h-8 w-px flex-none bg-[var(--color-border)]" />
         <StatBlock icon="⏱️" value={test.duration_minutes} label="Minutes" />
       </div>
+
+      {test.card_status === "in_progress" && test.in_progress_answered_count != null && test.question_count > 0 && (
+        <div>
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--color-surface-muted)]">
+            <div
+              className="h-full rounded-full bg-amber-500"
+              style={{ width: `${Math.min(100, Math.round((test.in_progress_answered_count / test.question_count) * 100))}%` }}
+            />
+          </div>
+          <p className="mt-1 text-[11px] font-semibold text-amber-700">
+            {test.in_progress_answered_count} / {test.question_count} answered
+          </p>
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-1.5">
         <div className="flex flex-wrap items-center gap-1.5">

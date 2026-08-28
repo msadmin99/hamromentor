@@ -41,19 +41,27 @@ function PastYearQuestionsUniversityContent() {
       <div className="hm-page flex flex-col gap-4">
         <TestPageHero examType="pyq" />
 
-        <PlatformStats examType="pyq" typeLabel="Question Sets" stats={computePlatformStats(tests)} />
+        <PlatformStats examType="pyq" typeLabel="Question Sets" stats={computePlatformStats(tests)} loading={loading} />
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
           <div className="flex flex-col gap-4">
-            {loading && <p className="text-sm text-[var(--color-text-muted)]">Loading…</p>}
-            {!loading && tests.length === 0 && (
-              <p className="text-sm text-[var(--color-text-muted)]">No question sets found for {decodedUniversity}.</p>
+            {loading && (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="hm-card h-52 animate-pulse" />
+                ))}
+              </div>
             )}
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-              {tests.map((t) => (
-                <ExamCard key={t.id} test={t} />
-              ))}
-            </div>
+            {!loading && tests.length === 0 && (
+              <p className="hm-card p-4 text-center text-sm text-[var(--color-text-muted)]">No question sets found for {decodedUniversity}.</p>
+            )}
+            {!loading && tests.length > 0 && (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                {tests.map((t) => (
+                  <ExamCard key={t.id} test={t} />
+                ))}
+              </div>
+            )}
             <UpgradeBanner />
           </div>
           <TestPageSidebar examType="pyq" />

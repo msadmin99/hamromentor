@@ -7,9 +7,7 @@ import { themeForIndex } from "@/lib/theme";
 const INITIAL_COUNT = 5;
 
 function SubjectCard({ subject, theme }) {
-  const total = subject.module_count || 0;
-  const solved = subject.solved_modules || 0;
-  const pct = total > 0 ? Math.round((solved / total) * 100) : 0;
+  const pct = subject.percent_practiced ?? 0;
 
   return (
     <Link
@@ -31,13 +29,14 @@ function SubjectCard({ subject, theme }) {
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-bold uppercase tracking-wide text-[var(--color-text)]">{subject.name}</p>
         <p className="text-xs text-[var(--color-text-muted)]">
-          {solved}/{total} modules
+          {subject.question_count} question{subject.question_count === 1 ? "" : "s"} · {subject.module_count} chapter
+          {subject.module_count === 1 ? "" : "s"}
         </p>
         <div className="mt-1.5 flex items-center gap-2">
           <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--color-surface-muted)]">
             <div className={`h-full rounded-full ${theme.bar}`} style={{ width: `${pct}%` }} />
           </div>
-          <span className="flex-none text-[10px] font-semibold text-[var(--color-text-muted)]">{pct}%</span>
+          <span className="flex-none text-[10px] font-semibold text-[var(--color-text-muted)]">{pct}% practiced</span>
         </div>
       </div>
       <span className="flex-none text-[var(--color-text-muted)]" aria-hidden="true">
@@ -47,24 +46,20 @@ function SubjectCard({ subject, theme }) {
   );
 }
 
-function CustomModuleCard() {
+function SubjectCardSkeleton() {
   return (
-    <div className="hm-card relative flex items-center gap-3 overflow-hidden p-3.5 opacity-70">
-      <span className="flex h-11 w-11 flex-none items-center justify-center rounded-full bg-brand-blue/10 text-xl text-brand-blue" aria-hidden="true">
-        ➕
-      </span>
+    <div className="hm-card flex animate-pulse items-center gap-3 p-3.5">
+      <div className="h-11 w-11 flex-none rounded-full bg-[var(--color-surface-muted)]" />
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-bold text-[var(--color-text)]">Custom Module</p>
-        <p className="text-xs text-[var(--color-text-muted)]">Create your own MCQs</p>
+        <div className="h-3.5 w-24 rounded bg-[var(--color-surface-muted)]" />
+        <div className="mt-2 h-2.5 w-32 rounded bg-[var(--color-surface-muted)]" />
+        <div className="mt-2 h-1.5 w-full rounded-full bg-[var(--color-surface-muted)]" />
       </div>
-      <span className="flex-none rounded-md bg-[var(--color-surface-muted)] px-2 py-1 text-[9px] font-bold text-[var(--color-text-muted)]">
-        SOON
-      </span>
     </div>
   );
 }
 
-export default function SubjectGrid({ subjects }) {
+export default function SubjectGrid({ subjects, loading }) {
   const [expanded, setExpanded] = useState(false);
   const hasMore = subjects.length > INITIAL_COUNT;
   const visible = expanded ? subjects : subjects.slice(0, INITIAL_COUNT);
@@ -72,19 +67,26 @@ export default function SubjectGrid({ subjects }) {
   return (
     <section id="subjects">
       <div className="mb-2 flex items-center justify-between">
-        <p className="text-sm font-bold text-[var(--color-text)]">Your Subjects</p>
+        <div>
+          <p className="text-sm font-bold text-[var(--color-text)]">Browse by Subject</p>
+          <p className="text-xs text-[var(--color-text-muted)]">Choose a subject to practice by topic</p>
+        </div>
         {hasMore && (
-          <button type="button" onClick={() => setExpanded((e) => !e)} className="text-xs font-bold text-brand-blue">
-            {expanded ? "Show Less" : "View All"} ›
+          <button type="button" onClick={() => setExpanded((e) => !e)} className="flex-none text-xs font-bold text-brand-blue">
+            {expanded ? "Show Less" : "View all subjects"} ›
           </button>
         )}
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {visible.map((s, i) => (
-          <SubjectCard key={s.id} subject={s} theme={themeForIndex(i)} />
-        ))}
-        <CustomModuleCard />
+        {loading
+          ? Array.from({ length: 4 }).map((_, i) => <SubjectCardSkeleton key={i} />)
+          : visible.map((s, i) => <SubjectCard key={s.id} subject={s} theme={themeForIndex(i)} />)}
       </div>
+      {!loading && subjects.length === 0 && (
+        <p className="hm-card p-4 text-center text-sm text-[var(--color-text-muted)]">
+          No subjects available for this course yet.
+        </p>
+      )}
     </section>
   );
 }

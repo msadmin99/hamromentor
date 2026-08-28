@@ -9,6 +9,12 @@ import ReportQuestionButton from "./ReportQuestionModal";
 import RichContent from "./RichContent";
 import { api } from "@/lib/api";
 
+const CONFIDENCE_OPTIONS = [
+  { key: "guess", label: "Guess", icon: "😕" },
+  { key: "unsure", label: "Unsure", icon: "😐" },
+  { key: "confident", label: "Confident", icon: "🙂" },
+];
+
 export default function QuestionSolver({ questions, onFinish, finishLabel = "Finish", timeLimitMinutes }) {
   const [index, setIndex] = useState(0);
   const [result, setResult] = useState(null);
@@ -16,6 +22,7 @@ export default function QuestionSolver({ questions, onFinish, finishLabel = "Fin
   const [submitting, setSubmitting] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [bookmarking, setBookmarking] = useState(false);
+  const [confidence, setConfidence] = useState(null);
   const [secondsLeft, setSecondsLeft] = useState(timeLimitMinutes ? Math.round(timeLimitMinutes * 60) : null);
   const scrollRef = useRef(null);
   const questionShownAtRef = useRef(Date.now());
@@ -25,6 +32,7 @@ export default function QuestionSolver({ questions, onFinish, finishLabel = "Fin
 
   useEffect(() => {
     setBookmarked(!!question?.is_bookmarked);
+    setConfidence(null);
     questionShownAtRef.current = Date.now();
     scrollRef.current?.scrollTo({ top: 0 });
   }, [question?.id]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -56,6 +64,15 @@ export default function QuestionSolver({ questions, onFinish, finishLabel = "Fin
     }
   }
 
+  async function submitConfidence(value) {
+    setConfidence(value); // optimistic — this is a low-stakes, optional self-report
+    try {
+      await api.post(`/questions/${question.id}/confidence/`, { confidence: value });
+    } catch {
+      // non-critical; leave the optimistic selection as-is
+    }
+  }
+
   async function selectOption(option) {
     if (result) return;
     setSelectedId(option.id);
@@ -79,6 +96,7 @@ export default function QuestionSolver({ questions, onFinish, finishLabel = "Fin
     setIndex((i) => i + 1);
     setResult(null);
     setSelectedId(null);
+    setConfidence(null);
   }
 
   if (!question) return null;
@@ -153,13 +171,32 @@ export default function QuestionSolver({ questions, onFinish, finishLabel = "Fin
           <div className="mt-4 flex flex-col gap-4">
             <div>
               <p className={`mb-1 text-sm font-bold ${result.is_correct ? "text-brand-green" : "text-brand-red"}`}>
-                {result.is_correct ? "Correct!" : "Incorrect"}
+                {result.is_correct ? "✓ Correct Answer" : "✕ Incorrect"}
               </p>
               <PerformanceMessage statsAvailable={result.stats_available} correctPercent={result.students_correct_percent} />
             </div>
 
+            <div className="flex flex-wrap items-center gap-2.5 rounded-xl border border-[var(--color-border)] px-3.5 py-2.5">
+              <p className="flex-none text-xs font-semibold text-[var(--color-text-muted)]">How confident were you?</p>
+              <div className="flex flex-wrap gap-1.5">
+                {CONFIDENCE_OPTIONS.map((c) => (
+                  <button
+                    key={c.key}
+                    type="button"
+                    onClick={() => submitConfidence(c.key)}
+                    aria-pressed={confidence === c.key}
+                    className={`rounded-full border px-2.5 py-1 text-xs font-semibold transition ${
+                      confidence === c.key ? "border-brand-blue bg-brand-blue/10 text-brand-blue" : "border-[var(--color-border)] text-[var(--color-text-muted)]"
+                    }`}
+                  >
+                    <span aria-hidden="true">{c.icon}</span> {c.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="rounded-xl bg-[var(--color-surface-muted)] p-4">
-              <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">Explanation</p>
+              <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">Why?</p>
               <RichContent
                 html={result.explanation}
                 latex={result.explanation_latex}
@@ -187,24 +224,34 @@ export default function QuestionSolver({ questions, onFinish, finishLabel = "Fin
                 </div>
               )}
 
-              <ReferencesList references={result.references} className="mt-3" />
               <p className="mt-3 text-[11px] text-[var(--color-text-muted)]">MCQ ID: {question.public_id}</p>
             </div>
 
             {result.key_takeaway && (
               <div className="rounded-xl border border-brand-blue/20 bg-brand-blue/5 p-4">
-                <p className="mb-1 text-xs font-bold uppercase tracking-wide text-brand-blue">Key Takeaway</p>
+                <p className="mb-1 flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-brand-blue">
+                  <span aria-hidden="true">⭐</span> Exam Pearl
+                </p>
                 <p className="text-sm leading-relaxed text-[var(--color-text)]">{result.key_takeaway}</p>
               </div>
             )}
 
-            <ReferenceCard
-              bookName={result.reference_book_name}
-              edition={result.reference_edition}
-              chapter={result.reference_chapter}
-              page={result.reference_page}
-              url={result.reference_url}
-            />
+            {(result.reference_book_name || result.references?.length > 0) && (
+              <div className="rounded-xl border border-[var(--color-border)] p-4">
+                <p className="mb-2 flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
+                  <span aria-hidden="true">📚</span> Reference
+                </p>
+                <ReferenceCard
+                  bookName={result.reference_book_name}
+                  edition={result.reference_edition}
+                  chapter={result.reference_chapter}
+                  page={result.reference_page}
+                  url={result.reference_url}
+                  className="!border-0 !p-0"
+                />
+                <ReferencesList references={result.references} className={result.reference_book_name ? "mt-3" : ""} />
+              </div>
+            )}
           </div>
         )}
       </div>

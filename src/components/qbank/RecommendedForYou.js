@@ -26,13 +26,14 @@ export default function RecommendedForYou() {
   }, []);
 
   if (!data || data.suggestions?.length === 0) return null;
+  const topSuggestions = data.suggestions.slice(0, 3);
 
   return (
     <section className="hm-card p-4">
       <p className="text-sm font-bold text-[var(--color-text)]">Recommended for You</p>
       <p className="mb-3 text-xs text-[var(--color-text-muted)]">Based on your recent performance</p>
       <div className="flex flex-col gap-2">
-        {data.suggestions.map((s, i) => (
+        {topSuggestions.map((s, i) => (
           <Link
             key={i}
             href={hrefFor(s.practice_params)}

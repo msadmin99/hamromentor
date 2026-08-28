@@ -2,17 +2,15 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Drawer from "@/components/Drawer";
 import RequireAuth from "@/components/RequireAuth";
-import RichContent from "@/components/RichContent";
+import NotesPopover, { hasNote } from "@/components/testplayer/NotesPopover";
+import QuestionNavigatorPanel from "@/components/testplayer/QuestionNavigatorPanel";
+import QuestionWorkspace from "@/components/testplayer/QuestionWorkspace";
+import ReviewAnswersModal from "@/components/testplayer/ReviewAnswersModal";
+import TestPlayerHeader from "@/components/testplayer/TestPlayerHeader";
+import TestProgressPanel from "@/components/testplayer/TestProgressPanel";
 import { api } from "@/lib/api";
-
-function formatTime(totalSeconds) {
-  const s = Math.max(0, Math.floor(totalSeconds));
-  const h = String(Math.floor(s / 3600)).padStart(2, "0");
-  const m = String(Math.floor((s % 3600) / 60)).padStart(2, "0");
-  const sec = String(s % 60).padStart(2, "0");
-  return `${h}:${m}:${sec}`;
-}
 
 function AttemptContent() {
   const { attemptId } = useParams();
@@ -21,13 +19,19 @@ function AttemptContent() {
   const [page, setPage] = useState(0);
   const [answers, setAnswers] = useState({});
   const [marked, setMarked] = useState({});
+  const [bookmarked, setBookmarked] = useState({});
   const [remaining, setRemaining] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [navigatorOpen, setNavigatorOpen] = useState(false); // mobile drawer
+  const [navigatorCollapsed, setNavigatorCollapsed] = useState(false); // desktop rail
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [notesQuestionId, setNotesQuestionId] = useState(null);
+  const [noteVersion, setNoteVersion] = useState(0); // bumps to re-read localStorage note markers
   const submittedRef = useRef(false);
-  // Approximates "time on this question" as time since its page was shown —
-  // exact for the common questions_per_page=1 case, a coarser page-level
-  // figure when several questions share one page.
   const pageShownAtRef = useRef(Date.now());
+  const questionRefs = useRef(new Map());
+  const scrollTargetRef = useRef(null);
+  const expiresAtRef = useRef(null);
 
   useEffect(() => {
     pageShownAtRef.current = Date.now();
@@ -40,9 +44,26 @@ function AttemptContent() {
         return;
       }
       setAttempt(data);
-      const totalSeconds = data.duration_minutes * 60;
-      const elapsed = (Date.now() - new Date(data.start_time).getTime()) / 1000;
-      setRemaining(totalSeconds - elapsed);
+
+      // Restore progress instead of starting blank — the actual bug fix,
+      // not just the redesign.
+      const restoredAnswers = {};
+      const restoredMarked = {};
+      Object.entries(data.answers || {}).forEach(([qId, a]) => {
+        if (a.option_id != null) restoredAnswers[qId] = a.option_id;
+        if (a.is_marked_for_review) restoredMarked[qId] = true;
+      });
+      setAnswers(restoredAnswers);
+      setMarked(restoredMarked);
+      const restoredBookmarks = {};
+      (data.questions || []).forEach((q) => {
+        if (q.is_bookmarked) restoredBookmarks[q.id] = true;
+      });
+      setBookmarked(restoredBookmarks);
+
+      const expiresAt = new Date(data.start_time).getTime() + data.duration_minutes * 60 * 1000;
+      expiresAtRef.current = expiresAt;
+      setRemaining((expiresAt - Date.now()) / 1000);
     });
   }, [attemptId, router]);
 
@@ -59,35 +80,50 @@ function AttemptContent() {
     }
   }, [attemptId, router]);
 
+  // Countdown ticks locally, but resyncs against the server-derived expiry
+  // (start_time + duration_minutes) on every tick and whenever the tab
+  // regains focus — reduces visible drift from background-tab throttling
+  // without changing submission-acceptance behavior on the backend.
   useEffect(() => {
-    if (remaining == null) return;
+    if (remaining == null) return undefined;
     if (remaining <= 0) {
       submitTest();
-      return;
+      return undefined;
     }
     const timer = setInterval(() => {
-      setRemaining((r) => {
-        if (r <= 1) {
-          clearInterval(timer);
-          submitTest();
-          return 0;
-        }
-        return r - 1;
-      });
+      if (!expiresAtRef.current) return;
+      const next = (expiresAtRef.current - Date.now()) / 1000;
+      if (next <= 0) {
+        clearInterval(timer);
+        submitTest();
+        return;
+      }
+      setRemaining(next);
     }, 1000);
-    return () => clearInterval(timer);
+    function onVisible() {
+      if (document.visibilityState === "visible" && expiresAtRef.current) {
+        setRemaining((expiresAtRef.current - Date.now()) / 1000);
+      }
+    }
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [remaining != null]);
 
-  // How many questions render together on one page — admin-configured per
-  // test (Test.questions_per_page). Defaults to 1, which makes pageQuestions
-  // a single-element array and reproduces the original one-question-at-a-time
-  // behavior exactly, rather than needing a separate code path.
   const perPage = Math.max(1, attempt?.questions_per_page || 1);
   const totalPages = attempt ? Math.max(1, Math.ceil(attempt.questions.length / perPage)) : 1;
   const pageQuestions = attempt ? attempt.questions.slice(page * perPage, (page + 1) * perPage) : [];
-  const pageStart = page * perPage + 1;
-  const pageEnd = attempt ? Math.min((page + 1) * perPage, attempt.questions.length) : 0;
+  const pageStart = page * perPage;
+
+  useEffect(() => {
+    if (scrollTargetRef.current == null) return;
+    const el = questionRefs.current.get(scrollTargetRef.current);
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+    scrollTargetRef.current = null;
+  }, [page, pageQuestions]);
 
   async function selectOption(question, optionId) {
     setAnswers((a) => ({ ...a, [question.id]: optionId }));
@@ -99,16 +135,49 @@ function AttemptContent() {
         time_taken_seconds: Math.round((Date.now() - pageShownAtRef.current) / 1000),
       });
     } catch {
-      // best-effort; final state reconciled at submit time isn't possible for unsent answers,
-      // so we keep local state as the source of truth for the UI.
+      // best-effort; local state stays the UI's source of truth for unsent answers
     }
   }
 
-  function toggleMark(question) {
-    setMarked((m) => ({ ...m, [question.id]: !m[question.id] }));
+  async function toggleMark(question) {
+    const next = !marked[question.id];
+    setMarked((m) => ({ ...m, [question.id]: next }));
+    try {
+      await api.post(`/attempts/${attemptId}/mark-review/`, { question_id: question.id, marked: next });
+    } catch {
+      setMarked((m) => ({ ...m, [question.id]: !next }));
+    }
   }
 
+  async function toggleBookmark(question) {
+    const next = !bookmarked[question.id];
+    setBookmarked((b) => ({ ...b, [question.id]: next }));
+    try {
+      await api.post(`/questions/${question.id}/bookmark/`, { bookmark: next });
+    } catch {
+      setBookmarked((b) => ({ ...b, [question.id]: !next }));
+    }
+  }
+
+  const goToQuestion = useCallback(
+    (globalIndex) => {
+      const targetPage = Math.floor(globalIndex / perPage);
+      const targetQuestion = attempt?.questions[globalIndex];
+      scrollTargetRef.current = targetQuestion?.id ?? null;
+      if (targetPage === page) {
+        const el = targetQuestion && questionRefs.current.get(targetQuestion.id);
+        el?.scrollIntoView({ behavior: "smooth", block: "start" });
+        scrollTargetRef.current = null;
+      } else {
+        setPage(targetPage);
+      }
+      setNavigatorOpen(false);
+    },
+    [attempt, page, perPage],
+  );
+
   const answeredCount = useMemo(() => Object.keys(answers).length, [answers]);
+  const currentQuestion = pageQuestions[0];
 
   if (!attempt) {
     return <div className="p-6 text-sm text-[var(--color-text-muted)]">Loading test…</div>;
@@ -116,90 +185,77 @@ function AttemptContent() {
 
   return (
     <div className="hm-app-shell">
-      <header className="hm-header-gradient sticky top-0 z-20 text-white">
-        <div className="hm-page">
-          <div className="flex items-center justify-between gap-2 text-sm font-semibold">
-            <span className="min-w-0 truncate">{attempt.test_title}</span>
-            <span className="flex-none rounded-md bg-black/20 px-2 py-1 font-mono text-xs">{formatTime(remaining)}</span>
+      <TestPlayerHeader
+        title={attempt.test_title}
+        currentQuestionNumber={pageStart + 1}
+        totalQuestions={attempt.questions.length}
+        answeredCount={answeredCount}
+        remaining={remaining}
+        onOpenNavigator={() => setNavigatorOpen(true)}
+      />
+
+      <div className="hm-page grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto md:grid-cols-[auto_1fr_260px]">
+        <aside className={`hidden md:block ${navigatorCollapsed ? "w-12" : "w-64"} transition-all`}>
+          <div className="hm-card sticky top-20 p-3">
+            <button
+              type="button"
+              onClick={() => setNavigatorCollapsed((c) => !c)}
+              aria-label={navigatorCollapsed ? "Expand question navigator" : "Collapse question navigator"}
+              className="mb-2 flex w-full items-center justify-end text-[var(--color-text-muted)]"
+            >
+              {navigatorCollapsed ? "»" : "«"}
+            </button>
+            {!navigatorCollapsed && (
+              <QuestionNavigatorPanel
+                questions={attempt.questions}
+                answers={answers}
+                marked={marked}
+                currentQuestionId={currentQuestion?.id}
+                onJump={goToQuestion}
+                answeredCount={answeredCount}
+              />
+            )}
           </div>
-          <p className="mt-1 text-xs text-white/85">
-            {perPage === 1
-              ? `Question ${pageStart} of ${attempt.questions.length}`
-              : `Page ${page + 1} of ${totalPages} (Q${pageStart}–Q${pageEnd} of ${attempt.questions.length})`}{" "}
-            · {answeredCount} answered
-          </p>
-        </div>
-      </header>
+        </aside>
 
-      <div className="hm-page min-h-0 flex-1 overflow-y-auto">
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4">
           {pageQuestions.map((q, qi) => {
-            const globalIndex = page * perPage + qi;
+            const globalIndex = pageStart + qi;
             return (
-              <div key={q.id} className={pageQuestions.length > 1 ? "hm-card p-4" : ""}>
-                {pageQuestions.length > 1 && (
-                  <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
-                    Q{globalIndex + 1}
-                  </p>
-                )}
-                <div className="text-[15px] font-medium leading-relaxed text-[var(--color-text)]">
-                  <RichContent html={q.text} latex={q.latex} image={q.image} imageData={q.image_data} priority={qi === 0} />
-                </div>
-                <div className="mt-4 flex flex-col gap-2.5">
-                  {q.options.map((opt, i) => {
-                    const selected = answers[q.id] === opt.id;
-                    return (
-                      <button
-                        key={opt.id}
-                        onClick={() => selectOption(q, opt.id)}
-                        className={`rounded-xl border px-4 py-3 text-left text-sm ${
-                          selected ? "border-brand-blue bg-brand-blue/10" : "border-[var(--color-border)]"
-                        }`}
-                      >
-                        <div className="flex gap-1.5 text-[var(--color-text)]">
-                          <span className="flex-none font-semibold">{String.fromCharCode(65 + i)})</span>
-                          <RichContent html={opt.text} latex={opt.latex} image={opt.image} imageData={opt.image_data} className="min-w-0 flex-1" />
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <button
-                  onClick={() => toggleMark(q)}
-                  className={`mt-4 rounded-lg border px-3 py-2 text-xs font-semibold ${
-                    marked[q.id] ? "border-yellow-400 bg-yellow-50 text-yellow-700" : "border-[var(--color-border)] text-[var(--color-text-muted)]"
-                  }`}
-                >
-                  {marked[q.id] ? "★ Marked for review" : "☆ Mark for review"}
-                </button>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="mt-5 grid grid-cols-6 gap-2 sm:grid-cols-10">
-          {attempt.questions.map((q, i) => {
-            const state = answers[q.id] ? "answered" : marked[q.id] ? "marked" : "unanswered";
-            const stateClasses = {
-              answered: "bg-brand-blue text-white",
-              marked: "bg-yellow-400 text-white",
-              unanswered: "bg-[var(--color-surface-muted)] text-[var(--color-text-muted)] border border-[var(--color-border)]",
-            }[state];
-            const questionPage = Math.floor(i / perPage);
-            return (
-              <button
+              <QuestionWorkspace
                 key={q.id}
-                onClick={() => setPage(questionPage)}
-                className={`aspect-square rounded-md text-xs font-semibold ${stateClasses} ${
-                  questionPage === page ? "ring-2 ring-brand-blue ring-offset-1" : ""
-                }`}
-              >
-                {i + 1}
-              </button>
+                workspaceRef={(el) => {
+                  if (el) questionRefs.current.set(q.id, el);
+                }}
+                question={q}
+                questionNumber={globalIndex + 1}
+                standalone={pageQuestions.length === 1}
+                selectedOptionId={answers[q.id]}
+                onSelectOption={(optionId) => selectOption(q, optionId)}
+                marked={!!marked[q.id]}
+                onToggleMark={() => toggleMark(q)}
+                bookmarked={!!bookmarked[q.id]}
+                onToggleBookmark={() => toggleBookmark(q)}
+                onOpenNotes={() => setNotesQuestionId(q.id)}
+                noteSaved={noteVersion >= 0 && hasNote(attemptId, q.id)}
+                priority={qi === 0}
+              />
             );
           })}
+
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-xs text-amber-800 sm:flex sm:items-center sm:justify-between">
+            <p>
+              <span aria-hidden="true">💡</span> You are in Test Mode — you will see results and explanations after you submit the test.
+            </p>
+            <button type="button" onClick={() => setReviewOpen(true)} className="mt-2 flex-none text-xs font-bold text-brand-red underline sm:mt-0">
+              End Test
+            </button>
+          </div>
         </div>
+
+        <aside className="hidden md:block">
+          <TestProgressPanel answeredCount={answeredCount} totalQuestions={attempt.questions.length} remaining={remaining} currentQuestion={currentQuestion} />
+        </aside>
       </div>
 
       <div className="border-t border-[var(--color-border)] bg-white">
@@ -207,28 +263,64 @@ function AttemptContent() {
           <button
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={page === 0}
-            className="flex-1 rounded-xl border border-[var(--color-border)] py-3 text-sm font-semibold disabled:opacity-40"
+            className="flex-1 rounded-xl border border-[var(--color-border)] py-3 text-sm font-semibold disabled:opacity-40 sm:flex-none sm:px-8"
           >
-            Previous
+            ← Previous
+          </button>
+          <button
+            type="button"
+            onClick={() => setReviewOpen(true)}
+            className="hidden flex-none items-center gap-1.5 rounded-xl border border-[var(--color-border)] px-4 py-3 text-sm font-semibold text-[var(--color-text)] sm:flex"
+          >
+            <span aria-hidden="true">✓</span> {answeredCount} answered
           </button>
           {page < totalPages - 1 ? (
-            <button
-              onClick={() => setPage((p) => p + 1)}
-              className="flex-1 rounded-xl bg-brand-blue py-3 text-sm font-bold text-white"
-            >
-              Next
+            <button onClick={() => setPage((p) => p + 1)} className="flex-1 rounded-xl bg-brand-blue py-3 text-sm font-bold text-white sm:flex-none sm:px-8">
+              Next →
             </button>
           ) : (
             <button
-              onClick={submitTest}
-              disabled={submitting}
-              className="flex-1 rounded-xl bg-brand-red py-3 text-sm font-bold text-white disabled:opacity-60"
+              onClick={() => setReviewOpen(true)}
+              className="flex-1 rounded-xl bg-brand-blue py-3 text-sm font-bold text-white sm:flex-none sm:px-8"
             >
-              {submitting ? "Submitting…" : "Submit test"}
+              Review & Submit →
             </button>
           )}
         </div>
       </div>
+
+      <Drawer open={navigatorOpen} onClose={() => setNavigatorOpen(false)} title={`Questions · ${answeredCount} / ${attempt.questions.length}`}>
+        <QuestionNavigatorPanel
+          questions={attempt.questions}
+          answers={answers}
+          marked={marked}
+          currentQuestionId={currentQuestion?.id}
+          onJump={goToQuestion}
+          answeredCount={answeredCount}
+          compact
+        />
+      </Drawer>
+
+      <ReviewAnswersModal
+        open={reviewOpen}
+        onClose={() => setReviewOpen(false)}
+        questions={attempt.questions}
+        answers={answers}
+        marked={marked}
+        onJump={goToQuestion}
+        onConfirmSubmit={submitTest}
+        submitting={submitting}
+      />
+
+      <NotesPopover
+        attemptId={attemptId}
+        questionId={notesQuestionId}
+        open={notesQuestionId != null}
+        onClose={() => {
+          setNotesQuestionId(null);
+          setNoteVersion((v) => v + 1);
+        }}
+      />
     </div>
   );
 }

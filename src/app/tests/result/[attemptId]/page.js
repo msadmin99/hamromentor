@@ -13,66 +13,43 @@ import RequireAuth from "@/components/RequireAuth";
 import RichContent from "@/components/RichContent";
 import { api } from "@/lib/api";
 
-function ChevronDownIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-      <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
+const FILTER_TABS = [
+  { key: "all", label: "All" },
+  { key: "correct", label: "Correct" },
+  { key: "wrong", label: "Wrong" },
+];
 
-function AnswersPanel({ counts, filter, onClose, onApply }) {
-  const [draft, setDraft] = useState(filter);
-  const OPTIONS = [
-    { key: "all", label: "All", count: counts.all },
-    { key: "correct", label: "Correct", count: counts.correct },
-    { key: "wrong", label: "Wrong", count: counts.wrong },
-  ];
-
+/** Visible All/Correct/Wrong tabs, same pill style as testpage/StatusTabs —
+ * replaces the old header dropdown (an extra click to see the same three
+ * options wasn't worth it once the answer-review is the main reason a
+ * student lands on this page). */
+function AnswerFilterTabs({ filter, counts, onChange }) {
   return (
-    <>
-      <div className="fixed inset-0 z-40" onClick={onClose} />
-      <div className="absolute right-4 top-full z-50 mt-2 w-64 overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white shadow-2xl">
-        <p className="border-b border-[var(--color-border)] px-4 py-3 text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
-          Answers
-        </p>
-        <div className="flex flex-col py-1">
-          {OPTIONS.map((opt) => (
-            <label key={opt.key} className="flex cursor-pointer items-center justify-between px-4 py-2.5 text-sm">
-              <span className="flex items-center gap-2.5">
-                <span
-                  className={`flex h-4 w-4 flex-none items-center justify-center rounded-full border-2 ${
-                    draft === opt.key ? "border-brand-blue" : "border-[var(--color-border)]"
-                  }`}
-                >
-                  {draft === opt.key && <span className="h-2 w-2 rounded-full bg-brand-blue" />}
-                </span>
-                <span className="text-[var(--color-text)]">{opt.label}</span>
-              </span>
-              <span className="text-[var(--color-text-muted)]">({opt.count})</span>
-              <input type="radio" name="answers-filter" className="hidden" checked={draft === opt.key} onChange={() => setDraft(opt.key)} />
-            </label>
-          ))}
-        </div>
-        <div className="border-t border-[var(--color-border)] p-3">
+    <div className="hm-page-narrow flex flex-wrap gap-1.5" role="tablist" aria-label="Filter by answer">
+      {FILTER_TABS.map((t) => {
+        const active = filter === t.key;
+        return (
           <button
-            onClick={() => onApply(draft)}
-            className="w-full rounded-xl bg-brand-blue py-2.5 text-sm font-bold text-white"
+            key={t.key}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            onClick={() => onChange(t.key)}
+            className={`rounded-lg border border-[var(--color-border)] px-3.5 py-2 text-sm font-semibold transition ${
+              active ? "bg-brand-blue text-white" : "bg-white text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+            }`}
           >
-            APPLY
+            {t.label} <span className={active ? "text-white/80" : "text-[var(--color-text-muted)]"}>({counts[t.key]})</span>
           </button>
-        </div>
-      </div>
-    </>
+        );
+      })}
+    </div>
   );
 }
-
-const FILTER_LABEL = { all: "All", correct: "Correct", wrong: "Wrong" };
 
 function ResultContent() {
   const { attemptId } = useParams();
   const [filter, setFilter] = useState("all");
-  const [panelOpen, setPanelOpen] = useState(false);
   const [result, setResult] = useState(null);
 
   useEffect(() => {
@@ -95,32 +72,7 @@ function ResultContent() {
 
   return (
     <AppShell>
-      <div className="relative">
-        <Header
-          title="Review"
-          showBack
-          right={
-            <button
-              onClick={() => setPanelOpen((o) => !o)}
-              className="flex items-center gap-1.5 rounded-lg bg-white/15 px-3 py-1.5 text-xs font-bold text-white"
-            >
-              {FILTER_LABEL[filter]}
-              <ChevronDownIcon />
-            </button>
-          }
-        />
-        {panelOpen && result && (
-          <AnswersPanel
-            counts={counts}
-            filter={filter}
-            onClose={() => setPanelOpen(false)}
-            onApply={(next) => {
-              setFilter(next);
-              setPanelOpen(false);
-            }}
-          />
-        )}
-      </div>
+      <Header title="Review" showBack />
 
       {result && (
         <>
@@ -130,6 +82,8 @@ function ResultContent() {
             <Stat label="Percentile" value={result.percentile ?? "-"} />
             <Stat label="Accuracy" value={`${result.accuracy}%`} />
           </div>
+
+          <AnswerFilterTabs filter={filter} counts={counts} onChange={setFilter} />
 
           <div className="hm-page-narrow flex flex-col gap-3">
             {visibleQuestions.map((q, i) => (

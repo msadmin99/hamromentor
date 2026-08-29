@@ -16,7 +16,13 @@ const CONFIDENCE_OPTIONS = [
   { key: "confident", label: "Confident", icon: "🙂" },
 ];
 
-export default function QuestionSolver({ questions, onFinish, finishLabel = "Finish", timeLimitMinutes }) {
+export default function QuestionSolver({
+  questions,
+  onFinish,
+  finishLabel = "Finish",
+  timeLimitMinutes,
+  answerUrl = (questionId) => `/questions/${questionId}/answer/`,
+}) {
   const [index, setIndex] = useState(0);
   const [result, setResult] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
@@ -80,7 +86,7 @@ export default function QuestionSolver({ questions, onFinish, finishLabel = "Fin
     setSubmitting(true);
     try {
       const time_taken_seconds = Math.round((Date.now() - questionShownAtRef.current) / 1000);
-      const res = await api.post(`/questions/${question.id}/answer/`, { option_id: option.id, time_taken_seconds });
+      const res = await api.post(answerUrl(question.id), { option_id: option.id, time_taken_seconds });
       setResult(res);
     } catch {
       // ignore network hiccups in demo

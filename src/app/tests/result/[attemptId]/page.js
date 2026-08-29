@@ -11,6 +11,7 @@ import ReferencesList from "@/components/ReferencesList";
 import ReportQuestionButton from "@/components/ReportQuestionModal";
 import RequireAuth from "@/components/RequireAuth";
 import RichContent from "@/components/RichContent";
+import SmartPracticeCard from "@/components/smart-practice/SmartPracticeCard";
 import { api } from "@/lib/api";
 
 const FILTER_TABS = [
@@ -84,6 +85,8 @@ function ResultContent() {
           </div>
 
           <AnswerFilterTabs filter={filter} counts={counts} onChange={setFilter} />
+
+          <SmartPracticeCard sourceTestId={result.test} />
 
           <div className="hm-page-narrow flex flex-col gap-3">
             {visibleQuestions.map((q, i) => (

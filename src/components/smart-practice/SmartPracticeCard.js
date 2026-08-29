@@ -4,23 +4,29 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 
-const MODE_META = {
-  retry_mistakes: { icon: "🔄", label: "Retry Mistakes" },
-  source_weak_areas: { icon: "🎯", label: "Fix Weak Areas" },
-  concept_reinforcement: { icon: "🧠", label: "Strengthen Concepts" },
+const MODE_ICON = {
+  retry_mistakes: "🔄",
+  source_weak_areas: "🎯",
+  concept_reinforcement: "🧠",
+  due_review: "📅",
+  new_questions: "🆕",
+  bookmarked: "⭐",
+  ai_mixed: "🎲",
 };
 
-/** Source-scoped Smart Practice CTA — renders nothing until eligibility is
- * confirmed (never a loading flicker for a feature most attempts won't
- * qualify for), and nothing at all for Grand Test or too-few-mistakes
- * attempts. sourceTestId must be the real Test id the student was just
- * examined on; the backend re-derives exam_type/authorization from it
- * server-side regardless of anything sent here. */
+/** The "Intelligent QBank Engine" surface on a Daily/Mock/PYQ/Exam result
+ * page — an AI Recommendation card (the single best next step) plus the
+ * full Practice Paths grid, both built from real, source-scoped counts.
+ * Renders nothing until eligibility is confirmed and never for Grand Test
+ * (enforced server-side, this component just reflects that). sourceTestId
+ * must be the real Test id the student was just examined on — the backend
+ * re-derives exam_type/authorization from it regardless of anything sent
+ * here. */
 export default function SmartPracticeCard({ sourceTestId }) {
   const router = useRouter();
   const [eligibility, setEligibility] = useState(null);
   const [recommendations, setRecommendations] = useState(null);
-  const [starting, setStarting] = useState(false);
+  const [starting, setStarting] = useState(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -41,61 +47,81 @@ export default function SmartPracticeCard({ sourceTestId }) {
 
   async function start(mode) {
     if (starting) return;
-    setStarting(true);
+    setStarting(mode);
     setError("");
     try {
       const session = await api.post("/student/smart-practice/sessions/", { source_test_id: sourceTestId, mode });
       router.push(`/smart-practice/session/${session.id}`);
     } catch (err) {
       setError(err.message || "Couldn't start practice. Please try again.");
-      setStarting(false);
+      setStarting(null);
     }
   }
 
   if (!eligibility?.eligible || !recommendations?.modes?.length) return null;
 
-  const [primary, ...rest] = recommendations.modes;
-  const primaryMeta = MODE_META[primary.mode] || {};
+  const [primary, ...paths] = recommendations.modes;
 
   return (
     <div className="hm-page-narrow flex flex-col gap-3">
-      <p className="text-xs font-bold uppercase tracking-wide text-brand-blue">
-        🧠 Smart Practice · {recommendations.source.title}
-      </p>
+      <div>
+        <p className="text-sm font-bold text-[var(--color-text)]">🧠 Smart Practice</p>
+        <p className="text-xs text-[var(--color-text-muted)]">
+          Practice what matters most · Based on your performance in {recommendations.source.title}
+        </p>
+      </div>
 
       <div className="rounded-xl border border-brand-blue/20 bg-brand-blue/5 p-4">
-        <p className="text-sm font-bold text-[var(--color-text)]">
-          <span aria-hidden="true">{primaryMeta.icon}</span> {primaryMeta.label}
+        <p className="text-[10px] font-bold uppercase tracking-wide text-brand-blue">🎯 AI Recommendation</p>
+        <p className="mt-1 text-sm font-bold text-[var(--color-text)]">
+          <span aria-hidden="true">{MODE_ICON[primary.mode]}</span> {primary.label}
         </p>
         <p className="mt-1 text-xs leading-relaxed text-[var(--color-text-muted)]">{primary.message}</p>
         <button
           type="button"
           onClick={() => start(primary.mode)}
-          disabled={starting}
+          disabled={!!starting}
           className="mt-3 w-full rounded-xl bg-brand-blue py-2.5 text-sm font-bold text-white disabled:opacity-60"
         >
-          {starting ? "Starting…" : `Start Practice (${primary.question_count} question${primary.question_count !== 1 ? "s" : ""})`}
+          {starting === primary.mode
+            ? "Starting…"
+            : `Start Recommended Practice (${primary.question_count} question${primary.question_count !== 1 ? "s" : ""})`}
         </button>
       </div>
 
-      {rest.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {rest.map((m) => {
-            const meta = MODE_META[m.mode] || {};
-            return (
+      {paths.length > 0 && (
+        <div>
+          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">Practice Paths</p>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {paths.map((m) => (
               <button
                 key={m.mode}
                 type="button"
                 onClick={() => start(m.mode)}
-                disabled={starting}
-                className="flex-1 rounded-xl border border-[var(--color-border)] px-3 py-2.5 text-xs font-semibold text-[var(--color-text)] disabled:opacity-60"
+                disabled={!!starting}
+                className="hm-card flex items-center gap-2.5 p-3 text-left transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60"
               >
-                <span aria-hidden="true">{meta.icon}</span> {meta.label}
+                <span
+                  className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-[var(--color-surface-muted)] text-base"
+                  aria-hidden="true"
+                >
+                  {MODE_ICON[m.mode]}
+                </span>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold leading-tight text-[var(--color-text)]">{m.label}</p>
+                  <p className="text-[11px] text-[var(--color-text-muted)]">
+                    {starting === m.mode ? "Starting…" : `${m.question_count} question${m.question_count !== 1 ? "s" : ""}`}
+                  </p>
+                </div>
               </button>
-            );
-          })}
+            ))}
+          </div>
         </div>
       )}
+
+      <p className="text-[11px] text-[var(--color-text-muted)]">
+        Practicing from: <span className="font-semibold text-[var(--color-text)]">{recommendations.source.title}</span>
+      </p>
 
       {error && <p className="text-xs font-medium text-brand-red">{error}</p>}
     </div>

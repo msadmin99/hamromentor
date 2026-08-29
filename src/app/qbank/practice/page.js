@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
 import Header from "@/components/Header";
 import QuestionSolver from "@/components/QuestionSolver";
@@ -311,10 +311,27 @@ function PracticeContent() {
   );
 }
 
-export default function PracticePage() {
+function PracticePageInner() {
+  // PracticeContent reads subject/chapter/status/etc. into state only once,
+  // at mount — clicking between different Practice Path tiles (Fix Weak
+  // Areas, Master Mistakes, ...) is a same-route, different-querystring
+  // client-side navigation, which React does NOT remount for. Without this
+  // key, every tile after the first would silently keep the first tile's
+  // filters and "already started" state, making every tab look identical.
+  // Keying on the full querystring forces a fresh instance (fresh state,
+  // fresh auto-start) whenever the URL actually changes.
+  const searchParams = useSearchParams();
   return (
     <RequireAuth>
-      <PracticeContent />
+      <PracticeContent key={searchParams.toString()} />
     </RequireAuth>
+  );
+}
+
+export default function PracticePage() {
+  return (
+    <Suspense fallback={null}>
+      <PracticePageInner />
+    </Suspense>
   );
 }

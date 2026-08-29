@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { BookmarkIcon } from "./icons";
+import OptionResultBar from "./OptionResultBar";
 import PerformanceMessage from "./PerformanceMessage";
 import ReferenceCard from "./ReferenceCard";
 import ReferencesList from "./ReferencesList";
@@ -114,7 +115,6 @@ export default function QuestionSolver({ questions, onFinish, finishLabel = "Fin
                 ⏱ {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, "0")}
               </span>
             )}
-            <ReportQuestionButton questionId={question.id} />
             <button
               type="button"
               onClick={toggleBookmark}
@@ -145,24 +145,30 @@ export default function QuestionSolver({ questions, onFinish, finishLabel = "Fin
             else if (isWrongSelected) stateClasses = "border-brand-red bg-brand-red-light";
             else if (isSelected) stateClasses = "border-brand-blue";
 
-            return (
-              <button
-                key={opt.id}
-                onClick={() => selectOption(opt)}
-                disabled={!!result || submitting}
-                className={`flex items-center justify-between rounded-xl border px-4 py-3 text-left text-sm transition ${stateClasses}`}
-              >
-                <div className="flex min-w-0 flex-1 gap-1.5 text-[var(--color-text)]">
+            if (!result) {
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => selectOption(opt)}
+                  disabled={submitting}
+                  className={`flex items-center gap-1.5 rounded-xl border px-4 py-3 text-left text-sm transition ${stateClasses}`}
+                >
                   <span className="flex-none font-semibold">{String.fromCharCode(65 + i)})</span>
                   <RichContent html={opt.text} latex={opt.latex} image={opt.image} imageData={opt.image_data} className="min-w-0 flex-1" />
-                </div>
-                {result && (
-                  <span className={`flex-none text-xs font-bold ${isCorrectOption ? "text-brand-green" : isWrongSelected ? "text-brand-red" : "text-[var(--color-text-muted)]"}`}>
-                    {isCorrectOption ? "✓ " : isWrongSelected ? "✕ " : ""}
-                    {optResult?.pick_percentage != null ? `${optResult.pick_percentage}%` : ""}
-                  </span>
-                )}
-              </button>
+                </button>
+              );
+            }
+
+            return (
+              <div key={opt.id} className={`rounded-xl border px-4 py-3 text-sm transition ${stateClasses}`}>
+                <OptionResultBar
+                  letter={String.fromCharCode(65 + i)}
+                  option={opt}
+                  state={isCorrectOption ? "correct" : isWrongSelected ? "wrong-selected" : "neutral"}
+                  percentage={optResult?.pick_percentage}
+                  showStats={result.stats_available}
+                />
+              </div>
             );
           })}
         </div>
@@ -173,7 +179,11 @@ export default function QuestionSolver({ questions, onFinish, finishLabel = "Fin
               <p className={`mb-1 text-sm font-bold ${result.is_correct ? "text-brand-green" : "text-brand-red"}`}>
                 {result.is_correct ? "✓ Correct Answer" : "✕ Incorrect"}
               </p>
-              <PerformanceMessage statsAvailable={result.stats_available} correctPercent={result.students_correct_percent} />
+              <PerformanceMessage
+                statsAvailable={result.stats_available}
+                correctPercent={result.students_correct_percent}
+                totalResponses={result.total_responses}
+              />
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5 rounded-xl border border-[var(--color-border)] px-3.5 py-2.5">
@@ -226,6 +236,8 @@ export default function QuestionSolver({ questions, onFinish, finishLabel = "Fin
 
               <p className="mt-3 text-[11px] text-[var(--color-text-muted)]">MCQ ID: {question.public_id}</p>
             </div>
+
+            <ReportQuestionButton questionId={question.id} variant="link" />
 
             {result.key_takeaway && (
               <div className="rounded-xl border border-brand-blue/20 bg-brand-blue/5 p-4">

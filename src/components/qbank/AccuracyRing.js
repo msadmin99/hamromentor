@@ -3,12 +3,16 @@
 /** Shared SVG circular-progress ring — used by NextPracticeCard (per-topic
  * accuracy) and ProgressSummary (overall accuracy) so there's one
  * implementation, not two near-identical ones. */
-export default function AccuracyRing({ percent, label = "Accuracy", size = 112, stroke = 10 }) {
+export default function AccuracyRing({ percent, label = "Accuracy", size = 112, stroke = 10, showLabel = true }) {
   const pct = Math.max(0, Math.min(100, percent ?? 0));
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference * (1 - pct / 100);
   const tone = pct >= 70 ? "var(--color-brand-green, #16a34a)" : pct >= 40 ? "#d97706" : "var(--color-brand-red, #dc2626)";
+  // Below ~72px the default text-xl/[10px] pair no longer fits two lines —
+  // scale down to a single compact number for small callers (e.g. the
+  // per-question performance summary) instead of clipping.
+  const compact = size < 72;
 
   return (
     <div
@@ -35,8 +39,10 @@ export default function AccuracyRing({ percent, label = "Accuracy", size = 112, 
         )}
       </svg>
       <div className="absolute flex flex-col items-center">
-        <span className="text-xl font-extrabold text-[var(--color-text)]">{percent == null ? "—" : `${pct}%`}</span>
-        <span className="text-[10px] font-semibold text-[var(--color-text-muted)]">{label}</span>
+        <span className={`font-extrabold text-[var(--color-text)] ${compact ? "text-xs" : "text-xl"}`}>
+          {percent == null ? "—" : `${pct}%`}
+        </span>
+        {showLabel && !compact && <span className="text-[10px] font-semibold text-[var(--color-text-muted)]">{label}</span>}
       </div>
     </div>
   );

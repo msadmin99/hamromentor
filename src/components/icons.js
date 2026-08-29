@@ -185,3 +185,13 @@ export function FlagIcon(props) {
     </svg>
   );
 }
+
+export function WarningTriangleIcon(props) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+      <path d="M12 4.5l9 15.5H3l9-15.5z" strokeLinejoin="round" strokeLinecap="round" />
+      <path d="M12 10v4.5" strokeLinecap="round" />
+      <circle cx="12" cy="17.2" r="0.9" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}

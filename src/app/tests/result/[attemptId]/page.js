@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
 import Header from "@/components/Header";
+import OptionResultBar from "@/components/OptionResultBar";
 import PerformanceMessage from "@/components/PerformanceMessage";
 import ReferenceCard from "@/components/ReferenceCard";
 import ReferencesList from "@/components/ReferencesList";
@@ -139,7 +140,6 @@ function ResultContent() {
                     <RichContent html={q.text} latex={q.latex} image={q.image} imageData={q.image_data} />
                   </div>
                   <div className="flex flex-none items-center gap-2">
-                    <ReportQuestionButton questionId={q.id} />
                     <span
                       className={`flex-none rounded-md px-2 py-0.5 text-[10px] font-bold ${
                         q.is_correct ? "bg-brand-green-light text-brand-green" : "bg-brand-red-light text-brand-red"
@@ -150,27 +150,29 @@ function ResultContent() {
                   </div>
                 </div>
                 <div className="mt-3 flex flex-col gap-2">
-                  {q.options.map((opt) => {
+                  {q.options.map((opt, oi) => {
                     const isSelected = q.selected_option_id === opt.id;
+                    const state = opt.is_correct ? "correct" : isSelected ? "wrong-selected" : "neutral";
                     let classes = "border-[var(--color-border)]";
                     if (opt.is_correct) classes = "border-brand-green bg-brand-green-light";
-                    else if (isSelected && !opt.is_correct) classes = "border-brand-red bg-brand-red-light";
+                    else if (isSelected) classes = "border-brand-red bg-brand-red-light";
                     return (
-                      <div key={opt.id} className={`flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-xs ${classes}`}>
-                        <div className="min-w-0 flex-1">
-                          {isSelected && <span className="mb-1 block font-semibold">(your answer)</span>}
-                          <RichContent html={opt.text} latex={opt.latex} image={opt.image} imageData={opt.image_data} />
-                        </div>
-                        {q.stats_available && (
-                          <span className="flex-none font-bold">{opt.pick_percentage}%</span>
-                        )}
+                      <div key={opt.id} className={`rounded-lg border px-3 py-2 text-xs ${classes}`}>
+                        {isSelected && <span className="mb-1 block font-semibold text-[var(--color-text)]">(your answer)</span>}
+                        <OptionResultBar
+                          letter={String.fromCharCode(65 + oi)}
+                          option={opt}
+                          state={state}
+                          percentage={opt.pick_percentage}
+                          showStats={q.stats_available}
+                        />
                       </div>
                     );
                   })}
                 </div>
 
                 <div className="mt-3">
-                  <PerformanceMessage statsAvailable={q.stats_available} correctPercent={q.students_correct_percent} />
+                  <PerformanceMessage statsAvailable={q.stats_available} correctPercent={q.students_correct_percent} totalResponses={q.total_responses} />
                 </div>
 
                 <RichContent
@@ -215,6 +217,10 @@ function ResultContent() {
                   url={q.reference_url}
                   className="mt-3"
                 />
+
+                <div className="mt-3 border-t border-[var(--color-border)] pt-3">
+                  <ReportQuestionButton questionId={q.id} variant="link" />
+                </div>
               </div>
             ))}
             {visibleQuestions.length === 0 && (

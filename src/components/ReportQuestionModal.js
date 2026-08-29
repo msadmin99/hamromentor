@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { api } from "@/lib/api";
-import { FlagIcon } from "./icons";
+import { FlagIcon, WarningTriangleIcon } from "./icons";
 
 const REASONS = [
   { key: "incorrect_answer", label: "Incorrect answer" },
@@ -95,8 +95,28 @@ function ReportQuestionModal({ questionId, onClose }) {
   );
 }
 
-export default function ReportQuestionButton({ questionId, className = "" }) {
+/** variant="icon" (default): compact flag icon for header rows.
+ * variant="link": text-labeled "Report error" link matching the img6
+ * reference's bottom-of-card placement — same submit logic either way. */
+export default function ReportQuestionButton({ questionId, className = "", variant = "icon" }) {
   const [open, setOpen] = useState(false);
+
+  if (variant === "link") {
+    return (
+      <>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className={`flex items-center gap-1.5 text-xs font-semibold text-brand-red ${className}`}
+        >
+          <WarningTriangleIcon />
+          Report error
+        </button>
+        {open && <ReportQuestionModal questionId={questionId} onClose={() => setOpen(false)} />}
+      </>
+    );
+  }
+
   return (
     <>
       <button

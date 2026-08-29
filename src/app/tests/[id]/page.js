@@ -100,6 +100,15 @@ function TestDetailContent() {
           </span>
         </div>
 
+        {test.best_score != null && test.latest_attempt_id && (
+          <Link
+            href={`/tests/result/${test.latest_attempt_id}`}
+            className="rounded-xl border border-brand-blue px-6 py-2.5 text-center text-sm font-bold text-brand-blue"
+          >
+            📖 View Result (Best score: {test.best_score})
+          </Link>
+        )}
+
         {test.best_score != null && (
           <Link
             href={`/tests/history?test=${test.id}`}

@@ -44,7 +44,7 @@ export default function PastTestRow({ test }) {
           </p>
         </div>
         <Link
-          href={`/tests/${test.id}`}
+          href={isMissed || !test.latest_attempt_id ? `/tests/${test.id}` : `/tests/result/${test.latest_attempt_id}`}
           className="flex-none rounded-lg border border-[var(--color-border)] px-3.5 py-2 text-xs font-bold text-[var(--color-text)]"
         >
           {isMissed ? "Attempt Now →" : "Review Test →"}

@@ -38,6 +38,10 @@ export default function ExamCard({ test }) {
   const locked = test.is_pro && test.card_status !== "completed";
   const attemptsLeft = Math.max(0, (test.max_attempts ?? 1) - (test.attempts_used ?? 0));
   const href = `/tests/${test.id}`;
+  // "Review Test" must land on the actual per-question result/percentage
+  // review, not the generic start-a-new-attempt detail page — falls back
+  // to the detail page only if latest_attempt_id is somehow missing.
+  const ctaHref = test.card_status === "completed" && test.latest_attempt_id ? `/tests/result/${test.latest_attempt_id}` : href;
 
   let cta = "Start Test";
   let ctaIcon = "🎯";
@@ -138,7 +142,7 @@ export default function ExamCard({ test }) {
       </div>
 
       <Link
-        href={href}
+        href={ctaHref}
         className="flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold text-white shadow-lg transition hover:brightness-95"
         style={{ background: "linear-gradient(120deg, var(--color-marketing-bar) 0%, var(--color-exam-card) 100%)" }}
       >

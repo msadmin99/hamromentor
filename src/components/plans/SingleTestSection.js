@@ -8,17 +8,15 @@ import { api } from "@/lib/api";
  * against one specific Test row, not a SubscriptionPlan at all, so it never
  * shares a card shape with the membership/bundle sections above. The actual
  * buy/start action is delegated entirely to the existing /tests/[id] page
- * (already handles has_access-based Buy vs Start Test) — this section is
- * just a real, browsable list pointing at it. */
-export default function SingleTestSection({ courseId, grandTestAccess }) {
+ * (already reads the server's `access` block for Buy vs Start Test) — this
+ * section is just a real, browsable list pointing at it. */
+export default function SingleTestSection({ courseId }) {
   const [tests, setTests] = useState([]);
 
   useEffect(() => {
     if (!courseId) return;
     api.get(`/tests/?exam_type=grand&course=${courseId}`).then(setTests);
   }, [courseId]);
-
-  const ownedTestIds = new Set((grandTestAccess || []).map((a) => a.test));
 
   return (
     <section>
@@ -32,7 +30,18 @@ export default function SingleTestSection({ courseId, grandTestAccess }) {
 
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {tests.map((t) => {
-          const owned = ownedTestIds.has(t.id) || !t.is_pro;
+          // Unified catalog/access remediation: this used to read
+          // `ownedTestIds.has(t.id) || !t.is_pro` — a client-supplied
+          // GrandTestAccess-only prop plus a price flag, so a student who
+          // held Grand Test access through a Subscription, Combo,
+          // Scholarship, or assignment (any source other than a direct
+          // GrandTestAccess purchase) saw "Buy Now" on a test they could
+          // already start — the exact "paid user sees a false lock" defect
+          // this remediation targets. `t.access` is the same server-derived
+          // projection (tests_app/card_access.py) ExamCard already reads
+          // elsewhere; every entitlement source is already resolved into
+          // it, so this list needs no source-specific prop of its own.
+          const owned = t.access?.can_start || t.access?.can_continue || t.access?.can_review;
           return (
             <Link
               key={t.id}

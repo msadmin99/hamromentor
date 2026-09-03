@@ -87,7 +87,7 @@ function PlansContent() {
               subscriptions={mySubscriptions?.subscriptions}
             />
 
-            <SingleTestSection courseId={courseId} grandTestAccess={mySubscriptions?.grand_test_access} />
+            <SingleTestSection courseId={courseId} />
 
             <MembershipSection
               productType="pyq"

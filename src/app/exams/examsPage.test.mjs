@@ -27,7 +27,7 @@ const pageCode = stripComments(pageSource);
 
 test("hero", async (t) => {
   await t.test("Exams heading exists", () => {
-    assert.match(pageSource, /Header title="Exams"/);
+    assert.match(pageSource, /<Header\s+title="Exams"/);
   });
 
   await t.test("a supporting subtitle exists", () => {
@@ -76,9 +76,11 @@ test("card visual sections (Step 2/7/45 architecture)", async (t) => {
 
   await t.test("cards render as a single stacked column, not a 2x2 tile grid", () => {
     // Step 13 explicitly supersedes the earlier compact 2x2 idea for this
-    // page: no sm:grid-cols-2 (or similar) on the cards' container.
-    assert.match(pageSource, /flex flex-col gap-4 sm:gap-5/);
+    // page: no sm:grid-cols-2 (or similar), and no `grid` display at all —
+    // a plain flex-col stack of full-width cards.
+    assert.match(pageSource, /flex w-full max-w-6xl flex-col/);
     assert.doesNotMatch(pageSource, /grid-cols-2/);
+    assert.doesNotMatch(pageSource, /className="[^"]*\bgrid\b/);
   });
 
   await t.test("the whole card is one real link — no clickable div, no nested link-in-button", () => {
@@ -88,7 +90,7 @@ test("card visual sections (Step 2/7/45 architecture)", async (t) => {
   });
 
   await t.test("left visual panel exists", () => {
-    assert.match(cardSource, /<Icon className="h-7 w-7" \/>/);
+    assert.match(cardSource, /<Icon className="h-\[clamp\(/);
     assert.match(cardSource, /panelLabel/);
   });
 
@@ -158,11 +160,61 @@ test("bottom navigation is untouched by this page (Step 23)", async (t) => {
 
 test("responsive / no-overflow safeguards (Step 29)", async (t) => {
   await t.test("card left panel is capped, not free-growing, to protect narrow-width layouts", () => {
-    assert.match(cardSource, /max-w-\[124px\]/);
+    assert.match(cardSource, /max-w-\[100px\]/);
   });
 
   await t.test("the wide two-column hero mission copy is a progressive enhancement (hidden below sm), not forced onto phones", () => {
     assert.match(pageSource, /hidden -translate-y-1\/2 items-center gap-3 sm:flex/);
+  });
+});
+
+test("single-viewport composition (Mobile Exams Hub Single-Viewport Update)", async (t) => {
+  await t.test("no carousel/pager/scroll-snap library or pattern anywhere in the new files", () => {
+    for (const src of [pageSource, cardSource]) {
+      assert.doesNotMatch(src, /carousel|swiper|pager|scroll-snap|snap-x|snap-y|snap-mandatory|IntersectionObserver/i);
+    }
+  });
+
+  await t.test("no hard overflow-hidden clip on the cards container — compression, not clipping, is how this fits", () => {
+    // Deliberate: a forced overflow:hidden here could silently hide Grand
+    // Test/PYQ if the height budget is ever slightly wrong on some real
+    // device, which this task's own rules forbid more strongly than the
+    // no-scroll goal permits. See the deployment report's root-cause
+    // section for the full reasoning.
+    assert.doesNotMatch(pageCode, /overflow-hidden|overflow-y-hidden/);
+  });
+
+  await t.test("no JS-measured viewport height — the fit is pure CSS (clamp/padding), not a resize listener", () => {
+    assert.doesNotMatch(pageCode, /window\.innerHeight|ResizeObserver|addEventListener\(.resize/);
+    assert.doesNotMatch(stripComments(cardSource), /window\.innerHeight|ResizeObserver|addEventListener\(.resize/);
+  });
+
+  await t.test("Header renders in its compact `dense` mode only on this page", () => {
+    assert.match(pageSource, /<Header\s+title="Exams"[\s\S]*?\bdense\b/);
+    // Every other Header caller in the app is untouched by the dense prop.
+    assert.doesNotMatch(headerSource, /dense = true/);
+  });
+
+  await t.test("card internals use clamp() so they compress at narrow widths instead of a single fixed size", () => {
+    const clampCount = (cardSource.match(/clamp\(/g) || []).length;
+    assert.ok(clampCount >= 4, `expected several clamp()-sized properties, found ${clampCount}`);
+  });
+
+  await t.test("chips and the arrow CTA share one row (not two), a real structural compression", () => {
+    // The chips list and the arrow are both direct children of one
+    // `justify-between` row, and the arrow is no longer on its own
+    // `mt-*` row of its own (the pre-compression layout).
+    // The chips list and the arrow sit close together in one row, not on
+    // two separate rows (the pre-compression layout had the arrow on its
+    // own `mt-*`-offset row, checked below).
+    assert.match(cardSource, /flex-wrap gap-x-1 gap-y-0\.5[\s\S]{0,1000}ChevronRightIcon/);
+    assert.doesNotMatch(cardSource, /mt-1 flex h-8 w-8/);
+  });
+
+  await t.test("no card is hidden or dropped at any breakpoint — same four categories, always", () => {
+    const matches = pageSource.match(/href: "\/(mock-test|daily-test|grand-test|past-year-questions)"/g) || [];
+    assert.equal(matches.length, 4);
+    assert.doesNotMatch(pageCode, /\bhidden\b[^)]*(mock-test|daily-test|grand-test|past-year-questions)/);
   });
 });
 

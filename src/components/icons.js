@@ -81,9 +81,9 @@ export function ArchiveIcon({ active, ...props }) {
   );
 }
 
-export function ChartIcon({ active }) {
+export function ChartIcon({ active, ...props }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
       <rect x="3.5" y="3.5" width="17" height="17" rx="2" fill={active ? "currentColor" : "none"} fillOpacity={active ? 0.08 : 0} />
       <path d="M7.5 15.5v-3M12 15.5v-6M16.5 15.5v-9" strokeLinecap="round" />
     </svg>

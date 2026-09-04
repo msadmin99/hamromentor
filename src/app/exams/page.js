@@ -110,15 +110,20 @@ const EXAM_CATEGORIES = [
 function ExamsContent() {
   return (
     <AppShell>
-      <Header title="Exams" subtitle="Choose an exam type and start your preparation" courseSwitcher={<CourseSwitcher variant="solid" />}>
+      <Header
+        title="Exams"
+        subtitle="Choose an exam type and start your preparation"
+        courseSwitcher={<CourseSwitcher variant="solid" />}
+        dense
+      >
         {/* Reference's "Your Success / Our Mission" + graduation-cap + "Learn
             Practice Succeed" mission copy — purely decorative brand
             identity, no data behind it. Shown from `sm` up: at real phone
             widths (<640px, the primary target — see Steps 4/29) there
             isn't room for it without either shrinking the functional title/
-            subtitle/course-selector or exceeding the ~190-230px hero-height
-            target, so it's a progressive enhancement rather than forced
-            onto the narrowest screens. */}
+            subtitle/course-selector or exceeding the single-viewport
+            budget below, so it's a progressive enhancement rather than
+            forced onto the narrowest screens. */}
         <div className="pointer-events-none absolute right-4 top-1/2 hidden -translate-y-1/2 items-center gap-3 sm:flex md:right-10 md:gap-5">
           <div className="text-right leading-tight">
             <p className="text-xs font-semibold text-white/70">Your Success</p>
@@ -137,7 +142,28 @@ function ExamsContent() {
         </div>
       </Header>
 
-      <div className="hm-page flex flex-col gap-4 sm:gap-5">
+      {/*
+        Single-Viewport Update: deliberately NOT the shared `.hm-page`
+        class here — that class is a plain (un-layered) CSS rule, which in
+        this Tailwind v4 setup beats utility classes regardless of source
+        order, so a `pt-2`/`pb-2` override on the div itself could not
+        reliably win against `.hm-page { padding: 1rem }`. Rebuilding the
+        same max-width/centering rules directly as utilities, with tighter
+        vertical padding and inter-card gap than any other page uses, is
+        the only way to actually shrink this page's own top/bottom
+        padding without touching `.hm-page` (which every other page also
+        uses, unchanged, at its normal padding).
+
+        This container intentionally has no overflow/height rule of its
+        own: the four cards below use natural, compressed sizing (via
+        ExamCategoryCard's own clamp()s) rather than being force-fit with
+        `overflow: hidden`, which risks silently clipping Grand Test or
+        Past Year Questions on some device if this budget is ever
+        slightly wrong — worse than the rare case of a few pixels of
+        scroll. See the deployment report for the full reasoning and the
+        concrete pixel budget behind these numbers.
+      */}
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-0.5 px-4 pb-1 pt-0.5 sm:gap-3 sm:px-10 sm:pb-6 sm:pt-3 xl:max-w-[82.5rem] 2xl:max-w-[100rem]">
         {EXAM_CATEGORIES.map((c) => (
           <ExamCategoryCard key={c.href} {...c} />
         ))}

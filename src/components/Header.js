@@ -2,13 +2,13 @@
 
 import { useRouter } from "next/navigation";
 
-export default function Header({ title, subtitle, showBack = false, right = null, courseSwitcher = null }) {
+export default function Header({ title, subtitle, showBack = false, right = null, courseSwitcher = null, children = null }) {
   const router = useRouter();
 
   return (
     <header className="hm-header-gradient sticky top-0 z-20 text-white shadow-sm">
       <div
-        className={`mx-auto w-full max-w-6xl px-4 pt-[calc(env(safe-area-inset-top)+1rem)] md:px-10 ${subtitle || courseSwitcher ? "pb-2" : "pb-5"}`}
+        className={`relative mx-auto w-full max-w-6xl px-4 pt-[calc(env(safe-area-inset-top)+1rem)] md:px-10 ${subtitle || courseSwitcher ? "pb-2" : "pb-5"}`}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
@@ -29,6 +29,11 @@ export default function Header({ title, subtitle, showBack = false, right = null
         </div>
         {subtitle && <p className="mt-2 pb-1 text-center text-xs font-medium text-white/85">{subtitle}</p>}
         {courseSwitcher && <div className="mt-2.5 pb-2">{courseSwitcher}</div>}
+        {/* Optional, additive decorative slot — absolutely positioned so it
+            never affects the layout above (no existing caller passes this,
+            so every other page renders identically to before). Used today
+            only by the Exams hub's hero mission copy. */}
+        {children}
       </div>
     </header>
   );

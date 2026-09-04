@@ -81,10 +81,13 @@ test("QBank route preservation", async (t) => {
 
 test("Tests hub contents", async (t) => {
   await t.test("the existing /exams hub lists all four exam types with real routes", () => {
-    assert.match(examsPageSource, /href: "\/mock-test", label: "Mock Test"/);
-    assert.match(examsPageSource, /href: "\/daily-test", label: "Daily Test"/);
-    assert.match(examsPageSource, /href: "\/grand-test", label: "Grand Test"/);
-    assert.match(examsPageSource, /href: "\/past-year-questions", label: "Past Year Questions"/);
+    // Field renamed label -> title in the Mobile Exams Hub Visual Redesign
+    // (each category is now a rich card, not a plain {href,label} row) —
+    // same four routes/names, just matched against the new field name.
+    assert.match(examsPageSource, /href: "\/mock-test",\s*\n\s*title: "Mock Test"/);
+    assert.match(examsPageSource, /href: "\/daily-test",\s*\n\s*title: "Daily Test"/);
+    assert.match(examsPageSource, /href: "\/grand-test",\s*\n\s*title: "Grand Test"/);
+    assert.match(examsPageSource, /href: "\/past-year-questions",\s*\n\s*title: "Past Year Questions"/);
   });
 
   await t.test("Tests tab's matchPrefixes cover the hub and all four exam types", () => {

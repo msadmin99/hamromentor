@@ -1,12 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDownIcon } from "./icons";
+import { BookOpenIcon, ChevronDownIcon } from "./icons";
 import { useCourse } from "@/lib/course-context";
 
-export default function CourseSwitcher() {
+// variant="solid": same component, same state/switching logic, same
+// dropdown/menu markup below — only the trigger button's surface changes,
+// to a solid white pill with a leading book icon (Exams hub hero). Every
+// other caller passes no variant and renders byte-for-byte as before.
+export default function CourseSwitcher({ variant = "translucent" }) {
   const { activeCourse, otherCourses, switchCourse, switching } = useCourse();
   const [open, setOpen] = useState(false);
+  const solid = variant === "solid";
 
   if (!activeCourse && otherCourses.length === 0) return null;
 
@@ -15,9 +20,14 @@ export default function CourseSwitcher() {
       <button
         onClick={() => setOpen((o) => !o)}
         disabled={switching}
-        className="flex max-w-full items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/25 disabled:opacity-60"
+        className={
+          solid
+            ? "flex max-w-full items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-[var(--color-text)] shadow-sm transition hover:bg-white/90 disabled:opacity-60"
+            : "flex max-w-full items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/25 disabled:opacity-60"
+        }
       >
-        <span className="flex-none text-white/70">Course:</span>
+        {solid && <BookOpenIcon className="flex-none text-[var(--color-marketing-bar)]" aria-hidden="true" />}
+        <span className={solid ? "flex-none text-[var(--color-text-muted)]" : "flex-none text-white/70"}>Course:</span>
         <span className="min-w-0 truncate">{switching ? "Switching…" : activeCourse?.name || "Select course"}</span>
         <ChevronDownIcon className={`flex-none transition-transform ${open ? "rotate-180" : ""}`} />
       </button>

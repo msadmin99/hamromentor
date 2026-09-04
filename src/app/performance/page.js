@@ -14,6 +14,7 @@ import Recommendations from "@/components/performance/Recommendations";
 import StrengthsWeaknesses from "@/components/performance/StrengthsWeaknesses";
 import SubjectTable from "@/components/performance/SubjectTable";
 import RequireAuth from "@/components/RequireAuth";
+import { ErrorCard } from "@/components/subscription/billingShared";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useCourse } from "@/lib/course-context";
@@ -53,6 +54,7 @@ function PerformanceContent() {
 
   const [period, setPeriod] = useState("30");
   const [overview, setOverview] = useState(null);
+  const [overviewError, setOverviewError] = useState(false);
   const [videoStats, setVideoStats] = useState(null);
   const [subscriptions, setSubscriptions] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -74,7 +76,11 @@ function PerformanceContent() {
     if (courseId) params.set("course", courseId);
     api
       .get(`/performance/overview/?${params.toString()}`)
-      .then(setOverview)
+      .then((data) => {
+        setOverview(data);
+        setOverviewError(false);
+      })
+      .catch(() => setOverviewError(true))
       .finally(() => setLoading(false));
   }, [period, courseId]);
 
@@ -86,10 +92,13 @@ function PerformanceContent() {
   }, []);
 
   useEffect(() => {
-    api.get("/attempts/mine/").then((attempts) => {
-      const latest = (attempts || []).find((a) => a.status === "submitted");
-      setRecentAttempt(latest || null);
-    });
+    api
+      .get("/attempts/mine/")
+      .then((attempts) => {
+        const latest = (attempts || []).find((a) => a.status === "submitted");
+        setRecentAttempt(latest || null);
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -168,7 +177,11 @@ function PerformanceContent() {
 
         {loading && <p className="text-sm text-[var(--color-text-muted)]">Loading your performance data…</p>}
 
-        {!loading && overview && (
+        {!loading && overviewError && (
+          <ErrorCard title="Unable to load your performance data." onRetry={loadOverview} />
+        )}
+
+        {!loading && !overviewError && overview && (
           <>
             <KpiCards kpis={overview.kpis} />
 

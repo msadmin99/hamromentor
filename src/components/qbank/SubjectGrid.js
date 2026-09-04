@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { LockIcon } from "@/components/icons";
 import { themeForIndex } from "@/lib/theme";
 
 const INITIAL_COUNT = 5;
@@ -16,8 +17,8 @@ function SubjectCard({ subject, theme }) {
     >
       <span className={`absolute -right-3 -top-3 h-12 w-12 rounded-full opacity-25 ${theme.corner}`} aria-hidden="true" />
       {!subject.has_access && (
-        <span className="absolute right-2 top-2 z-10 rounded-md bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-700">
-          🔒 PRO
+        <span className="absolute right-2 top-2 z-10 flex items-center gap-0.5 rounded-md bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-700">
+          <LockIcon /> PRO
         </span>
       )}
       <span

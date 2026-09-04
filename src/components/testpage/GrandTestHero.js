@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import CheckoutModal from "@/components/CheckoutModal";
+import { LockIcon } from "@/components/icons";
 import { api } from "@/lib/api";
 import { useCourse } from "@/lib/course-context";
 
@@ -100,7 +101,7 @@ export default function GrandTestHero({ onPurchased }) {
               onClick={() => setShowCheckout(true)}
               className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl bg-brand-blue-dark py-2.5 text-sm font-bold text-white"
             >
-              <span aria-hidden="true">🔒</span> Unlock & Buy Now
+              <LockIcon aria-hidden="true" /> Unlock & Buy Now
             </button>
             <p className="mt-2 text-center text-[10px] text-[var(--color-text-muted)]">Secure payment · Instant access</p>
           </>

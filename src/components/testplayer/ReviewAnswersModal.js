@@ -4,7 +4,7 @@ import Drawer from "@/components/Drawer";
 
 const STATE_META = {
   answered: { label: "Answered", className: "bg-brand-green-light text-brand-green" },
-  review: { label: "Marked for Review", className: "bg-amber-100 text-amber-700" },
+  review: { label: "Marked for Review", className: "bg-warning-soft text-amber-700" },
   unanswered: { label: "Unanswered", className: "bg-[var(--color-surface-muted)] text-[var(--color-text-muted)]" },
 };
 
@@ -50,7 +50,7 @@ export default function ReviewAnswersModal({ open, onClose, questions, answers, 
           {unansweredCount} unanswered
         </span>
         {reviewCount > 0 && (
-          <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-700">{reviewCount} marked for review</span>
+          <span className="rounded-full bg-warning-soft px-3 py-1 text-xs font-bold text-amber-700">{reviewCount} marked for review</span>
         )}
       </div>
       {unansweredCount > 0 && (

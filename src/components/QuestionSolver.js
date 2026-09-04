@@ -246,8 +246,8 @@ export default function QuestionSolver({
             <ReportQuestionButton questionId={question.id} variant="link" />
 
             {result.key_takeaway && (
-              <div className="rounded-xl border border-brand-blue/20 bg-brand-blue/5 p-4">
-                <p className="mb-1 flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-brand-blue">
+              <div className="rounded-xl border border-info/20 bg-info-soft p-4">
+                <p className="mb-1 flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-info">
                   <span aria-hidden="true">⭐</span> Exam Pearl
                 </p>
                 <p className="text-sm leading-relaxed text-[var(--color-text)]">{result.key_takeaway}</p>

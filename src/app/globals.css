@@ -45,6 +45,34 @@
   --color-marketing-accent: #50c2d9;
   --color-marketing-navy: #0f2830;
   --color-marketing-navy-light: #17323c;
+
+  /* Semantic status tokens (design-system Phase C) — warning/info added
+     here for the first time; success/danger already existed above as
+     --color-brand-green/-red and are deliberately not duplicated. Values
+     match what the app already renders in practice, so this is
+     normalization of scattered raw classes onto a token, not a new
+     palette: warning is Tailwind's stock amber-500/amber-100 (already
+     used ad hoc for "review"/"waiting" states — QuestionNavigatorPanel,
+     ExamCard's TONE_CLASS, the attempt page's Test Mode notice); info is
+     --color-brand-blue itself, since that's already this app's one
+     accent color and is already what "informational" notices use in
+     practice (tests/result's "solutions locked" banner, tests/[id]'s
+     access-denial card both use brand-blue at low opacity today). */
+  --color-warning: #f59e0b;
+  --color-warning-soft: #fef3c7;
+  --color-info: var(--color-brand-blue);
+  --color-info-soft: color-mix(in srgb, var(--color-brand-blue) 8%, white);
+
+  /* --color-primary/-dark/-light/-soft: aliases onto the existing brand
+     teal, not a second color system. --color-brand-blue already IS the
+     app's one primary accent (see the note at the top of this file: a
+     separate blue accent was retired in favor of this teal everywhere),
+     so these names exist only so component code can also spell it
+     "primary" without introducing a different color. */
+  --color-primary: var(--color-brand-blue);
+  --color-primary-dark: var(--color-brand-blue-dark);
+  --color-primary-light: var(--color-marketing-bar);
+  --color-primary-soft: color-mix(in srgb, var(--color-brand-blue) 10%, white);
 }
 
 @theme inline {
@@ -72,6 +100,14 @@
   --color-marketing-accent: var(--color-marketing-accent);
   --color-marketing-navy: var(--color-marketing-navy);
   --color-marketing-navy-light: var(--color-marketing-navy-light);
+  --color-warning: var(--color-warning);
+  --color-warning-soft: var(--color-warning-soft);
+  --color-info: var(--color-info);
+  --color-info-soft: var(--color-info-soft);
+  --color-primary: var(--color-primary);
+  --color-primary-dark: var(--color-primary-dark);
+  --color-primary-light: var(--color-primary-light);
+  --color-primary-soft: var(--color-primary-soft);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -330,4 +366,49 @@ body {
 
 .hm-navy-section {
   background: radial-gradient(circle at 15% 20%, var(--color-marketing-navy-light) 0%, var(--color-marketing-navy) 60%);
+}
+
+/* ---------------------------------------------------------------------------
+   Accessibility pass — global foundations.
+
+   Added after an audit found the student app had no global focus indicator
+   (only 4 focus-visible declarations across 157 files) and no
+   prefers-reduced-motion support at all. Both are applied here rather than
+   component-by-component so every existing control benefits without a
+   sweep through the whole app.
+   --------------------------------------------------------------------------- */
+
+/* A single visible focus ring for keyboard users, on top of whatever each
+   component already styles. :focus-visible (not :focus) so it appears for
+   keyboard/AT navigation but not on mouse click — the reason the design
+   never showed one is that a plain :focus outline looked wrong on click,
+   and the fix for that is :focus-visible, not removing the indicator.
+   The offset keeps it legible against the component's own border. */
+:focus-visible {
+  outline: 2px solid var(--color-brand-blue, #224c5a);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Nothing in the app removes outlines with `outline: none`, so this is
+   additive — no component loses an indicator it previously had. */
+
+@media (prefers-reduced-motion: reduce) {
+  /* Users who ask the OS for reduced motion get transitions and animations
+     collapsed to near-instant rather than removed: a 0s duration would
+     break transitionend/animationend handlers, whereas 0.01ms keeps them
+     firing. Scroll behaviour is reset because smooth scrolling is itself a
+     vestibular trigger.
+
+     Deliberately broad: the app's motion is decorative (hover transitions,
+     drawer slide-ins, progress-bar width tweens) and none of it conveys
+     information that would be lost. */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

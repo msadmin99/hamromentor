@@ -71,8 +71,8 @@ export default function SmartPracticeCard({ sourceTestId }) {
         </p>
       </div>
 
-      <div className="rounded-xl border border-brand-blue/20 bg-brand-blue/5 p-4">
-        <p className="text-[10px] font-bold uppercase tracking-wide text-brand-blue">🎯 AI Recommendation</p>
+      <div className="rounded-xl border border-info/20 bg-info-soft p-4">
+        <p className="text-[10px] font-bold uppercase tracking-wide text-info">🎯 AI Recommendation</p>
         <p className="mt-1 text-sm font-bold text-[var(--color-text)]">
           <span aria-hidden="true">{MODE_ICON[primary.mode]}</span> {primary.label}
         </p>

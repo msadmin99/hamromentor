@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { ErrorCard } from "@/components/subscription/billingShared";
 
 /** Grand Test is a SINGLE_TEST purchase — Purchase(kind='grand_test')
  * against one specific Test row, not a SubscriptionPlan at all, so it never
@@ -11,11 +12,24 @@ import { api } from "@/lib/api";
  * (already reads the server's `access` block for Buy vs Start Test) — this
  * section is just a real, browsable list pointing at it. */
 export default function SingleTestSection({ courseId }) {
-  const [tests, setTests] = useState([]);
+  const [tests, setTests] = useState(null); // null = loading
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
+  function load() {
     if (!courseId) return;
-    api.get(`/tests/?exam_type=grand&course=${courseId}`).then(setTests);
+    api
+      .get(`/tests/?exam_type=grand&course=${courseId}`)
+      .then((data) => {
+        setTests(data);
+        setError(false);
+      })
+      .catch(() => setError(true));
+  }
+  useEffect(() => {
+    // No synchronous reset before the fetch — see AvailablePlans.js's
+    // load() for why.
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId]);
 
   return (
@@ -28,6 +42,21 @@ export default function SingleTestSection({ courseId }) {
       </div>
       <p className="mt-1 text-sm text-[var(--color-text-muted)]">Experience a complete exam simulation.</p>
 
+      {error && (
+        <div className="mt-4">
+          <ErrorCard title="Unable to load Grand Tests." onRetry={load} />
+        </div>
+      )}
+
+      {!error && tests === null && (
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-32 animate-pulse rounded-2xl border border-[var(--color-border)] bg-white" />
+          ))}
+        </div>
+      )}
+
+      {!error && tests !== null && (
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {tests.map((t) => {
           // Unified catalog/access remediation: this used to read
@@ -78,6 +107,7 @@ export default function SingleTestSection({ courseId }) {
           </p>
         )}
       </div>
+      )}
     </section>
   );
 }

@@ -5,24 +5,34 @@ import { useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
 import Header from "@/components/Header";
 import RequireAuth from "@/components/RequireAuth";
+import { ErrorCard } from "@/components/subscription/billingShared";
 import { api } from "@/lib/api";
 
 function MyCoursesContent() {
   const [enrollments, setEnrollments] = useState(null);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
-    api.get("/course-enrollments/mine/").then((rows) => {
-      const now = Date.now();
-      setEnrollments(rows.filter((r) => !r.expires_at || new Date(r.expires_at).getTime() > now));
-    });
-  }, []);
+  // Phase E QA: previously had no .catch() — a failed request left the
+  // page on a bare "Loading…" forever.
+  function load() {
+    api
+      .get("/course-enrollments/mine/")
+      .then((rows) => {
+        const now = Date.now();
+        setEnrollments(rows.filter((r) => !r.expires_at || new Date(r.expires_at).getTime() > now));
+        setError(false);
+      })
+      .catch(() => setError(true));
+  }
+  useEffect(load, []);
 
   return (
     <AppShell>
       <Header title="My Courses" subtitle="Video lecture courses you've purchased" />
       <div className="hm-page flex flex-col gap-3">
-        {enrollments === null && <p className="text-sm text-[var(--color-text-muted)]">Loading…</p>}
-        {enrollments?.map((e) => (
+        {error && <ErrorCard title="Unable to load your courses." onRetry={load} />}
+        {!error && enrollments === null && <p className="text-sm text-[var(--color-text-muted)]">Loading…</p>}
+        {!error && enrollments?.map((e) => (
           <Link
             key={e.id}
             href={`/courses/${e.course}`}
@@ -37,7 +47,7 @@ function MyCoursesContent() {
             <span className="flex-none rounded-xl bg-brand-blue px-4 py-2 text-xs font-bold text-white">Continue →</span>
           </Link>
         ))}
-        {enrollments?.length === 0 && (
+        {!error && enrollments?.length === 0 && (
           <div className="hm-card p-8 text-center">
             <p className="text-sm text-[var(--color-text-muted)]">You haven&apos;t purchased any courses yet.</p>
             <Link href="/courses" className="mt-3 inline-block rounded-xl bg-brand-blue px-5 py-2.5 text-sm font-bold text-white">

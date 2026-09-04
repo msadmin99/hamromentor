@@ -5,6 +5,9 @@ import { useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
 import Header from "@/components/Header";
 import RequireAuth from "@/components/RequireAuth";
+import { PrintIcon } from "@/components/icons";
+import { ErrorCard } from "@/components/subscription/billingShared";
+import { statusMeta } from "@/components/subscription/statusMeta";
 import { api } from "@/lib/api";
 
 function formatDate(value) {
@@ -15,20 +18,33 @@ function formatDate(value) {
 function InvoiceContent() {
   const { purchaseId } = useParams();
   const [purchase, setPurchase] = useState(null);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
+  function load() {
+    // No synchronous reset before the fetch (state only changes inside
+    // .then()/.catch()) — keeps this reusable by both the mount effect and
+    // Retry without tripping react-hooks/set-state-in-effect. The initial
+    // `useState(null)` already covers the true first-mount loading state.
     api
       .get(`/purchases/${purchaseId}/`)
-      .then(setPurchase)
-      .catch((e) => setError(e.message));
+      .then((p) => {
+        setPurchase(p);
+        setError(false);
+      })
+      .catch(() => setError(true));
+  }
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [purchaseId]);
 
   if (error) {
     return (
       <AppShell showNav={false}>
         <Header title="Invoice" showBack />
-        <p className="hm-page-narrow text-sm text-brand-red">{error}</p>
+        <div className="hm-page-narrow">
+          <ErrorCard title="Unable to load this invoice." onRetry={load} />
+        </div>
       </AppShell>
     );
   }
@@ -37,7 +53,17 @@ function InvoiceContent() {
     return (
       <AppShell showNav={false}>
         <Header title="Invoice" showBack />
-        <p className="hm-page-narrow text-sm text-[var(--color-text-muted)]">Loading…</p>
+        <div className="hm-page-narrow">
+          <div className="hm-card animate-pulse p-6">
+            <div className="flex items-start justify-between border-b border-[var(--color-border)] pb-4">
+              <div className="h-5 w-32 rounded bg-[var(--color-surface-muted)]" />
+              <div className="h-5 w-24 rounded bg-[var(--color-surface-muted)]" />
+            </div>
+            <div className="mt-4 h-3 w-1/2 rounded bg-[var(--color-surface-muted)]" />
+            <div className="mt-2 h-3 w-1/3 rounded bg-[var(--color-surface-muted)]" />
+            <div className="mt-6 h-24 rounded bg-[var(--color-surface-muted)]" />
+          </div>
+        </div>
       </AppShell>
     );
   }
@@ -51,16 +77,32 @@ function InvoiceContent() {
           ? purchase.combo_plan_name || "Custom Combo"
           : purchase.plan_name;
 
+  const meta = statusMeta(purchase.status);
+
   return (
     <AppShell showNav={false}>
       <div className="print:hidden">
-        <Header title="Invoice" showBack right={<button onClick={() => window.print()} className="text-xs font-bold text-white">🖨 Print</button>} />
+        <Header
+          title="Invoice"
+          showBack
+          right={
+            <button type="button" onClick={() => window.print()} className="flex items-center gap-1 text-xs font-bold text-white">
+              <PrintIcon className="h-4 w-4" /> Print
+            </button>
+          }
+        />
       </div>
 
       <div className="hm-page-narrow print:mx-auto print:max-w-2xl">
-        {purchase.status !== "approved" && (
-          <p className="mb-4 rounded-lg bg-yellow-100 p-3 text-xs font-semibold text-yellow-800 print:hidden">
+        {purchase.status !== "approved" && purchase.status !== "refunded" && (
+          <p className="mb-4 rounded-lg bg-warning-soft p-3 text-xs font-semibold text-amber-800 print:hidden">
             This purchase is not yet approved — the invoice will finalize once payment is verified.
+          </p>
+        )}
+        {purchase.status === "refunded" && (
+          <p className="mb-4 rounded-lg bg-info-soft p-3 text-xs font-semibold text-info print:hidden">
+            This payment was refunded{purchase.refunded_at ? ` on ${formatDate(purchase.refunded_at)}` : ""}.
+            {purchase.refund_reason && ` ${purchase.refund_reason}`}
           </p>
         )}
 
@@ -84,17 +126,7 @@ function InvoiceContent() {
             </div>
             <div className="sm:text-right">
               <p className="font-semibold text-[var(--color-text-muted)]">Status</p>
-              <p
-                className={`mt-1 font-bold ${
-                  purchase.status === "approved"
-                    ? "text-brand-green"
-                    : purchase.status === "rejected"
-                      ? "text-brand-red"
-                      : "text-yellow-700"
-                }`}
-              >
-                {purchase.status.toUpperCase()}
-              </p>
+              <p className={`mt-1 font-bold ${meta.iconClassName}`}>{meta.label.toUpperCase()}</p>
               {purchase.decided_at && <p className="text-[var(--color-text-muted)]">{formatDate(purchase.decided_at)}</p>}
             </div>
           </div>
@@ -148,6 +180,10 @@ function InvoiceContent() {
 
           <div className="mt-6 grid grid-cols-1 gap-4 border-t border-[var(--color-border)] pt-4 text-xs sm:grid-cols-2">
             <div>
+              <p className="font-semibold text-[var(--color-text-muted)]">Payment method</p>
+              <p className="mt-1 text-[var(--color-text)]">{purchase.payment_method_detail?.name || "—"}</p>
+            </div>
+            <div className="sm:text-right">
               <p className="font-semibold text-[var(--color-text-muted)]">Payment reference</p>
               <p className="mt-1 text-[var(--color-text)]">{purchase.payment_reference || "—"}</p>
             </div>
@@ -160,9 +196,9 @@ function InvoiceContent() {
 
         <button
           onClick={() => window.print()}
-          className="mt-4 w-full rounded-xl bg-brand-blue py-2.5 text-sm font-bold text-white print:hidden"
+          className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl bg-brand-blue py-2.5 text-sm font-bold text-white print:hidden"
         >
-          🖨 Print / Save as PDF
+          <PrintIcon className="h-4 w-4" /> Print / Save as PDF
         </button>
       </div>
     </AppShell>

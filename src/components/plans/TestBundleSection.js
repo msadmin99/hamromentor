@@ -3,32 +3,44 @@
 import { useEffect, useMemo, useState } from "react";
 import CheckoutModal from "@/components/CheckoutModal";
 import { api } from "@/lib/api";
+import { ErrorCard } from "@/components/subscription/billingShared";
 
 /** Reused for Mock Test (usually several bundle sizes) and Daily Test
  * (usually one large bundle) — both are quota-based TEST_BUNDLE products
  * (SubscriptionPlan rows with mock_test_quota set), entitlement tracked as
  * Used/Remaining rather than a start/expiry date. Deliberately never shares
  * MembershipSection's card shape — a bundle is "N tests", not a duration. */
-export default function TestBundleSection({ productType, heading, subtitle, features, courseId, subscriptions }) {
-  const [plans, setPlans] = useState([]);
+export default function TestBundleSection({ productType, heading, subtitle, courseId, subscriptions }) {
+  const [plans, setPlans] = useState(null); // null = loading
+  const [error, setError] = useState(false);
   const [discounts, setDiscounts] = useState({});
   const [checkoutPlan, setCheckoutPlan] = useState(null);
 
-  useEffect(() => {
+  function load() {
     if (!courseId) return;
-    setDiscounts({});
-    api.get(`/subscription-plans/?course=${courseId}&product_type=${productType}`).then((data) => {
-      const bundlePlans = data.filter((p) => p.mock_test_quota != null).sort((a, b) => a.mock_test_quota - b.mock_test_quota);
-      setPlans(bundlePlans);
-      bundlePlans.forEach((plan) => {
-        api
-          .post("/coupons/apply/", { code: "", kind: "subscription", plan_id: plan.id })
-          .then((info) => {
-            if (info.discount_amount > 0) setDiscounts((d) => ({ ...d, [plan.id]: info }));
-          })
-          .catch(() => {});
-      });
-    });
+    api
+      .get(`/subscription-plans/?course=${courseId}&product_type=${productType}`)
+      .then((data) => {
+        const bundlePlans = data.filter((p) => p.mock_test_quota != null).sort((a, b) => a.mock_test_quota - b.mock_test_quota);
+        setPlans(bundlePlans);
+        setError(false);
+        bundlePlans.forEach((plan) => {
+          api
+            .post("/coupons/apply/", { code: "", kind: "subscription", plan_id: plan.id })
+            .then((info) => {
+              if (info.discount_amount > 0) setDiscounts((d) => ({ ...d, [plan.id]: info }));
+            })
+            .catch(() => {});
+        });
+      })
+      .catch(() => setError(true));
+  }
+  useEffect(() => {
+    // No synchronous reset before the fetch — see AvailablePlans.js's load()
+    // for why. productType is fixed per call site on /plans (never changes
+    // at runtime); only a course switch re-runs this.
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId, productType]);
 
   const activeBundles = useMemo(
@@ -37,7 +49,7 @@ export default function TestBundleSection({ productType, heading, subtitle, feat
   );
   const totalQuota = activeBundles.reduce((sum, s) => sum + s.mock_test_quota, 0);
   const totalUsed = activeBundles.reduce((sum, s) => sum + s.mock_test_used, 0);
-  const largestQuota = plans.length ? Math.max(...plans.map((p) => p.mock_test_quota)) : null;
+  const largestQuota = plans?.length ? Math.max(...plans.map((p) => p.mock_test_quota)) : null;
 
   return (
     <section>
@@ -62,6 +74,21 @@ export default function TestBundleSection({ productType, heading, subtitle, feat
         </div>
       )}
 
+      {error && (
+        <div className="mt-4">
+          <ErrorCard title={`Unable to load ${heading} bundles.`} onRetry={load} />
+        </div>
+      )}
+
+      {!error && plans === null && (
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-48 animate-pulse rounded-2xl border border-[var(--color-border)] bg-white" />
+          ))}
+        </div>
+      )}
+
+      {!error && plans !== null && (
       <div className={`mt-4 grid grid-cols-1 gap-4 ${plans.length > 1 ? "sm:grid-cols-3" : ""}`}>
         {plans.map((plan) => {
           const discount = discounts[plan.id];
@@ -90,7 +117,12 @@ export default function TestBundleSection({ productType, heading, subtitle, feat
               </div>
 
               <ul className="mt-4 flex flex-1 flex-col gap-1.5">
-                {(features || []).map((f) => (
+                {/* Phase 10: the plan's own admin-configured features
+                    (SubscriptionPlan.features, falling back server-side to a
+                    line derived from its real duration/quota). The four
+                    hardcoded arrays that used to live in plans/page.js could
+                    drift from what a plan actually granted. */}
+                {(plan.display_features || []).map((f) => (
                   <li key={f} className="flex items-start gap-1.5 text-xs text-[var(--color-text)]">
                     <span className="mt-0.5 flex-none font-bold text-brand-green" aria-hidden="true">✓</span>
                     {f}
@@ -114,6 +146,7 @@ export default function TestBundleSection({ productType, heading, subtitle, feat
           </p>
         )}
       </div>
+      )}
 
       {checkoutPlan && (
         <CheckoutModal kind="subscription" plan={checkoutPlan} onClose={() => setCheckoutPlan(null)} />

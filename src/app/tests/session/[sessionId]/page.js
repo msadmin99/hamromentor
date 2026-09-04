@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
 import Header from "@/components/Header";
 import RequireAuth from "@/components/RequireAuth";
+import { ErrorCard } from "@/components/subscription/billingShared";
 import { api } from "@/lib/api";
 
 const STATUS_LABELS = {
@@ -25,13 +26,22 @@ function SessionContent() {
   const { sessionId } = useParams();
   const router = useRouter();
   const [session, setSession] = useState(null);
+  const [loadError, setLoadError] = useState(false);
   const [password, setPassword] = useState("");
   const [needsPassword, setNeedsPassword] = useState(false);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState("");
 
+  // Previously had no .catch() — a failed request left the page on a bare
+  // "Loading…" forever.
   function load() {
-    api.get(`/exam-sessions/${sessionId}/`).then(setSession);
+    api
+      .get(`/exam-sessions/${sessionId}/`)
+      .then((data) => {
+        setSession(data);
+        setLoadError(false);
+      })
+      .catch(() => setLoadError(true));
   }
 
   useEffect(load, [sessionId]);
@@ -57,11 +67,32 @@ function SessionContent() {
     }
   }
 
+  if (loadError) {
+    return (
+      <AppShell>
+        <Header title="Exam Session" showBack />
+        <div className="hm-page-narrow py-6">
+          <ErrorCard title="Unable to load this session." onRetry={load} />
+        </div>
+      </AppShell>
+    );
+  }
+
   if (!session) {
     return (
       <AppShell>
         <Header title="Exam Session" showBack />
-        <p className="px-4 py-6 text-sm text-[var(--color-text-muted)]">Loading…</p>
+        <div className="hm-page-narrow flex flex-col gap-4 py-6">
+          <div className="hm-card animate-pulse p-5">
+            <div className="flex items-center justify-between">
+              <div className="h-4 w-40 rounded bg-[var(--color-surface-muted)]" />
+              <div className="h-4 w-16 rounded bg-[var(--color-surface-muted)]" />
+            </div>
+            <div className="mt-3 h-3 w-1/2 rounded bg-[var(--color-surface-muted)]" />
+            <div className="mt-4 h-16 w-full rounded-xl bg-[var(--color-surface-muted)]" />
+            <div className="mt-4 h-11 w-full rounded-xl bg-[var(--color-surface-muted)]" />
+          </div>
+        </div>
       </AppShell>
     );
   }

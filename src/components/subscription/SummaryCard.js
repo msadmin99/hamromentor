@@ -1,11 +1,6 @@
 "use client";
 
-const PRODUCT_LABELS = {
-  qbank: "📚 Question Bank",
-  daily_test: "📅 Daily Test",
-  mock_test: "🎁 Mock Test",
-  video: "🎥 Video Lectures",
-};
+import { productMeta } from "@/components/subscription/productIcons";
 
 function formatDate(value) {
   if (!value) return "No expiry";
@@ -32,13 +27,15 @@ export default function SummaryCard({ subscription, onToggleAutoRenew, togglingI
   const s = subscription;
   const remaining = daysRemaining(s.expires_at);
   const pct = validityPercent(s.starts_at, s.expires_at);
+  const { label: productLabel, Icon: ProductIcon } = productMeta(s.product_type);
 
   return (
     <div className="hm-card p-5">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <p className="text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
-            {PRODUCT_LABELS[s.product_type] || s.product_type}
+          <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
+            {ProductIcon && <ProductIcon className="h-3.5 w-3.5" />}
+            {productLabel}
           </p>
           <p className="mt-0.5 text-lg font-extrabold text-[var(--color-text)]">{s.plan_name || "Custom access"}</p>
           <p className="text-xs text-[var(--color-text-muted)]">{s.course_name}</p>
@@ -79,7 +76,7 @@ export default function SummaryCard({ subscription, onToggleAutoRenew, togglingI
         <div className="mt-3">
           <div className="h-1.5 overflow-hidden rounded-full bg-[var(--color-surface-muted)]">
             <div
-              className={`h-full rounded-full ${pct >= 90 ? "bg-brand-red" : pct >= 70 ? "bg-yellow-500" : "bg-brand-blue"}`}
+              className={`h-full rounded-full ${pct >= 90 ? "bg-brand-red" : pct >= 70 ? "bg-warning" : "bg-brand-blue"}`}
               style={{ width: `${pct}%` }}
             />
           </div>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { useDialogA11y } from "@/lib/useDialogA11y";
 
 const SUPPORT_EMAIL = "atech1627@gmail.com";
 
@@ -68,6 +69,11 @@ const SUPPORT_LINKS = [
 ];
 
 export default function ProfileMenu({ user, onClose, align = "left" }) {
+  // Accessibility pass: Escape closes and focus returns to the trigger.
+  // trap:false deliberately — this is a navigation menu, not a modal
+  // dialog, and trapping Tab inside it would strand a keyboard user who
+  // simply wanted to move past it.
+  const menuRef = useDialogA11y(true, onClose, { trap: false });
   const [enrollments, setEnrollments] = useState(null);
 
   useEffect(() => {
@@ -83,7 +89,7 @@ export default function ProfileMenu({ user, onClose, align = "left" }) {
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/40 sm:bg-transparent" onClick={onClose} />
+      <div className="fixed inset-0 z-40 bg-black/40 sm:bg-transparent" onClick={onClose} role="presentation" />
       <div
         className={`hm-header-gradient fixed inset-x-0 bottom-0 z-50 max-h-[85dvh] w-full overflow-y-auto rounded-t-2xl shadow-2xl sm:absolute sm:inset-x-auto sm:bottom-full sm:mb-2 sm:max-h-none sm:w-72 sm:overflow-hidden sm:rounded-2xl ${
           align === "right" ? "sm:right-0" : "sm:left-0"

@@ -59,8 +59,12 @@ export default function Sidebar() {
     <>
       {!open && (
         <>
-          {/* Invisible hover activation zone along the left edge — reveals the sidebar */}
+          {/* Invisible hover activation zone along the left edge — reveals the sidebar.
+              aria-hidden: it is a mouse-only convenience with no visible content,
+              and the "Show sidebar" button below is the keyboard/AT path to the
+              same action, so exposing this strip would only add noise. */}
           <div
+            aria-hidden="true"
             className="fixed inset-y-0 left-0 z-40 hidden w-3 md:block"
             onMouseEnter={() => {
               setOpen(true);

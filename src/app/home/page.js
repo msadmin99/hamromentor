@@ -7,15 +7,17 @@ import AppShell from "@/components/AppShell";
 import CourseSwitcher from "@/components/CourseSwitcher";
 import Header from "@/components/Header";
 import RequireAuth from "@/components/RequireAuth";
-import { SearchIcon, BookmarkIcon, UserIcon } from "@/components/icons";
+import { SearchIcon, BookmarkIcon, UserIcon, VideosIcon } from "@/components/icons";
 import DailyGoalCard from "@/components/home/DailyGoalCard";
 import ExploreTestTypes from "@/components/home/ExploreTestTypes";
+import FreeAccessSummary from "@/components/FreeAccessSummary";
 import HomeHero from "@/components/home/HomeHero";
 import PerformanceSnapshot from "@/components/home/PerformanceSnapshot";
 import RecentPerformanceList from "@/components/home/RecentPerformanceList";
 import StreakCard from "@/components/home/StreakCard";
 import SuggestedTestsRow from "@/components/home/SuggestedTestsRow";
 import UpcomingSessionsWidget from "@/components/UpcomingSessionsWidget";
+import { AccessBadge } from "@/components/videos/videoCardShared";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useCourse } from "@/lib/course-context";
@@ -37,17 +39,20 @@ function HomeContent() {
   const { activeCourse } = useCourse();
   const [dashboard, setDashboard] = useState(null);
   const [tests, setTests] = useState([]);
-  const [error, setError] = useState("");
   const [continueWatching, setContinueWatching] = useState([]);
   const [recentVideos, setRecentVideos] = useState([]);
   const [performance, setPerformance] = useState(null);
   const [attempts, setAttempts] = useState([]);
 
   useEffect(() => {
-    api
-      .get("/home/")
-      .then(setDashboard)
-      .catch((e) => setError(e.message));
+    // Phase E QA: previously rendered the raw e.message (a bare browser
+    // TypeError like "Failed to fetch" on a network blip) as unstyled
+    // page text. dashboard only feeds the optional banner/announcement/
+    // MCQ-of-the-day widgets below (each already null-safe via `?.`), so
+    // a failure here — like this page's sibling "tests" fetch right
+    // below — degrades silently rather than surfacing raw error text for
+    // content that was never load-bearing to begin with.
+    api.get("/home/").then(setDashboard).catch(() => {});
     // "Suggested tests of the day" spans every test type (not just Mock),
     // with free tests surfaced first — a signed-in student with no active
     // subscription should still see something they can actually start.
@@ -114,8 +119,6 @@ function HomeContent() {
       <AnnouncementBar announcement={dashboard?.announcement} />
 
       <div className="hm-page flex flex-col gap-5">
-        {error && <p className="text-xs text-brand-red">{error}</p>}
-
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
           <div className="flex flex-col gap-5 lg:col-span-2">
             <HomeHero name={user?.first_name || "Student"} onStartTest={scrollToTestTypes} />
@@ -164,6 +167,10 @@ function HomeContent() {
 
             <UpcomingSessionsWidget />
 
+            {/* Phase 10: server-owned Free Starter quota, shown once here
+                rather than repeated across every page. */}
+            <FreeAccessSummary />
+
             <SuggestedTestsRow tests={tests} />
 
             <div id="test-types">
@@ -175,7 +182,9 @@ function HomeContent() {
             {(continueWatching.length > 0 || recentVideos.length > 0) && (
               <section>
                 <div className="mb-2 flex items-center justify-between">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">🎥 Video Lectures</p>
+                  <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+                    <VideosIcon className="h-3.5 w-3.5" /> Video Lectures
+                  </p>
                   <Link href="/videos" className="text-xs font-bold text-brand-blue">
                     See all →
                   </Link>
@@ -186,17 +195,13 @@ function HomeContent() {
                     : recentVideos
                   ).map((v) => (
                     <Link key={v.id} href={`/videos/${v.id}`} className="hm-card relative w-48 flex-none p-3">
-                      {!v.has_access && (
-                        <span className="absolute right-2 top-2 z-10 rounded-md bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-700">
-                          🔒 PRO
-                        </span>
-                      )}
-                      <div className="flex h-24 items-center justify-center rounded-lg bg-[var(--color-surface-muted)] text-2xl">
+                      <AccessBadge hasAccess={v.has_access} />
+                      <div className="flex h-24 items-center justify-center rounded-lg bg-[var(--color-surface-muted)] text-[var(--color-text-muted)]">
                         {v.thumbnail ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={v.thumbnail} alt="" className="h-full w-full rounded-lg object-cover" />
                         ) : (
-                          "🎬"
+                          <VideosIcon />
                         )}
                       </div>
                       <p className="mt-2 truncate text-sm font-semibold text-[var(--color-text)]">{v.title}</p>

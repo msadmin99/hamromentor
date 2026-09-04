@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
 import Header from "@/components/Header";
 import RequireAuth from "@/components/RequireAuth";
+import { ErrorCard } from "@/components/subscription/billingShared";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
@@ -47,11 +48,19 @@ function copyToClipboard(text) {
 function PromoCodesContent() {
   const { user } = useAuth();
   const [data, setData] = useState(null);
+  const [error, setError] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    api.get("/coupons/mine/").then(setData);
-  }, []);
+  function load() {
+    api
+      .get("/coupons/mine/")
+      .then((d) => {
+        setData(d);
+        setError(false);
+      })
+      .catch(() => setError(true));
+  }
+  useEffect(load, []);
 
   async function shareReferral() {
     const text = `Use my Dr. Gutka referral code ${user.referral_code} to get a discount on your first purchase!`;
@@ -89,9 +98,16 @@ function PromoCodesContent() {
           </div>
         </section>
 
-        {!data ? (
-          <p className="text-sm text-[var(--color-text-muted)]">Loading…</p>
-        ) : (
+        {error && <ErrorCard title="Unable to load your promo codes." onRetry={load} />}
+
+        {!error && !data && (
+          <div className="flex flex-col gap-3">
+            <div className="h-16 animate-pulse rounded-2xl bg-[var(--color-surface-muted)]" />
+            <div className="h-16 animate-pulse rounded-2xl bg-[var(--color-surface-muted)]" />
+          </div>
+        )}
+
+        {!error && data && (
           <>
             <section className="hm-card p-4">
               <p className="text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">Total savings</p>

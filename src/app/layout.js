@@ -59,8 +59,30 @@ export default function RootLayout({ children }) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[var(--color-surface-muted)]">
+        {/* Accessibility pass: the student app previously had no <main>
+            landmark on any page and no way to bypass the header/nav. A
+            keyboard or screen-reader user had to tab through the whole
+            chrome on every navigation to reach the content.
+
+            The skip link is visually hidden until focused (Tailwind's
+            sr-only, dropped by focus:not-sr-only) so the visual design is
+            unchanged for everyone else. It is the first focusable thing in
+            the document, which is what makes it useful. */}
+        <a
+          href="#main-content"
+          className="sr-only rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100]"
+        >
+          Skip to main content
+        </a>
         <AuthProvider>
-          <CourseProvider>{children}</CourseProvider>
+          <CourseProvider>
+            {/* One <main> for the whole app rather than per page: no page
+                defined its own, so there is no nesting risk, and every
+                route gets the landmark without touching 157 files. */}
+            <main id="main-content" className="flex min-h-0 flex-1 flex-col">
+              {children}
+            </main>
+          </CourseProvider>
         </AuthProvider>
       </body>
     </html>

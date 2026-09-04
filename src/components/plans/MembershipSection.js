@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import CheckoutModal from "@/components/CheckoutModal";
 import { api } from "@/lib/api";
+import { ErrorCard } from "@/components/subscription/billingShared";
 
 const TIER_LABELS = ["BASIC", "STANDARD", "PREMIUM"];
 
@@ -17,30 +18,43 @@ function formatDate(value) {
  * unlike Mock/Daily Test which are quota-based TEST_BUNDLE products handled
  * by TestBundleSection instead. Never rendered with the same card shape as
  * a test bundle — that's the whole point of splitting these components. */
-export default function MembershipSection({ productType, heading, subtitle, features, courseId, subscriptions }) {
-  const [plans, setPlans] = useState([]);
+export default function MembershipSection({ productType, heading, subtitle, courseId, subscriptions }) {
+  const [plans, setPlans] = useState(null); // null = loading
+  const [error, setError] = useState(false);
   const [discounts, setDiscounts] = useState({});
   const [checkoutPlan, setCheckoutPlan] = useState(null);
 
-  useEffect(() => {
+  function load() {
     if (!courseId) return;
-    setDiscounts({});
-    api.get(`/subscription-plans/?course=${courseId}&product_type=${productType}`).then((data) => {
-      const membershipPlans = data.filter((p) => p.mock_test_quota == null);
-      setPlans(membershipPlans);
-      membershipPlans.forEach((plan) => {
-        api
-          .post("/coupons/apply/", { code: "", kind: "subscription", plan_id: plan.id })
-          .then((info) => {
-            if (info.discount_amount > 0) setDiscounts((d) => ({ ...d, [plan.id]: info }));
-          })
-          .catch(() => {});
-      });
-    });
+    api
+      .get(`/subscription-plans/?course=${courseId}&product_type=${productType}`)
+      .then((data) => {
+        const membershipPlans = data.filter((p) => p.mock_test_quota == null);
+        setPlans(membershipPlans);
+        setError(false);
+        membershipPlans.forEach((plan) => {
+          api
+            .post("/coupons/apply/", { code: "", kind: "subscription", plan_id: plan.id })
+            .then((info) => {
+              if (info.discount_amount > 0) setDiscounts((d) => ({ ...d, [plan.id]: info }));
+            })
+            .catch(() => {});
+        });
+      })
+      .catch(() => setError(true));
+  }
+  useEffect(() => {
+    // No synchronous reset before the fetch — see AvailablePlans.js's load()
+    // for why. productType is fixed per call site on /plans (never changes
+    // at runtime); only a course switch re-runs this, and briefly showing
+    // the previous course's plans until the new ones resolve is an
+    // accepted, minor trade-off for not tripping set-state-in-effect.
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId, productType]);
 
   const activeSub = (subscriptions || []).find((s) => s.product_type === productType && s.is_current);
-  const useTierLabels = plans.length === 3;
+  const useTierLabels = plans?.length === 3;
 
   return (
     <section>
@@ -64,6 +78,21 @@ export default function MembershipSection({ productType, heading, subtitle, feat
         </div>
       )}
 
+      {error && (
+        <div className="mt-4">
+          <ErrorCard title={`Unable to load ${heading} plans.`} onRetry={load} />
+        </div>
+      )}
+
+      {!error && plans === null && (
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-56 animate-pulse rounded-2xl border border-[var(--color-border)] bg-white" />
+          ))}
+        </div>
+      )}
+
+      {!error && plans !== null && (
       <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {plans.map((plan, i) => {
           const discount = discounts[plan.id];
@@ -96,7 +125,12 @@ export default function MembershipSection({ productType, heading, subtitle, feat
               </div>
 
               <ul className="mt-4 flex flex-1 flex-col gap-1.5">
-                {(features || []).map((f) => (
+                {/* Phase 10: the plan's own admin-configured features
+                    (SubscriptionPlan.features, falling back server-side to a
+                    line derived from its real duration/quota). The four
+                    hardcoded arrays that used to live in plans/page.js could
+                    drift from what a plan actually granted. */}
+                {(plan.display_features || []).map((f) => (
                   <li key={f} className="flex items-start gap-1.5 text-xs text-[var(--color-text)]">
                     <span className="mt-0.5 flex-none font-bold text-brand-green" aria-hidden="true">✓</span>
                     {f}
@@ -120,6 +154,7 @@ export default function MembershipSection({ productType, heading, subtitle, feat
           </p>
         )}
       </div>
+      )}
 
       {checkoutPlan && (
         <CheckoutModal kind="subscription" plan={checkoutPlan} onClose={() => setCheckoutPlan(null)} />

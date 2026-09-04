@@ -33,7 +33,12 @@ export const PRIMARY_TABS = [
     // Tests must read as active for the hub page itself AND every exam
     // type it links to — a student inside Mock/Daily/Grand/PYQ is still
     // in the "Tests" section, not looking at an inactive bottom bar.
-    matchPrefixes: ["/exams", "/mock-test", "/daily-test", "/grand-test", "/past-year-questions"],
+    // "/tests" (Test Details, Test History, Test Result — all reached by
+    // drilling into a specific test from one of the pages above) was a
+    // real gap found in the Phase E QA pass: the bottom bar went
+    // completely blank on those pages, even though the student never
+    // left the Tests section.
+    matchPrefixes: ["/exams", "/mock-test", "/daily-test", "/grand-test", "/past-year-questions", "/tests"],
   },
   { href: "/performance", label: "Progress" },
 ];

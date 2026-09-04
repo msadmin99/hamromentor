@@ -1,11 +1,9 @@
 "use client";
 
-const FEATURES = [
-  { key: "qbank", icon: "📚", label: "Question Bank Access" },
-  { key: "daily_test", icon: "📅", label: "Daily Test Access" },
-  { key: "mock_test", icon: "🎁", label: "Mock Test Access" },
-  { key: "video", icon: "🎥", label: "Video Lectures" },
-];
+import { CheckCircleIcon } from "@/components/icons";
+import { PRODUCT_META } from "@/components/subscription/productIcons";
+
+const FEATURES = ["qbank", "daily_test", "mock_test", "video"].map((key) => ({ key, ...PRODUCT_META[key] }));
 
 export default function PlanFeatures({ subscriptions, courseNames }) {
   const active = new Set(subscriptions.filter((s) => s.is_current).map((s) => s.product_type));
@@ -20,19 +18,22 @@ export default function PlanFeatures({ subscriptions, courseNames }) {
         </p>
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {FEATURES.map((f) => (
-          <div
-            key={f.key}
-            className={`flex items-center gap-2 rounded-lg border p-2.5 text-xs font-semibold ${
-              active.has(f.key)
-                ? "border-brand-green bg-brand-green-light text-brand-green"
-                : "border-[var(--color-border)] text-[var(--color-text-muted)]"
-            }`}
-          >
-            <span>{active.has(f.key) ? "✅" : "⭕"}</span>
-            <span>{f.label}</span>
-          </div>
-        ))}
+        {FEATURES.map((f) => {
+          const isActive = active.has(f.key);
+          return (
+            <div
+              key={f.key}
+              className={`flex items-center gap-2 rounded-lg border p-2.5 text-xs font-semibold ${
+                isActive
+                  ? "border-brand-green bg-brand-green-light text-brand-green"
+                  : "border-[var(--color-border)] text-[var(--color-text-muted)]"
+              }`}
+            >
+              {isActive ? <CheckCircleIcon className="h-4 w-4 flex-none" /> : <f.Icon className="h-4 w-4 flex-none opacity-50" />}
+              <span>{f.label}</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

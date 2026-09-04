@@ -45,11 +45,18 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
           <div>
-            <label className="mb-1 block text-xs font-semibold text-[var(--color-text-muted)]">
+            <label htmlFor="login-identifier" className="mb-1 block text-xs font-semibold text-[var(--color-text-muted)]">
               Email or phone
             </label>
             <input
+              id="login-identifier"
+              name="identifier"
               required
+              /* autoComplete lets a password manager and the browser's own
+                 autofill work, which is an accessibility aid for anyone who
+                 finds typing costly, not just a convenience. */
+              autoComplete="username"
+              aria-describedby={error ? "login-error" : undefined}
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
               placeholder="you@example.com"
@@ -57,9 +64,13 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold text-[var(--color-text-muted)]">Password</label>
+            <label htmlFor="login-password" className="mb-1 block text-xs font-semibold text-[var(--color-text-muted)]">Password</label>
             <input
+              id="login-password"
+              name="password"
               required
+              autoComplete="current-password"
+              aria-describedby={error ? "login-error" : undefined}
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -68,7 +79,15 @@ export default function LoginPage() {
             />
           </div>
 
-          {error && <p className="rounded-lg bg-brand-red-light px-3 py-2 text-xs font-medium text-brand-red">{error}</p>}
+          {/* role="alert" so a login failure is announced rather than
+              silently repainting, and id-linked from both inputs via
+              aria-describedby so the reason is read when focus returns to
+              the field the user has to correct. */}
+          {error && (
+            <p id="login-error" role="alert" className="rounded-lg bg-brand-red-light px-3 py-2 text-xs font-medium text-brand-red">
+              {error}
+            </p>
+          )}
 
           <button
             type="submit"

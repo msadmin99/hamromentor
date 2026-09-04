@@ -152,6 +152,17 @@ test("active-route mapping", async (t) => {
     }
   });
 
+  await t.test("REGRESSION (Phase E QA): Test Details/History/Result also activate Tests", () => {
+    // Found via real-browser QA: viewing a specific test (drilled into
+    // from Mock/Daily/Grand/PYQ or from Profile's Test History link) left
+    // the bottom bar with nothing highlighted at all — the student never
+    // left the Tests section, so it must stay lit.
+    const tests = PRIMARY_TABS.find((t2) => t2.label === "Tests");
+    for (const path of ["/tests/history", "/tests/42", "/tests/result/501", "/tests/attempt/700", "/tests/session/900"]) {
+      assert.equal(isTabActive(tests, path), true, `Tests should be active on ${path}`);
+    }
+  });
+
   await t.test("Performance routes activate Progress", () => {
     const progress = PRIMARY_TABS.find((t2) => t2.label === "Progress");
     assert.equal(isTabActive(progress, "/performance"), true);

@@ -8,7 +8,13 @@ export default function AccuracyRing({ percent, label = "Accuracy", size = 112, 
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference * (1 - pct / 100);
-  const tone = pct >= 70 ? "var(--color-brand-green, #16a34a)" : pct >= 40 ? "#d97706" : "var(--color-brand-red, #dc2626)";
+  // Design-system Phase C: the green/red stops already resolved through a
+  // CSS var with a hex fallback; the amber middle stop was the one literal
+  // hex with no token at all — brought in line with its siblings. This
+  // does shift the rendered shade slightly (#d97706 -> the new
+  // --color-warning, #f59e0b) since the fallback only applies when the
+  // var is undefined, not merely different — disclosed, not accidental.
+  const tone = pct >= 70 ? "var(--color-brand-green, #16a34a)" : pct >= 40 ? "var(--color-warning, #d97706)" : "var(--color-brand-red, #dc2626)";
   // Below ~72px the default text-xl/[10px] pair no longer fits two lines —
   // scale down to a single compact number for small callers (e.g. the
   // per-question performance summary) instead of clipping.

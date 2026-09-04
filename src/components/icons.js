@@ -26,9 +26,9 @@ export function TestsIcon({ active }) {
   );
 }
 
-export function VideosIcon({ active }) {
+export function VideosIcon({ active, ...props }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
       <rect x="3" y="6" width="14" height="12" rx="1.8" fill={active ? "currentColor" : "none"} fillOpacity={active ? 0.12 : 0} />
       <path d="M17 10l4-2.4v8.8L17 14" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
@@ -263,6 +263,88 @@ export function RankIcon(props) {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
       <path d="M4 20v-6M12 20V6M20 20v-10" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// --- Added for the Profile redesign (Phase B) — same hand-authored,
+// 24-viewport / stroke-1.8 language as every icon above. ---
+
+/** Question mark in a circle — Help & Support / FAQ. */
+export function HelpCircleIcon(props) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M9.5 9.3a2.5 2.5 0 0 1 4.7 1.2c0 1.7-2.2 1.8-2.2 3.3" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="12" cy="17" r="0.9" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+/** Envelope — Contact Support. */
+export function MailIcon(props) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+      <rect x="3.5" y="5" width="17" height="14" rx="1.8" />
+      <path d="M4.5 6.5l7.5 6 7.5-6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** Door + arrow — Log out. Extracted from MoreMenu.js's inline SVG (same
+ * path data, byte-identical render) so Profile and MoreMenu share one
+ * definition instead of two copies of the same icon. */
+export function LogoutIcon(props) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M16 17l5-5-5-5M21 12H9" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** Small pencil — Edit Profile CTA. */
+export function EditIcon(props) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+      <path d="M4 20h4L18.5 9.5a2 2 0 0 0-4-4L4 16v4z" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M13.5 6.5l4 4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** Padlock — locked/premium content. Added in the design-system pass
+ * (Phase C) to replace the 🔒 emoji that was standing in for this exact
+ * meaning in ~8 places (PRO badges, locked video/course states, the
+ * Grand Test unlock CTA) with no shared icon before now. */
+export function LockIcon(props) {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+      <rect x="4.5" y="10.5" width="15" height="10" rx="2" />
+      <path d="M7.5 10.5V7a4.5 4.5 0 0 1 9 0v3.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// Phase D, Area 3: a play-button overlay for video thumbnails — the one
+// icon the brief names that didn't already exist. Filled (not stroked),
+// matching how a play glyph reads at small sizes.
+export function PlayIcon(props) {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" {...props}>
+      <path d="M8 5.5v13l11-6.5-11-6.5z" />
+    </svg>
+  );
+}
+
+// Phase D, Area 4: the invoice page's print action — no existing icon
+// covers it.
+export function PrintIcon(props) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+      <path d="M6 9V3h12v6" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="4.5" y="9" width="15" height="8" rx="1.5" />
+      <path d="M6 15h12v6H6z" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

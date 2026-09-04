@@ -1,6 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+import { ClockIcon } from "@/components/icons";
+import { announcementFor, timerLabel } from "@/lib/examTimerAnnounce";
 
 function formatTime(totalSeconds) {
   const s = Math.max(0, Math.floor(totalSeconds));
@@ -40,6 +43,22 @@ export default function TestPlayerHeader({
     }
   }
 
+  // Accessibility pass: the countdown used to be a live region that
+  // re-rendered every second, so under five minutes a screen reader read
+  // the clock ~300 times. Announcements are now milestone-based — see
+  // lib/examTimerAnnounce.js. `lastMilestoneRef` is a ref, not state,
+  // because remembering what was already said must not itself trigger a
+  // render on every tick.
+  const [announcement, setAnnouncement] = useState("");
+  const lastMilestoneRef = useRef(null);
+
+  useEffect(() => {
+    const next = announcementFor(remaining, lastMilestoneRef.current);
+    if (!next) return;
+    lastMilestoneRef.current = next.milestone;
+    setAnnouncement(next.message);
+  }, [remaining]);
+
   const remainingPct = totalQuestions ? Math.round(((currentQuestionNumber - 1) / totalQuestions) * 100) : 0;
   const answeredPct = totalQuestions ? Math.round((answeredCount / totalQuestions) * 100) : 0;
   const isLowTime = remaining != null && remaining <= 300;
@@ -63,11 +82,23 @@ export default function TestPlayerHeader({
           </div>
 
           <div className="flex flex-none items-center gap-3">
+            {/* The digits are visual only. Their accessible name carries
+                the same information in words, so a screen-reader user can
+                query the exact time on demand — but it is not a live
+                region, so it never interrupts unprompted.
+
+                isLowTime keeps driving the red background AND is restated
+                in the accessible name, so "running out of time" is not
+                communicated by colour alone. */}
             <span
-              className={`rounded-md px-2 py-1 font-mono text-xs font-bold ${isLowTime ? "bg-brand-red text-white" : "bg-black/20"}`}
-              aria-live={isLowTime ? "polite" : "off"}
+              role="timer"
+              aria-label={`${timerLabel(remaining)}${isLowTime ? " Low time." : ""}`}
+              className={`flex items-center gap-1 rounded-md px-2 py-1 font-mono text-xs font-bold ${isLowTime ? "bg-brand-red text-white" : "bg-black/20"}`}
             >
-              ⏱ {remaining != null ? formatTime(remaining) : "--:--:--"}
+              <span aria-hidden="true" className="flex items-center gap-1">
+                <ClockIcon className="h-3 w-3 flex-none" />
+                {remaining != null ? formatTime(remaining) : "--:--:--"}
+              </span>
             </span>
             <button
               type="button"
@@ -95,6 +126,17 @@ export default function TestPlayerHeader({
           </div>
           <span className="flex-none text-xs font-bold text-white/85">{answeredPct}%</span>
         </div>
+
+        {/* The only live region in the test player. Empty except for the
+            moment a milestone is crossed, so it announces roughly five
+            times across a whole exam instead of once a second.
+            aria-live="assertive" (not polite) because running out of time
+            is the one thing worth interrupting for, and role="status"
+            keeps it exposed as a status message rather than an alert
+            dialog. */}
+        <p role="status" aria-live="assertive" className="sr-only">
+          {announcement}
+        </p>
       </div>
     </header>
   );

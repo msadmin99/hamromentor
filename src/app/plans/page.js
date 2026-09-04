@@ -16,10 +16,10 @@ import TrustBadges from "@/components/plans/TrustBadges";
 import YourPurchasesCallout from "@/components/plans/YourPurchasesCallout";
 import { api } from "@/lib/api";
 
-const QBANK_FEATURES = ["Unlimited Practice", "Detailed Solutions", "All Subjects", "Performance Insights", "Bookmark & Revision Tools"];
-const PYQ_FEATURES = ["IOM", "BPKIHS", "KU", "MOE", "Chapter-wise PYQs", "Detailed Solutions"];
-const MOCK_FEATURES = ["Full Length Tests", "Exam-style Questions", "Detailed Analysis", "Performance Tracking"];
-const DAILY_FEATURES = ["Daily New Tests", "Subject-wise & Mixed Tests", "Quick Analysis", "Track Daily Progress"];
+// Phase 10: the four hardcoded feature arrays that used to live here were
+// removed — each plan card now renders SubscriptionPlan.display_features,
+// i.e. what an admin actually configured for that plan, so the advertised
+// contents and the real entitlement can no longer drift apart.
 
 function PlansContent() {
   const [courses, setCourses] = useState([]);
@@ -64,7 +64,6 @@ function PlansContent() {
               productType="qbank"
               heading="Practice Question Bank"
               subtitle="Unlimited subject-wise MCQ practice with instant, detailed solutions."
-              features={QBANK_FEATURES}
               courseId={courseId}
               subscriptions={mySubscriptions?.subscriptions}
             />
@@ -73,7 +72,6 @@ function PlansContent() {
               productType="mock_test"
               heading="Mock Test"
               subtitle="Full-length exam simulations designed for real exam preparation."
-              features={MOCK_FEATURES}
               courseId={courseId}
               subscriptions={mySubscriptions?.subscriptions}
             />
@@ -82,7 +80,6 @@ function PlansContent() {
               productType="daily_test"
               heading="Daily Test"
               subtitle="Build consistency with daily exam-oriented practice."
-              features={DAILY_FEATURES}
               courseId={courseId}
               subscriptions={mySubscriptions?.subscriptions}
             />
@@ -93,7 +90,6 @@ function PlansContent() {
               productType="pyq"
               heading="Past Year Questions"
               subtitle="Practice authentic past questions from major medical examinations."
-              features={PYQ_FEATURES}
               courseId={courseId}
               subscriptions={mySubscriptions?.subscriptions}
             />

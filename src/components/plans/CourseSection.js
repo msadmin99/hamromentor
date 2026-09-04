@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { VideosIcon } from "@/components/icons";
 import { api } from "@/lib/api";
+import { ErrorCard } from "@/components/subscription/billingShared";
 
 /** Teacher-authored video courses (marketplace.TeacherCourse) — a COURSE
  * purchase, structurally unrelated to SubscriptionPlan/Subscription (its
@@ -11,13 +13,32 @@ import { api } from "@/lib/api";
  * size) than a pricing card, per the brief. Buy action delegated to the
  * existing /courses/[id] page, which already has the CheckoutModal wired. */
 export default function CourseSection({ enrolledCourseIds }) {
-  const [courses, setCourses] = useState([]);
+  const [courses, setCourses] = useState(null); // null = loading
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
-    api.get("/teacher-courses/?status=approved").then((data) => setCourses(data.slice(0, 3)));
-  }, []);
+  function load() {
+    api
+      .get("/teacher-courses/?status=approved")
+      .then((data) => {
+        setCourses(data.slice(0, 3));
+        setError(false);
+      })
+      .catch(() => setError(true));
+  }
+  useEffect(load, []);
 
-  if (courses.length === 0) return null;
+  // Same self-hiding-while-loading rationale as ComboPlansSection: this is
+  // a supplementary catalog row, and a genuinely empty catalog already
+  // hides it below — only a real failure gets a visible ErrorCard.
+  if (!error && (courses === null || courses.length === 0)) return null;
+
+  if (error) {
+    return (
+      <section>
+        <ErrorCard title="Unable to load video courses." onRetry={load} />
+      </section>
+    );
+  }
 
   return (
     <section>
@@ -43,7 +64,7 @@ export default function CourseSection({ enrolledCourseIds }) {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={c.thumbnail} alt={c.title} className="h-full w-full object-cover" />
                 ) : (
-                  <span className="text-3xl" aria-hidden="true">🎥</span>
+                  <VideosIcon className="h-8 w-8 text-[var(--color-text-muted)]" />
                 )}
                 {enrolled && (
                   <span className="absolute right-2 top-2 rounded-md bg-brand-green px-2 py-0.5 text-[10px] font-bold text-white">

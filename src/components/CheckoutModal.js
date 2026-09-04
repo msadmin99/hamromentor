@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { useDialogA11y } from "@/lib/useDialogA11y";
 
 const DISCOUNT_SOURCE_LABELS = {
   coupon: "Coupon applied",
@@ -10,6 +11,9 @@ const DISCOUNT_SOURCE_LABELS = {
 };
 
 export default function CheckoutModal({ kind, plan, grandTest, teacherCourse, combo, onClose, onSubmitted }) {
+  // Accessibility pass: Escape, focus trap and focus return, shared with
+  // Drawer so this copy of the same shell cannot drift away from it.
+  const panelRef = useDialogA11y(true, onClose);
   const router = useRouter();
   const [couponCode, setCouponCode] = useState("");
   const [priceInfo, setPriceInfo] = useState(null);
@@ -93,12 +97,16 @@ export default function CheckoutModal({ kind, plan, grandTest, teacherCourse, co
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }} role="presentation">
       <div
+        ref={panelRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="checkout-modal-title"
         className="max-h-[90dvh] w-full overflow-y-auto rounded-t-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 sm:max-h-[85dvh] sm:max-w-sm sm:rounded-2xl"
-        onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-base font-bold text-[var(--color-text)]">{itemLabel}</h2>
+        <h2 id="checkout-modal-title" className="text-base font-bold text-[var(--color-text)]">{itemLabel}</h2>
 
         {isCombo && (
           <ul className="mt-3 flex flex-col gap-1">

@@ -23,10 +23,33 @@ export default function OptionResultBar({ letter, option, state, percentage, sho
           <span className="flex-none font-semibold">{letter})</span>
           <RichContent html={option.text} latex={option.latex} image={option.image} imageData={option.image_data} className="min-w-0 flex-1" />
         </div>
+        {/* MCQ accessibility remediation: correctness was carried by the
+         * ✓/✕ glyph and its colour alone. The glyph is now aria-hidden and
+         * the same fact is stated in text for assistive technology.
+         *
+         * This adds no information the caller wasn't already showing: when
+         * solutions are locked the result page passes only "selected" or
+         * "neutral", so neither branch below can render — the answer key
+         * stays as unavailable here as it is in the payload, which omits
+         * is_correct entirely. */}
+        {showIcon && (
+          <span className="sr-only">
+            {state === "correct" ? "Correct answer." : "Incorrect."}
+          </span>
+        )}
         {(showIcon || (showStats && percentage != null)) && (
           <span className={`flex-none whitespace-nowrap text-xs font-bold ${badgeClass}`}>
-            {state === "correct" ? "✓ " : state === "wrong-selected" ? "✕ " : ""}
-            {showStats && percentage != null ? `${percentage}%` : ""}
+            {/* Only the glyph is hidden — the percentage beside it is real
+             * information and stays readable. */}
+            <span aria-hidden="true">{state === "correct" ? "✓ " : state === "wrong-selected" ? "✕ " : ""}</span>
+            {showStats && percentage != null ? (
+              <>
+                <span aria-hidden="true">{percentage}%</span>
+                {/* Same number, said in full — "45%" alone is ambiguous out
+                 * of visual context. Visible text is unchanged. */}
+                <span className="sr-only">{percentage}% of students chose this option.</span>
+              </>
+            ) : ""}
           </span>
         )}
       </div>

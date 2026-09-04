@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { BookOpenIcon, ChevronDownIcon } from "./icons";
 import { useCourse } from "@/lib/course-context";
+import { useDialogA11y } from "@/lib/useDialogA11y";
 
 // variant="solid": same component, same state/switching logic, same
 // dropdown/menu markup below — only the trigger button's surface changes,
@@ -12,6 +13,17 @@ export default function CourseSwitcher({ variant = "translucent" }) {
   const { activeCourse, otherCourses, switchCourse, switching } = useCourse();
   const [open, setOpen] = useState(false);
   const solid = variant === "solid";
+
+  // Accessibility pass: Escape closes the menu and focus returns to the
+  // trigger. trap:false — this is a menu, not a modal dialog; trapping Tab
+  // would strand a keyboard user who just wanted to move past it.
+  //
+  // useCallback, not an inline arrow: the hook's effect depends on this
+  // identity, and a fresh function each render would re-bind the keydown
+  // listener on every render.
+  const close = useCallback(() => setOpen(false), []);
+  // Called before the early return below, so the hook order stays stable.
+  useDialogA11y(open, close, { trap: false });
 
   if (!activeCourse && otherCourses.length === 0) return null;
 
@@ -34,7 +46,7 @@ export default function CourseSwitcher({ variant = "translucent" }) {
 
       {open && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} role="presentation" />
           <div className="absolute left-0 top-full z-50 mt-2 w-64 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-[var(--color-border)] bg-white shadow-2xl">
             <div className="border-b border-[var(--color-border)] px-3 py-2">
               <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--color-text-muted)]">

@@ -5,14 +5,17 @@ import { useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
 import Header from "@/components/Header";
 import RequireAuth from "@/components/RequireAuth";
+import { ClockIcon } from "@/components/icons";
+import { ErrorCard } from "@/components/subscription/billingShared";
 import { api, uploadFields } from "@/lib/api";
 
 const STATUS_LABELS = {
   pending: "Submitted — awaiting verification",
-  approved: "Approved — access granted",
-  rejected: "Rejected",
+  approved: "Payment successful — access granted",
+  rejected: "Payment could not be completed",
   expired: "Payment window expired",
   cancelled: "Order cancelled",
+  refunded: "Refunded",
 };
 
 const ALLOWED_SCREENSHOT_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -66,12 +69,19 @@ function CheckoutContent() {
   const [fileError, setFileError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [cancelling, setCancelling] = useState(false);
 
   function load() {
-    api.get(`/purchases/${purchaseId}/`).then(setPurchase);
-    api.get("/payment-methods/").then(setMethods);
+    api
+      .get(`/purchases/${purchaseId}/`)
+      .then((p) => {
+        setPurchase(p);
+        setLoadError(false);
+      })
+      .catch(() => setLoadError(true));
+    api.get("/payment-methods/").then(setMethods).catch(() => {});
   }
 
   useEffect(load, [purchaseId]);
@@ -135,17 +145,37 @@ function CheckoutContent() {
     }
   }
 
+  if (loadError) {
+    return (
+      <AppShell>
+        <Header title="Complete Payment" showBack />
+        <div className="hm-page-narrow py-6">
+          <ErrorCard title="Unable to load this order." onRetry={load} />
+        </div>
+      </AppShell>
+    );
+  }
+
   if (!purchase) {
     return (
       <AppShell>
         <Header title="Complete Payment" showBack />
-        <div className="hm-page py-10 text-center text-sm text-[var(--color-text-muted)]">Loading…</div>
+        <div className="hm-page-narrow flex flex-col gap-4 py-6">
+          <div className="animate-pulse rounded-2xl border border-[var(--color-border)] p-5">
+            <div className="mx-auto h-3 w-24 rounded bg-[var(--color-surface-muted)]" />
+            <div className="mx-auto mt-3 h-5 w-40 rounded bg-[var(--color-surface-muted)]" />
+            <div className="mx-auto mt-4 h-8 w-32 rounded bg-[var(--color-surface-muted)]" />
+          </div>
+        </div>
       </AppShell>
     );
   }
 
   if (submitted || !canSubmit) {
     const effectiveStatus = windowExpired ? "expired" : purchase.status;
+    const succeeded = !submitted && effectiveStatus === "approved";
+    const failed = !submitted && effectiveStatus === "rejected";
+    const statusColorClass = succeeded ? "text-brand-green" : failed ? "text-brand-red" : "text-brand-blue";
     return (
       <AppShell>
         <Header title="Payment Status" showBack />
@@ -155,7 +185,7 @@ function CheckoutContent() {
             <p className="mt-1 text-lg font-bold text-[var(--color-text)]">
               <ItemLabel purchase={purchase} />
             </p>
-            <p className="mt-2 text-sm font-semibold text-brand-blue">
+            <p className={`mt-2 text-sm font-semibold ${statusColorClass}`}>
               {submitted ? "Submitted — we'll verify and activate your access." : STATUS_LABELS[effectiveStatus] || purchase.status}
             </p>
             {purchase.status === "rejected" && purchase.admin_note && (
@@ -167,7 +197,7 @@ function CheckoutContent() {
               </button>
             )}
             <button onClick={() => router.push("/subscriptions")} className="mt-3 w-full rounded-xl border border-[var(--color-border)] py-3 text-sm font-bold text-[var(--color-text)]">
-              Go to My Subscriptions
+              {succeeded ? "View Subscription" : "Go to My Subscriptions"}
             </button>
           </div>
         </div>
@@ -190,8 +220,8 @@ function CheckoutContent() {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="font-mono text-xs text-[var(--color-text-muted)]">Order {purchase.order_id}</span>
             {remainingSeconds !== null && (
-              <span className={`rounded-md px-2 py-1 text-xs font-bold ${remainingSeconds < 60 ? "bg-brand-red-light text-brand-red" : "bg-[var(--color-surface-muted)] text-[var(--color-text-muted)]"}`}>
-                ⏱ {formatCountdown(remainingSeconds)}
+              <span className={`flex items-center gap-1 rounded-md px-2 py-1 text-xs font-bold ${remainingSeconds < 60 ? "bg-brand-red-light text-brand-red" : "bg-[var(--color-surface-muted)] text-[var(--color-text-muted)]"}`}>
+                <ClockIcon className="h-3.5 w-3.5" /> {formatCountdown(remainingSeconds)}
               </span>
             )}
           </div>

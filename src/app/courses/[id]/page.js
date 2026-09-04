@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
 import CheckoutModal from "@/components/CheckoutModal";
 import Header from "@/components/Header";
+import { LockIcon } from "@/components/icons";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
@@ -127,7 +128,7 @@ function CourseDetailContent() {
                       >
                         <span>{LESSON_ICONS[lesson.lesson_type] || "📘"}</span>
                         <span className="flex-1">{lesson.title}</span>
-                        {!enrolled && <span className="text-xs text-[var(--color-text-muted)]">🔒</span>}
+                        {!enrolled && <LockIcon className="h-3.5 w-3.5 flex-none text-[var(--color-text-muted)]" />}
                       </Wrapper>
                     );
                   })}

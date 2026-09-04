@@ -3,13 +3,15 @@
 import { useEffect, useMemo, useState } from "react";
 import CheckoutModal from "@/components/CheckoutModal";
 import { api } from "@/lib/api";
+import { ErrorCard } from "@/components/subscription/billingShared";
+import { PRODUCT_META } from "@/components/subscription/productIcons";
 
 const PRODUCT_TYPES = [
-  { key: "qbank", label: "Question Bank", icon: "📘" },
-  { key: "mock_test", label: "Mock Tests", icon: "📝" },
-  { key: "daily_test", label: "Daily Tests", icon: "📅" },
-  { key: "pyq", label: "Past Year Questions", icon: "📚" },
-  { key: "video", label: "Video Course", icon: "🎥" },
+  { key: "qbank", label: "Question Bank", Icon: PRODUCT_META.qbank.Icon },
+  { key: "mock_test", label: "Mock Tests", Icon: PRODUCT_META.mock_test.Icon },
+  { key: "daily_test", label: "Daily Tests", Icon: PRODUCT_META.daily_test.Icon },
+  { key: "pyq", label: "Past Year Questions", Icon: PRODUCT_META.pyq.Icon },
+  { key: "video", label: "Video Course", Icon: PRODUCT_META.video.Icon },
 ];
 
 function planLabel(p) {
@@ -24,29 +26,41 @@ function planLabel(p) {
  * never disagree. Never treats a selection as time-based — it's just a set
  * of real SubscriptionPlan rows, priced exactly like buying them one by one. */
 export default function BuildYourOwnCombo({ courseId }) {
-  const [plans, setPlans] = useState([]);
+  const [plans, setPlans] = useState(null); // null = loading
+  const [plansError, setPlansError] = useState(false);
   const [selected, setSelected] = useState({});
   const [quote, setQuote] = useState(null);
   const [quoteError, setQuoteError] = useState("");
   const [quoting, setQuoting] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
 
-  useEffect(() => {
+  function loadPlans() {
     if (!courseId) return;
+    api
+      .get(`/subscription-plans/?course=${courseId}`)
+      .then((data) => {
+        setPlans(data);
+        setPlansError(false);
+      })
+      .catch(() => setPlansError(true));
+  }
+  useEffect(() => {
     setSelected({});
-    api.get(`/subscription-plans/?course=${courseId}`).then(setPlans);
+    setPlans(null);
+    loadPlans();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId]);
 
   const plansByType = useMemo(() => {
     const acc = {};
-    plans.forEach((p) => {
+    (plans || []).forEach((p) => {
       (acc[p.product_type] = acc[p.product_type] || []).push(p);
     });
     return acc;
   }, [plans]);
 
   const selectedPlanIds = Object.values(selected).filter(Boolean);
-  const selectedPlans = plans.filter((p) => selectedPlanIds.includes(String(p.id)));
+  const selectedPlans = (plans || []).filter((p) => selectedPlanIds.includes(String(p.id)));
   const individualTotal = selectedPlans.reduce((sum, p) => sum + Number(p.price), 0);
 
   useEffect(() => {
@@ -86,7 +100,7 @@ export default function BuildYourOwnCombo({ courseId }) {
   return (
     <section className="rounded-2xl border-2 border-dashed border-brand-blue/40 bg-brand-blue/[0.03] p-5">
       <div className="flex items-center gap-2">
-        <h2 className="text-lg font-extrabold text-[var(--color-text)]">🛠️ Build Your Own Combo</h2>
+        <h2 className="text-lg font-extrabold text-[var(--color-text)]">Build Your Own Combo</h2>
         <span className="rounded-md bg-brand-blue/10 px-2 py-0.5 text-[10px] font-bold tracking-wide text-brand-blue">
           UP TO 35% OFF
         </span>
@@ -95,6 +109,21 @@ export default function BuildYourOwnCombo({ courseId }) {
         Pick exactly what you need — the discount grows automatically as you add more.
       </p>
 
+      {plansError && (
+        <div className="mt-4">
+          <ErrorCard onRetry={loadPlans} />
+        </div>
+      )}
+
+      {!plansError && plans === null && (
+        <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+          {PRODUCT_TYPES.map((t) => (
+            <div key={t.key} className="h-14 animate-pulse rounded-xl bg-white/60" />
+          ))}
+        </div>
+      )}
+
+      {!plansError && plans !== null && (
       <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
         {PRODUCT_TYPES.map((t) => {
           const available = plansByType[t.key] || [];
@@ -113,7 +142,7 @@ export default function BuildYourOwnCombo({ courseId }) {
                   disabled={available.length === 0}
                   onChange={() => toggleType(t.key)}
                 />
-                <span>{t.icon}</span>
+                <t.Icon className="h-4 w-4 flex-none" />
                 {t.label}
                 {available.length === 0 && <span className="text-xs font-normal text-[var(--color-text-muted)]">(unavailable)</span>}
               </label>
@@ -135,6 +164,7 @@ export default function BuildYourOwnCombo({ courseId }) {
           );
         })}
       </div>
+      )}
 
       <div className="mt-4 rounded-xl bg-white p-4 shadow-sm">
         {selectedPlanIds.length < 2 && (

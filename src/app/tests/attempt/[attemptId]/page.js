@@ -4,18 +4,21 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Drawer from "@/components/Drawer";
 import RequireAuth from "@/components/RequireAuth";
+import { CheckCircleIcon } from "@/components/icons";
 import NotesPopover, { hasNote } from "@/components/testplayer/NotesPopover";
 import QuestionNavigatorPanel from "@/components/testplayer/QuestionNavigatorPanel";
 import QuestionWorkspace from "@/components/testplayer/QuestionWorkspace";
 import ReviewAnswersModal from "@/components/testplayer/ReviewAnswersModal";
 import TestPlayerHeader from "@/components/testplayer/TestPlayerHeader";
 import TestProgressPanel from "@/components/testplayer/TestProgressPanel";
+import { ErrorCard } from "@/components/subscription/billingShared";
 import { api } from "@/lib/api";
 
 function AttemptContent() {
   const { attemptId } = useParams();
   const router = useRouter();
   const [attempt, setAttempt] = useState(null);
+  const [loadError, setLoadError] = useState(false);
   const [page, setPage] = useState(0);
   const [answers, setAnswers] = useState({});
   const [marked, setMarked] = useState({});
@@ -37,34 +40,58 @@ function AttemptContent() {
     pageShownAtRef.current = Date.now();
   }, [page]);
 
+  // Previously had no .catch() at all — a failed request (network blip,
+  // 500) left the page on a bare "Loading test…" forever, with no way to
+  // retry short of a full page reload. The success branch below is
+  // byte-for-byte unchanged; only the new .catch() and the reusable
+  // function wrapper (so Retry can call the exact same logic) are new. No
+  // synchronous state reset before the fetch, so this can't trip
+  // react-hooks/set-state-in-effect the way an eager reset would.
+  function load() {
+    api
+      .get(`/attempts/${attemptId}/`)
+      .then((data) => {
+        if (data.status === "submitted") {
+          router.replace(`/tests/result/${attemptId}`);
+          return;
+        }
+        setAttempt(data);
+        setLoadError(false);
+
+        // Restore progress instead of starting blank — the actual bug fix,
+        // not just the redesign.
+        const restoredAnswers = {};
+        const restoredMarked = {};
+        Object.entries(data.answers || {}).forEach(([qId, a]) => {
+          if (a.option_id != null) restoredAnswers[qId] = a.option_id;
+          if (a.is_marked_for_review) restoredMarked[qId] = true;
+        });
+        setAnswers(restoredAnswers);
+        setMarked(restoredMarked);
+        const restoredBookmarks = {};
+        (data.questions || []).forEach((q) => {
+          if (q.is_bookmarked) restoredBookmarks[q.id] = true;
+        });
+        setBookmarked(restoredBookmarks);
+
+        // Phase 6: effective_end_at (start_time + duration, capped by the
+        // exam session's own end if one exists and is sooner) is now the
+        // real, server-enforced deadline — falls back to the old
+        // duration-only computation only if an older cached response
+        // somehow lacks the field. Display-only either way: the backend
+        // independently re-checks and rejects a late answer/submit
+        // regardless of what this timer shows.
+        const expiresAt = data.effective_end_at
+          ? new Date(data.effective_end_at).getTime()
+          : new Date(data.start_time).getTime() + data.duration_minutes * 60 * 1000;
+        expiresAtRef.current = expiresAt;
+        setRemaining((expiresAt - Date.now()) / 1000);
+      })
+      .catch(() => setLoadError(true));
+  }
   useEffect(() => {
-    api.get(`/attempts/${attemptId}/`).then((data) => {
-      if (data.status === "submitted") {
-        router.replace(`/tests/result/${attemptId}`);
-        return;
-      }
-      setAttempt(data);
-
-      // Restore progress instead of starting blank — the actual bug fix,
-      // not just the redesign.
-      const restoredAnswers = {};
-      const restoredMarked = {};
-      Object.entries(data.answers || {}).forEach(([qId, a]) => {
-        if (a.option_id != null) restoredAnswers[qId] = a.option_id;
-        if (a.is_marked_for_review) restoredMarked[qId] = true;
-      });
-      setAnswers(restoredAnswers);
-      setMarked(restoredMarked);
-      const restoredBookmarks = {};
-      (data.questions || []).forEach((q) => {
-        if (q.is_bookmarked) restoredBookmarks[q.id] = true;
-      });
-      setBookmarked(restoredBookmarks);
-
-      const expiresAt = new Date(data.start_time).getTime() + data.duration_minutes * 60 * 1000;
-      expiresAtRef.current = expiresAt;
-      setRemaining((expiresAt - Date.now()) / 1000);
-    });
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attemptId, router]);
 
   const submitTest = useCallback(async () => {
@@ -179,8 +206,37 @@ function AttemptContent() {
   const answeredCount = useMemo(() => Object.keys(answers).length, [answers]);
   const currentQuestion = pageQuestions[0];
 
+  if (loadError) {
+    return (
+      <div className="hm-app-shell flex items-center justify-center p-6">
+        <div className="w-full max-w-sm">
+          <ErrorCard title="Unable to load test." onRetry={load} />
+        </div>
+      </div>
+    );
+  }
+
   if (!attempt) {
-    return <div className="p-6 text-sm text-[var(--color-text-muted)]">Loading test…</div>;
+    return (
+      <div className="hm-app-shell">
+        <div className="hm-header-gradient p-4">
+          <div className="h-4 w-40 animate-pulse rounded bg-white/20" />
+          <div className="mt-3 h-1.5 w-full animate-pulse rounded-full bg-white/15" />
+        </div>
+        <div className="hm-page flex flex-col gap-4">
+          <div className="hm-card animate-pulse p-4">
+            <div className="h-3 w-24 rounded bg-[var(--color-surface-muted)]" />
+            <div className="mt-3 h-4 w-full rounded bg-[var(--color-surface-muted)]" />
+            <div className="mt-1.5 h-4 w-2/3 rounded bg-[var(--color-surface-muted)]" />
+            <div className="mt-4 flex flex-col gap-2.5">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-11 rounded-xl bg-[var(--color-surface-muted)]" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -243,10 +299,8 @@ function AttemptContent() {
             );
           })}
 
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-xs text-amber-800 sm:flex sm:items-center sm:justify-between">
-            <p>
-              <span aria-hidden="true">💡</span> You are in Test Mode — you will see results and explanations after you submit the test.
-            </p>
+          <div className="rounded-xl border border-info/20 bg-info-soft p-3.5 text-xs text-[var(--color-text)] sm:flex sm:items-center sm:justify-between">
+            <p>You are in Test Mode — you will see results and explanations after you submit the test.</p>
             <button type="button" onClick={() => setReviewOpen(true)} className="mt-2 flex-none text-xs font-bold text-brand-red underline sm:mt-0">
               End Test
             </button>
@@ -272,7 +326,7 @@ function AttemptContent() {
             onClick={() => setReviewOpen(true)}
             className="hidden flex-none items-center gap-1.5 rounded-xl border border-[var(--color-border)] px-4 py-3 text-sm font-semibold text-[var(--color-text)] sm:flex"
           >
-            <span aria-hidden="true">✓</span> {answeredCount} answered
+            <CheckCircleIcon className="h-4 w-4" aria-hidden="true" /> {answeredCount} answered
           </button>
           {page < totalPages - 1 ? (
             <button onClick={() => setPage((p) => p + 1)} className="flex-1 rounded-xl bg-brand-blue py-3 text-sm font-bold text-white sm:flex-none sm:px-8">

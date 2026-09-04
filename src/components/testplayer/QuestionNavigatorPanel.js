@@ -6,7 +6,7 @@ const LEGEND = [
   { key: "answered", label: "Answered", dot: "bg-brand-green" },
   { key: "unanswered", label: "Unanswered", dot: "border border-[var(--color-border)]" },
   { key: "current", label: "Current", dot: "border-2 border-brand-blue" },
-  { key: "review", label: "Review", dot: "bg-amber-500" },
+  { key: "review", label: "Review", dot: "bg-warning" },
 ];
 
 function questionState({ q, answers, marked, currentQuestionId }) {
@@ -18,7 +18,7 @@ function questionState({ q, answers, marked, currentQuestionId }) {
 
 const STATE_CLASSES = {
   answered: "bg-brand-green text-white",
-  review: "bg-amber-500 text-white",
+  review: "bg-warning text-white",
   current: "border-2 border-brand-blue text-brand-blue",
   unanswered: "border border-[var(--color-border)] text-[var(--color-text-muted)]",
 };

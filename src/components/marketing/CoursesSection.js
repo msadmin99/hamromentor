@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useCourse } from "@/lib/course-context";
 
-const FALLBACK_CARD = { icon: "🎓", color: "#224c5a", description: "" };
+const FALLBACK_CARD = { icon: "🎓", color: "var(--color-brand-blue)", description: "" };
 
 export default function CoursesSection({ s, courses }) {
   const { user } = useAuth();
@@ -82,7 +82,7 @@ export default function CoursesSection({ s, courses }) {
           )}
 
           <Link href="/qbank" className="overflow-hidden rounded-2xl bg-white">
-            <div className="h-1.5" style={{ background: "#ed220d" }} />
+            <div className="h-1.5" style={{ background: "var(--color-brand-red)" }} />
             <div className="p-6">
               <div className="flex items-start justify-between">
                 <span className="flex h-11 w-11 items-center justify-center rounded-xl text-xl" style={{ background: "#ed220d22" }}>

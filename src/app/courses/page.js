@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
 import Header from "@/components/Header";
+import { VideosIcon } from "@/components/icons";
 import { api } from "@/lib/api";
 
 function CourseCard({ course }) {
@@ -17,7 +18,7 @@ function CourseCard({ course }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={course.thumbnail} alt={course.title} className="h-full w-full object-cover" />
         ) : (
-          <span className="text-3xl">🎥</span>
+          <VideosIcon className="h-8 w-8 text-[var(--color-text-muted)]" />
         )}
       </div>
       <div className="flex flex-1 flex-col gap-1.5 p-4">

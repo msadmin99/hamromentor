@@ -5,17 +5,13 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import AppShell from "@/components/AppShell";
 import Header from "@/components/Header";
+import { BookmarkIcon, CheckCircleIcon, LockIcon, VideosIcon } from "@/components/icons";
 import RequireAuth from "@/components/RequireAuth";
 import { videoEmbedUrl } from "@/components/RichContent";
 import { api } from "@/lib/api";
+import { formatDuration } from "@/components/videos/videoCardShared";
 
 const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
-
-function formatDuration(seconds) {
-  const m = Math.floor((seconds || 0) / 60);
-  const s = Math.floor((seconds || 0) % 60);
-  return `${m}:${String(s).padStart(2, "0")}`;
-}
 
 function PlayerContent() {
   const { id } = useParams();
@@ -24,7 +20,7 @@ function PlayerContent() {
   const seekedRef = useRef(false);
 
   const [video, setVideo] = useState(null);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(false);
   const [siblings, setSiblings] = useState([]);
   const [notes, setNotes] = useState([]);
   const [noteText, setNoteText] = useState("");
@@ -32,16 +28,32 @@ function PlayerContent() {
   const [bookmarked, setBookmarked] = useState(false);
   const [rate, setRate] = useState(1);
 
-  useEffect(() => {
+  // Deliberately does not reset video/error to null/false before the
+  // fetch — only inside the resolved .then()/.catch() below. A leading
+  // synchronous reset would trip react-hooks/set-state-in-effect the
+  // same way bookmarks/mistakes/history's `load()` pattern already does
+  // elsewhere, and unlike those pages this one has no real need for it:
+  // the previous video's content staying on screen for the brief moment
+  // before the new one resolves matches this page's existing (unchanged)
+  // behavior on an id change, and Retry re-uses this exact function.
+  function load() {
     api
       .get(`/videos/${id}/`)
       .then((v) => {
         setVideo(v);
+        setError(false);
         setBookmarked(!!v.progress?.is_bookmarked);
         if (v.chapter) api.get(`/videos/?chapter=${v.chapter}`).then(setSiblings).catch(() => {});
       })
-      .catch((e) => setError(e.message));
+      .catch(() => setError(true));
+  }
+
+  useEffect(() => {
+    seekedRef.current = false; // otherwise a video reached via "More from this chapter"/auto-next
+    // inherits the previous video's already-seeked flag and never restores its own resume position
+    load();
     api.get(`/video-notes/?video=${id}`).then(setNotes).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   useEffect(() => {
@@ -105,7 +117,14 @@ function PlayerContent() {
     return (
       <AppShell>
         <Header title="Video" showBack />
-        <p className="hm-page-narrow text-sm text-brand-red">{error}</p>
+        <div className="hm-page-narrow">
+          <div className="hm-card p-4">
+            <p className="text-sm text-brand-red">Unable to load this video.</p>
+            <button type="button" onClick={load} className="mt-2 text-xs font-bold text-brand-blue">
+              Try Again
+            </button>
+          </div>
+        </div>
       </AppShell>
     );
   }
@@ -113,7 +132,13 @@ function PlayerContent() {
     return (
       <AppShell>
         <Header title="Video" showBack />
-        <p className="hm-page-narrow text-sm text-[var(--color-text-muted)]">Loading…</p>
+        <div className="hm-page-narrow flex flex-col gap-4">
+          <div className="aspect-video w-full animate-pulse rounded-xl bg-[var(--color-surface-muted)]" />
+          <div className="flex flex-col gap-2">
+            <div className="h-4 w-2/3 animate-pulse rounded bg-[var(--color-surface-muted)]" />
+            <div className="h-3 w-1/2 animate-pulse rounded bg-[var(--color-surface-muted)]" />
+          </div>
+        </div>
       </AppShell>
     );
   }
@@ -123,7 +148,9 @@ function PlayerContent() {
       <AppShell>
         <Header title={video.title} showBack />
         <div className="hm-page-narrow flex flex-col items-center gap-3 py-10 text-center">
-          <span className="text-4xl">🔒</span>
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-surface-muted)] text-[var(--color-text-muted)]">
+            <LockIcon className="h-7 w-7" />
+          </span>
           <p className="text-lg font-bold text-[var(--color-text)]">This video needs an upgrade</p>
           <p className="text-sm text-[var(--color-text-muted)]">
             Subscribe or enroll to unlock &quot;{video.title}&quot; and the rest of this course&apos;s video lectures.
@@ -137,6 +164,7 @@ function PlayerContent() {
   }
 
   const embedUrl = video.source_type !== "upload" ? videoEmbedUrl(video.play_url) : null;
+  const chapterSiblings = siblings.filter((s) => s.id !== video.id);
 
   return (
     <AppShell>
@@ -177,6 +205,7 @@ function PlayerContent() {
                   if (videoRef.current) videoRef.current.playbackRate = r;
                 }}
                 className="hm-input w-24 text-xs"
+                aria-label="Playback speed"
               >
                 {PLAYBACK_RATES.map((r) => (
                   <option key={r} value={r}>
@@ -191,22 +220,32 @@ function PlayerContent() {
             </label>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={toggleBookmark} className="hm-btn-outline text-xs">
-              {bookmarked ? "🔖 Bookmarked" : "🔖 Bookmark"}
+            <button
+              type="button"
+              onClick={toggleBookmark}
+              aria-pressed={bookmarked}
+              className={`hm-btn-outline flex items-center gap-1.5 text-xs ${bookmarked ? "text-brand-blue" : ""}`}
+            >
+              <BookmarkIcon fill={bookmarked ? "currentColor" : "none"} /> {bookmarked ? "Bookmarked" : "Bookmark"}
             </button>
             {video.source_type !== "upload" && !video.progress?.is_completed && (
-              <button onClick={markComplete} className="hm-btn-outline text-xs">
+              <button type="button" onClick={markComplete} className="hm-btn-outline text-xs">
                 Mark as Completed
               </button>
             )}
-            {video.progress?.is_completed && <span className="text-xs font-semibold text-brand-green">✅ Completed</span>}
+            {video.progress?.is_completed && (
+              <span className="flex items-center gap-1 text-xs font-semibold text-brand-green">
+                <CheckCircleIcon className="h-4 w-4" /> Completed
+              </span>
+            )}
           </div>
         </div>
 
         <div>
           <p className="text-sm font-bold text-[var(--color-text)]">{video.title}</p>
           <p className="text-xs text-[var(--color-text-muted)]">
-            {video.instructor_display} · {video.subject_name} · {formatDuration(video.duration_seconds)}
+            {video.instructor_display} · {video.subject_name}
+            {video.chapter_name ? ` · ${video.chapter_name}` : ""} · {formatDuration(video.duration_seconds)}
           </p>
           {video.description && <p className="mt-2 text-sm text-[var(--color-text)]">{video.description}</p>}
         </div>
@@ -251,6 +290,32 @@ function PlayerContent() {
           </section>
         )}
 
+        {chapterSiblings.length > 0 && (
+          <section>
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
+              More from {video.chapter_name || "this chapter"}
+            </p>
+            <div className="flex flex-col gap-2">
+              {chapterSiblings.map((s) => (
+                <Link key={s.id} href={`/videos/${s.id}`} className="hm-card relative flex items-center gap-3 p-2.5">
+                  <span
+                    className={`flex h-10 w-14 flex-none items-center justify-center rounded-lg bg-[var(--color-surface-muted)] ${
+                      s.progress?.is_completed ? "text-brand-green" : "text-[var(--color-text-muted)]"
+                    }`}
+                  >
+                    {s.progress?.is_completed ? <CheckCircleIcon className="h-4 w-4" /> : <VideosIcon />}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-[var(--color-text)]">{s.title}</p>
+                    <p className="text-xs text-[var(--color-text-muted)]">{formatDuration(s.duration_seconds)}</p>
+                  </div>
+                  {!s.has_access && <LockIcon className="h-3.5 w-3.5 flex-none text-amber-700" />}
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
         <section>
           <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">My Notes</p>
           <div className="flex flex-col gap-2">
@@ -269,8 +334,9 @@ function PlayerContent() {
               onChange={(e) => setNoteText(e.target.value)}
               placeholder="Add a note…"
               className="hm-input flex-1"
+              aria-label="Add a note"
             />
-            <button onClick={addNote} className="hm-btn-primary text-xs">
+            <button type="button" onClick={addNote} className="hm-btn-primary text-xs">
               Add
             </button>
           </div>

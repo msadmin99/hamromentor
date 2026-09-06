@@ -134,8 +134,36 @@ body {
      (QuestionSolver's question pane) being the sole scrollable area so the
      Header above it and the answer/next bar below it stay in place; a
      min-height here would let the whole shell grow past the viewport and
-     scroll as one page instead. */
-  height: 100dvh;
+     scroll as one page instead.
+
+     Android Daily Test white-screen fix: this used to be 100dvh (dynamic
+     viewport height), which by spec recalculates live as the browser's UI
+     chrome / on-screen keyboard / IME candidate strip / autofill-suggestion
+     surface shows and hides. The MCQ accessibility remediation
+     (QuestionWorkspace.js) made each answer option a real, focusable
+     <input type="radio">, so selecting an answer now moves real DOM focus
+     onto a native form control for the first time — exactly the trigger
+     Android Chrome's IME/autofill layer can react to, even for a
+     non-text input, by transiently reserving viewport space. When that
+     happens, 100dvh shrinks; since the header and bottom action bar below
+     keep their own intrinsic height as non-flex-1 siblings, 100% of that
+     shrinkage lands on this shell's flex-1 middle region (the question
+     pane), which can collapse toward zero height — and with overflow:
+     hidden here, a near-zero-height descendant is simply clipped away.
+     Nothing is lost (DOM/React state stays intact — only the CSS box
+     collapses), but the student sees a blank question area.
+
+     100svh (small viewport height) is the same viewport-unit family,
+     identical browser support, but represents the SMALLEST the viewport
+     can ever be — it does not shrink further when a keyboard/IME/autofill
+     surface appears, because it already assumes that surface is present.
+     That removes the collapsing-middle-region failure mode entirely. The
+     100vh line first is a pure fallback for a browser predating both
+     units — harmless no-op cascade for anything that already understands
+     svh/dvh. Desktop Safari was never affected (no keyboard/IME concept),
+     which is why this was reported as Android-only. */
+  height: 100vh;
+  height: 100svh;
   background: var(--color-surface-muted);
   position: relative;
   display: flex;

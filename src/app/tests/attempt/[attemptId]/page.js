@@ -25,6 +25,7 @@ function AttemptContent() {
   const [bookmarked, setBookmarked] = useState({});
   const [remaining, setRemaining] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [navigatorOpen, setNavigatorOpen] = useState(false); // mobile drawer
   const [navigatorCollapsed, setNavigatorCollapsed] = useState(false); // desktop rail
   const [reviewOpen, setReviewOpen] = useState(false);
@@ -94,16 +95,41 @@ function AttemptContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attemptId, router]);
 
+  // PRODUCTION INCIDENT FIX (Daily Test "exam error"): this used to be a
+  // bare `catch { submittedRef.current = false; setSubmitting(false); }` —
+  // every rejection (preview-only student hitting SubmitTestView's 402
+  // "Subscribe to submit this test.", or any other denial) silently reset
+  // the button with zero explanation. The student saw "Submitting…" flash
+  // and then... nothing — no error, no redirect, no way to tell what
+  // happened, so they retried the exact same submit over and over
+  // (confirmed in production logs: the same attempt id hit
+  // /attempts/{id}/submit/ repeatedly across multiple separate sessions,
+  // every single time answered with 402, every single time silently
+  // swallowed here). Root cause is proven; SubmitTestView's own decisions
+  // are untouched — this only makes an already-correct server response
+  // visible instead of thrown away.
   const submitTest = useCallback(async () => {
     if (submittedRef.current) return;
     submittedRef.current = true;
     setSubmitting(true);
+    setSubmitError("");
     try {
       await api.post(`/attempts/${attemptId}/submit/`);
       router.push(`/tests/result/${attemptId}`);
-    } catch {
+    } catch (err) {
+      // The exam's deadline already passed and the server auto-submitted
+      // it (SubmitAnswerView/AttemptDetailView's is_attempt_expired() +
+      // finalize_attempt(auto_submitted=True), returned here as a 403
+      // with code "exam_closed") — the attempt is already scored, so send
+      // the student to their real result instead of showing an error for
+      // something that, from the server's point of view, already succeeded.
+      if (err.data?.code === "exam_closed") {
+        router.push(`/tests/result/${attemptId}`);
+        return;
+      }
       submittedRef.current = false;
       setSubmitting(false);
+      setSubmitError(err.message || "Could not submit your test. Please try again.");
     }
   }, [attemptId, router]);
 
@@ -357,13 +383,17 @@ function AttemptContent() {
 
       <ReviewAnswersModal
         open={reviewOpen}
-        onClose={() => setReviewOpen(false)}
+        onClose={() => {
+          setReviewOpen(false);
+          setSubmitError("");
+        }}
         questions={attempt.questions}
         answers={answers}
         marked={marked}
         onJump={goToQuestion}
         onConfirmSubmit={submitTest}
         submitting={submitting}
+        error={submitError}
       />
 
       <NotesPopover

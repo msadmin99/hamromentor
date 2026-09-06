@@ -17,7 +17,7 @@ function stateFor(q, answers, marked) {
 /** Pre-submit summary — real counts/status from the same answers/marked
  * state the navigator uses, with per-item jump-back. Replaces the old
  * direct, unconfirmed submit-on-click. */
-export default function ReviewAnswersModal({ open, onClose, questions, answers, marked, onJump, onConfirmSubmit, submitting }) {
+export default function ReviewAnswersModal({ open, onClose, questions, answers, marked, onJump, onConfirmSubmit, submitting, error }) {
   const answeredCount = questions.filter((q) => answers[q.id] != null).length;
   const reviewCount = questions.filter((q) => marked[q.id]).length;
   const unansweredCount = questions.length - answeredCount;
@@ -56,6 +56,14 @@ export default function ReviewAnswersModal({ open, onClose, questions, answers, 
       {unansweredCount > 0 && (
         <p className="mb-3 rounded-lg bg-brand-red-light px-3 py-2 text-xs font-medium text-brand-red">
           You have {unansweredCount} unanswered question{unansweredCount === 1 ? "" : "s"}. You can still submit, or go back to answer them.
+        </p>
+      )}
+      {/* Production incident fix: this used to have nowhere to appear at
+          all — a failed submit reset the button with zero explanation
+          (see AttemptContent.submitTest's comment for the full incident). */}
+      {error && (
+        <p className="mb-3 rounded-lg bg-brand-red-light px-3 py-2 text-xs font-medium text-brand-red" role="alert">
+          {error}
         </p>
       )}
       <div className="flex flex-col gap-1.5">

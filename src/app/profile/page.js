@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import RequireAuth from "@/components/RequireAuth";
 import ActivityStats from "@/components/profile/ActivityStats";
 import CourseCard from "@/components/profile/CourseCard";
+import IdentityVerificationCard from "@/components/profile/IdentityVerificationCard";
 import PersonalInfoCard from "@/components/profile/PersonalInfoCard";
 import { ProfileNavRow, ProfileNavSection } from "@/components/profile/ProfileNav";
 import ProfileHero from "@/components/profile/ProfileHero";
@@ -91,6 +92,7 @@ function ProfileContent() {
 
           <div className="flex flex-col gap-5">
             <PersonalInfoCard user={user} />
+            <IdentityVerificationCard />
 
             <ProfileNavSection title="Account & Settings">
               <ProfileNavRow href="/settings" Icon={SettingsIcon} label="Settings" description="Name, password, payment preference and course" />

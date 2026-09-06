@@ -313,6 +313,26 @@ export function EditIcon(props) {
   );
 }
 
+/** Shield with a checkmark — Identity Verification section header. */
+export function ShieldIcon(props) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+      <path d="M12 3.5l7 3v5c0 5-3 8.2-7 9.5-4-1.3-7-4.5-7-9.5v-5l7-3z" strokeLinejoin="round" />
+      <path d="M9 12.2l2.1 2.1L15.3 10" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** Small camera glyph — the profile-photo edit overlay button. */
+export function CameraIcon(props) {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+      <path d="M4 8.5h3l1.5-2h7l1.5 2h3v11H4v-11z" strokeLinejoin="round" />
+      <circle cx="12" cy="14" r="3.2" />
+    </svg>
+  );
+}
+
 /** Padlock — locked/premium content. Added in the design-system pass
  * (Phase C) to replace the 🔒 emoji that was standing in for this exact
  * meaning in ~8 places (PRO badges, locked video/course states, the

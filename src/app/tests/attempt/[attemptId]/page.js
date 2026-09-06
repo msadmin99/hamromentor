@@ -265,6 +265,32 @@ function AttemptContent() {
     );
   }
 
+  // PRODUCTION INCIDENT FIX (Daily Test "white screen" / "shows Submit"):
+  // with zero questions, totalPages computes to 1 and page(0) < totalPages-1(0)
+  // is false, so the bottom bar unconditionally renders "Review & Submit →"
+  // with nothing above it — a blank content area plus a Submit button and
+  // no exception, exactly the reported symptom. Root cause is
+  // TestAttemptSerializer.get_questions() returning an empty list — most
+  // plausibly the underlying Test's questions were removed from the
+  // question bank after this attempt started (TestQuestion.question is
+  // CASCADE-deleted with the Question) — not something this page can fix;
+  // it can only stop presenting the misleading "ready to submit" UI for
+  // an exam that never actually loaded any questions. Never auto-retries
+  // or re-creates anything — the student explicitly chooses Retry.
+  if (attempt.questions.length === 0) {
+    return (
+      <div className="hm-app-shell flex items-center justify-center p-6">
+        <div className="w-full max-w-sm">
+          <ErrorCard
+            title="This exam has no questions to show right now."
+            subtitle="Your attempt is still saved — this hasn't been submitted or scored. Please try again, or contact support if this keeps happening."
+            onRetry={load}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="hm-app-shell">
       <TestPlayerHeader

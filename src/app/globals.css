@@ -73,6 +73,14 @@
   --color-primary-dark: var(--color-brand-blue-dark);
   --color-primary-light: var(--color-marketing-bar);
   --color-primary-soft: color-mix(in srgb, var(--color-brand-blue) 10%, white);
+
+  /* BottomNav's own content height (icon + label rows, py-2.5 padding),
+     excluding its own safe-area-inset-bottom padding — measured against
+     the actual rendered component, not guessed. Single source of truth so
+     AppShell's scrollable content can reserve exactly enough bottom
+     clearance to never sit behind the fixed nav, on any device, without
+     duplicating this number in two places. */
+  --mobile-bottom-nav-height: 4rem;
 }
 
 @theme inline {

@@ -25,7 +25,20 @@ export default function AppShell({ children, showNav = true }) {
           produced the "half the page is cut off, have to scroll right"
           symptom across multiple pages that all render through AppShell. */}
       <div className="flex h-dvh min-w-0 flex-1 flex-col">
-        <div className="hm-scrollbar-none min-w-0 flex-1 overflow-y-auto overflow-x-hidden">{children}</div>
+        {/* min-h-0 alongside flex-1: a flex item's default min-height is
+            `auto` (its content's own height), which can let this div ignore
+            flex-1's computed height and grow past the shell instead of
+            scrolling internally — the exact "one clear scrolling model"
+            this shell exists to guarantee. min-h-0 makes flex-1 actually
+            win. pb-[...] reserves room for BottomNav, now position:fixed
+            (removed from flow) instead of sticky — see BottomNav.js. */}
+        <div
+          className={`hm-scrollbar-none min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden ${
+            showNav ? "pb-[calc(var(--mobile-bottom-nav-height)+env(safe-area-inset-bottom))] md:pb-0" : ""
+          }`}
+        >
+          {children}
+        </div>
         {showNav && <BottomNav />}
       </div>
     </div>

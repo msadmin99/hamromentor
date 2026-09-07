@@ -25,7 +25,15 @@ export default function BottomNav() {
 
   return (
     <>
-      <nav aria-label="Primary navigation" className="sticky bottom-0 z-20 flex border-t border-[var(--color-border)] bg-white/95 backdrop-blur pb-[env(safe-area-inset-bottom)] md:hidden">
+      {/* position: fixed, not sticky — sticky only pins within its nearest
+          scrolling ancestor, so it stays correctly placed only as long as
+          that ancestor's own containment never breaks (a nested-flex/
+          overflow edge case some mobile browser engines handle
+          inconsistently). Fixed pins to the viewport itself regardless of
+          any ancestor's scroll context, which is the actual guarantee this
+          bar needs. Removed from flow entirely — AppShell reserves matching
+          bottom clearance on the scrollable content instead. */}
+      <nav aria-label="Primary navigation" className="fixed inset-x-0 bottom-0 z-20 flex border-t border-[var(--color-border)] bg-white/95 backdrop-blur pb-[env(safe-area-inset-bottom)] md:hidden">
         {PRIMARY_TABS.map((tab) => {
           const Icon = ICONS[tab.href];
           const active = isTabActive(tab, pathname);

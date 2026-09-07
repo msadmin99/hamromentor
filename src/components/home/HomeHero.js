@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 export default function HomeHero({ name, onStartTest }) {
   return (
     <div className="hm-card relative overflow-hidden p-5 sm:p-7">
@@ -28,12 +30,16 @@ export default function HomeHero({ name, onStartTest }) {
           </button>
         </div>
 
+        {/* Dr. Gutka emblem — the same /central-logo.png already used on the
+            marketing landing page hero (app/page.js), not a new asset.
+            Replaces the placeholder graduation-cap emoji this circle used
+            to show. */}
         <div
-          className="flex h-32 w-32 flex-none items-center justify-center self-center rounded-full text-6xl sm:h-36 sm:w-36"
+          className="flex h-32 w-32 flex-none items-center justify-center self-center rounded-full sm:h-36 sm:w-36"
           style={{ background: "linear-gradient(135deg, var(--color-brand-teal-from) 0%, var(--color-brand-teal-to) 100%)" }}
           aria-hidden="true"
         >
-          🎓
+          <Image src="/central-logo.png" alt="" width={96} height={96} className="h-[70%] w-[70%] object-contain" />
         </div>
       </div>
     </div>

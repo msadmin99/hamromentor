@@ -143,27 +143,38 @@ function ExamsContent() {
       </Header>
 
       {/*
-        Single-Viewport Update: deliberately NOT the shared `.hm-page`
-        class here — that class is a plain (un-layered) CSS rule, which in
-        this Tailwind v4 setup beats utility classes regardless of source
-        order, so a `pt-2`/`pb-2` override on the div itself could not
-        reliably win against `.hm-page { padding: 1rem }`. Rebuilding the
-        same max-width/centering rules directly as utilities, with tighter
-        vertical padding and inter-card gap than any other page uses, is
-        the only way to actually shrink this page's own top/bottom
-        padding without touching `.hm-page` (which every other page also
-        uses, unchanged, at its normal padding).
+        Mobile visual-consistency fix: the "Single-Viewport Update"'s
+        mobile-only gap-0.5/pt-0.5/pb-1 squeeze combined with
+        ExamCategoryCard's vw-based clamp() sizing meant the visible gap
+        between cards shrank toward invisible on narrower phones (cards
+        read as touching/merged) while comfortably wider phones — still
+        well under the `sm:` breakpoint — kept a clear, well-separated
+        look. Confirmed by direct screenshot comparison across mobile
+        widths (see the incident report). Using the same gap/padding at
+        every width below `sm:` removes that inconsistency: every mobile
+        screen now gets the same comfortable spacing this page's own
+        `sm:` values already established as correct, rather than a
+        width-dependent squeeze.
+
+        Deliberately NOT the shared `.hm-page` class here — that class is
+        a plain (un-layered) CSS rule, which in this Tailwind v4 setup
+        beats utility classes regardless of source order, so a
+        `pt-2`/`pb-2` override on the div itself could not reliably win
+        against `.hm-page { padding: 1rem }`. Rebuilding the same
+        max-width/centering rules directly as utilities is the only way
+        to control this page's own padding without touching `.hm-page`
+        (which every other page also uses, unchanged, at its normal
+        padding).
 
         This container intentionally has no overflow/height rule of its
-        own: the four cards below use natural, compressed sizing (via
+        own: the four cards below use natural sizing (via
         ExamCategoryCard's own clamp()s) rather than being force-fit with
         `overflow: hidden`, which risks silently clipping Grand Test or
         Past Year Questions on some device if this budget is ever
         slightly wrong — worse than the rare case of a few pixels of
-        scroll. See the deployment report for the full reasoning and the
-        concrete pixel budget behind these numbers.
+        scroll.
       */}
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-0.5 px-4 pb-1 pt-0.5 sm:gap-3 sm:px-10 sm:pb-6 sm:pt-3 xl:max-w-[82.5rem] 2xl:max-w-[100rem]">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 pb-6 pt-3 sm:px-10 xl:max-w-[82.5rem] 2xl:max-w-[100rem]">
         {EXAM_CATEGORIES.map((c) => (
           <ExamCategoryCard key={c.href} {...c} />
         ))}

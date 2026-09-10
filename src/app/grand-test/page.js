@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import AppShell from "@/components/AppShell";
 import CourseSwitcher from "@/components/CourseSwitcher";
 import ExamCard from "@/components/ExamCard";
@@ -44,6 +45,14 @@ function GrandTestContent() {
         <TestPageHero examType="grand" />
 
         <GrandTestHero onPurchased={load} />
+
+        <Link
+          href="/grand-test/series"
+          className="flex items-center justify-between rounded-2xl border border-[var(--color-border)] bg-white px-4 py-3 text-sm font-bold text-brand-blue transition hover:border-brand-blue"
+        >
+          <span>📈 My Grand Test series — progress, trend &amp; attendance</span>
+          <span aria-hidden>→</span>
+        </Link>
 
         <PlatformStats examType="grand" typeLabel="Grand Tests" stats={computePlatformStats(tests)} loading={loading && tests.length === 0} />
 

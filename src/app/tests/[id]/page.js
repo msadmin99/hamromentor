@@ -13,6 +13,7 @@ import {
 } from "@/components/icons";
 import { ErrorCard } from "@/components/subscription/billingShared";
 import { TEST_GUIDELINES } from "@/components/testpage/examTypeMeta";
+import GrandTestStatusPanel from "@/components/testpage/GrandTestStatusPanel";
 import { accessOf, denialFor, isLocked, sourceLabel } from "@/lib/accessState";
 import { api } from "@/lib/api";
 
@@ -100,9 +101,17 @@ function TestDetailContent() {
       const attempt = await api.post(`/tests/${id}/start/`, needsPassword ? { access_password: password } : {});
       router.push(`/tests/attempt/${attempt.id}`);
     } catch (err) {
-      if (err.status === 402) {
+      const code = err.data?.code;
+      // Grand Test 3.0 — the server's own schedule verdict. Show its
+      // message verbatim (it is the approved student-facing copy) and
+      // reload so the state-specific panel above reflects reality,
+      // rather than misrouting "examination" text into the password flow.
+      if (code === "grand_test_missed" || code === "grand_test_not_started" || code === "session_ended" || code === "session_not_started") {
         setSubmitError(err.message);
-      } else if (err.status === 403 && /password|exam/i.test(err.message)) {
+        load();
+      } else if (err.status === 402) {
+        setSubmitError(err.message);
+      } else if (err.status === 403 && (code === "invalid_test_password" || code === "invalid_session_password" || /password/i.test(err.message))) {
         setNeedsPassword(true);
         setSubmitError(password ? "Incorrect password." : "This test is password-protected.");
       } else {
@@ -191,6 +200,12 @@ function TestDetailContent() {
           </p>
           {test.description && <p className="mt-3 text-sm text-[var(--color-text)]">{test.description}</p>}
         </div>
+
+        {/* Grand Test 3.0 — state-specific panel driven by the backend's
+            own derived grand_test_status + authoritative grand_test_schedule
+            (never the browser clock). Renders nothing for non-Grand or
+            unscheduled tests. */}
+        <GrandTestStatusPanel test={test} />
 
         {/* 2. Key statistics */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

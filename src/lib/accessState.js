@@ -51,6 +51,10 @@ const PRESENTATION = {
   start: { label: "Available", cta: "Start Test", icon: "🎯", tone: "ready" },
   upcoming: { label: "Upcoming", cta: "Not open yet", icon: "🕒", tone: "waiting", disabled: true },
   closed: { label: "Closed", cta: "Closed", icon: "🔔", tone: "closed", disabled: true },
+  // Grand Test 3.0 — the student was entitled but the scheduled window
+  // passed without them starting. Distinct from `closed` so the card
+  // can carry the approved "Missed" wording, and never "failed"/zero.
+  missed: { label: "Missed", cta: "Exam window closed", icon: "⌛", tone: "closed", disabled: true },
   attempts_exhausted: { label: "No attempts left", cta: "No attempts left", icon: "🚫", tone: "closed", disabled: true },
   locked: { label: "Locked", cta: "Unlock Test", icon: "🔒", tone: "locked" },
 };
@@ -114,6 +118,12 @@ const DENIAL_COPY = {
   exam_closed: {
     title: "This exam has closed",
     body: "The exam window has ended, so it can no longer be started.",
+    action: null,
+    href: null,
+  },
+  exam_missed: {
+    title: "You missed this Grand Test",
+    body: "The scheduled exam window has closed, so it can no longer be started. No score, rank or percentile is awarded for a missed Grand Test — but educational review may be available.",
     action: null,
     href: null,
   },

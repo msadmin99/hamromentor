@@ -1,7 +1,27 @@
 "use client";
 
 import { useMemo } from "react";
+import DOMPurify from "dompurify";
 import katex from "katex";
+
+/** GT3-7 §37 — question/option/explanation HTML comes from the admin
+ * rich-text editor and the bulk-import pipeline (which can include
+ * content from a lower-trust Teacher-role account, not only a full
+ * Admin), and is rendered here via dangerouslySetInnerHTML for every
+ * student who views that question — a real stored-XSS surface with no
+ * sanitization in front of it before this fix. USE_PROFILES: mathMl/svg
+ * (DOMPurify's own documented config for KaTeX-rendered output) plus an
+ * explicit `style` allowance keeps every legitimate KaTeX/rich-text
+ * rendering path working unchanged (KaTeX leans heavily on inline
+ * `style` for layout) while stripping <script>, event-handler
+ * attributes (onerror, onclick, ...), and javascript: URLs. */
+function sanitizeRichHtml(html) {
+  if (!html) return "";
+  return DOMPurify.sanitize(html, {
+    USE_PROFILES: { html: true, mathMl: true, svg: true },
+    ADD_ATTR: ["style", "target"],
+  });
+}
 
 export function videoEmbedUrl(url) {
   if (!url) return null;
@@ -93,12 +113,12 @@ function buildResponsiveImage(imageData) {
  * should leave this false so the browser doesn't fetch dozens of images
  * that are never scrolled into view. */
 export default function RichContent({ html, latex, image, imageData, video, className = "", priority = false }) {
-  const renderedHtml = useMemo(() => renderInlineLatex(html), [html]);
+  const renderedHtml = useMemo(() => sanitizeRichHtml(renderInlineLatex(html)), [html]);
 
   const latexHtml = useMemo(() => {
     if (!latex?.trim()) return "";
     try {
-      return katex.renderToString(latex, { throwOnError: false, displayMode: false });
+      return sanitizeRichHtml(katex.renderToString(latex, { throwOnError: false, displayMode: false }));
     } catch {
       return "";
     }

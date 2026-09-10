@@ -68,14 +68,14 @@ describe("card presentation comes from the backend state, never from price", () 
     assert.equal(p.cta, "Review Test");
   });
 
-  it("disables the action for upcoming, closed and exhausted", () => {
-    for (const state of ["upcoming", "closed", "attempts_exhausted"]) {
+  it("disables the action for upcoming, closed, missed and exhausted", () => {
+    for (const state of ["upcoming", "closed", "missed", "attempts_exhausted"]) {
       assert.equal(cardPresentation(test_({ state, can_start: false })).disabled, true, state);
     }
   });
 
   it("gives every state a distinct label and icon, so state is never colour-only", () => {
-    const states = ["continue", "review", "start", "upcoming", "closed", "attempts_exhausted", "locked"];
+    const states = ["continue", "review", "start", "upcoming", "closed", "missed", "attempts_exhausted", "locked"];
     const labels = states.map((s) => cardPresentation(test_({ state: s })).label);
     const icons = states.map((s) => cardPresentation(test_({ state: s })).icon);
     assert.equal(new Set(labels).size, states.length);

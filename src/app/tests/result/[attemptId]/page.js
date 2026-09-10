@@ -14,6 +14,7 @@ import ReportQuestionButton from "@/components/ReportQuestionModal";
 import RequireAuth from "@/components/RequireAuth";
 import RichContent from "@/components/RichContent";
 import SmartPracticeCard from "@/components/smart-practice/SmartPracticeCard";
+import GrandTestResultExtras from "@/components/testpage/GrandTestResultExtras";
 import { ErrorCard } from "@/components/subscription/billingShared";
 import { api } from "@/lib/api";
 
@@ -328,11 +329,16 @@ function ResultContent() {
           </>
         )}
 
+        {/* Grand Test 3.0 — review-lifecycle banner, score-band motivation,
+            and personalized recommendations. All backend-driven; null for
+            every non-Grand result. */}
+        <GrandTestResultExtras result={result} />
+
         <SmartPracticeCard sourceTestId={result.test} />
 
         {/* 8. Question review — unchanged internals, only re-hosted under
             the new hierarchy above. */}
-        <div className="flex flex-col gap-3">
+        <div id="question-review" className="flex flex-col gap-3">
           {visibleQuestions.map((q, i) => (
             <div key={q.id ?? `deleted-${i}`} className="hm-card p-4">
               <div className="flex items-start justify-between gap-2">

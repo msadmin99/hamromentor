@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import DOMPurify from "dompurify";
 import katex from "katex";
+import { classifyStandaloneLatex, renderMathInHtml } from "@/lib/mathDelimiters";
 
 /** GT3-7 §37 — question/option/explanation HTML comes from the admin
  * rich-text editor and the bulk-import pipeline (which can include
@@ -45,32 +46,25 @@ function stripEmbeddedTags(expr) {
 }
 
 /** Bulk-imported questions sometimes carry raw LaTeX source typed straight into
- * a Word/Excel cell (e.g. "$\vec{a}+\vec{b}$") instead of using the admin's
- * equation-editor button — the import pipeline has no way to know that's math,
- * so it lands in `text` as literal characters. Render it here instead, so it
- * doesn't matter whether the LaTeX came in via the dedicated `latex` field or
- * as inline $...$/$$...$$ markers inside the HTML itself. */
+ * a Word/Excel cell instead of using the admin's equation-editor button — the
+ * import pipeline has no way to know that's math, so it lands in `text` as
+ * literal characters. Production content uses a mix of TeX `$...$`/`$$...$$`
+ * markers AND MathJax-style `\(...\)`/`\[...\]` delimiters (plus, on some
+ * legacy rows, a malformed nested pair like `\(\[...\]\)`) — `renderMathInHtml`
+ * (src/lib/mathDelimiters.js) recognises all four and normalises the
+ * malformed nesting before handing each bare expression to KaTeX, so it
+ * doesn't matter which delimiter style a given row happens to use. */
 function renderInlineLatex(html) {
   if (!html) return html;
-  let out = html.replace(/\$\$([\s\S]+?)\$\$/g, (match, expr) => {
+  return renderMathInHtml(html, (expr, { displayMode }) => {
     const cleaned = stripEmbeddedTags(expr).trim();
-    if (!cleaned) return match;
+    if (!cleaned) return null;
     try {
-      return katex.renderToString(cleaned, { throwOnError: false, displayMode: true });
+      return katex.renderToString(cleaned, { throwOnError: false, displayMode });
     } catch {
-      return match;
+      return null;
     }
   });
-  out = out.replace(/\$([^$\n]+?)\$/g, (match, expr) => {
-    const cleaned = stripEmbeddedTags(expr).trim();
-    if (!cleaned) return match;
-    try {
-      return katex.renderToString(cleaned, { throwOnError: false, displayMode: false });
-    } catch {
-      return match;
-    }
-  });
-  return out;
 }
 
 /** Builds `srcset`/fallback-src for a media_library `image_data` object
@@ -117,8 +111,15 @@ export default function RichContent({ html, latex, image, imageData, video, clas
 
   const latexHtml = useMemo(() => {
     if (!latex?.trim()) return "";
+    // The dedicated `latex` field normally holds a bare expression, but a
+    // row imported by hand sometimes carries it wrapped in \(...\), \[...\]
+    // or $...$ (or the same malformed nesting as inline content) — strip
+    // and classify those the same way renderMathInHtml does, so this path
+    // never shows raw delimiters either.
+    const { expr, display } = classifyStandaloneLatex(latex);
+    if (!expr) return "";
     try {
-      return sanitizeRichHtml(katex.renderToString(latex, { throwOnError: false, displayMode: false }));
+      return sanitizeRichHtml(katex.renderToString(expr, { throwOnError: false, displayMode: display }));
     } catch {
       return "";
     }

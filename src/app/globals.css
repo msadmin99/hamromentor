@@ -248,6 +248,16 @@ body {
   border-color: var(--color-brand-blue);
 }
 
+/* A wide \[...\]/$$...$$ display equation (a long derivation, a matrix)
+   renders wider than a phone screen. KaTeX's own docs recommend this rule
+   so that span scrolls horizontally within itself instead of pushing the
+   whole page/question card into a horizontal scroll on mobile. */
+.hm-richtext-content .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.15rem 0;
+}
+
 .hm-richtext-content img {
   max-width: 100%;
   border-radius: 0.5rem;

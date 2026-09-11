@@ -5,15 +5,37 @@ import Sidebar from "./Sidebar";
 
 export default function AppShell({ children, showNav = true }) {
   return (
-    // h-dvh (not min-h-dvh) is load-bearing: a *minimum* height still lets
-    // this wrapper grow taller than the viewport once content is added, at
-    // which point there's nothing left to scroll internally — the whole
-    // page (Header, Sidebar, BottomNav included) scrolls as one long
-    // document instead, which is what made the header/bottom nav drift
-    // away while scrolling on mobile/iPad instead of staying put. Pinning
-    // the shell to exactly the viewport height forces the inner
-    // overflow-y-auto region below to be the only thing that scrolls.
-    <div className="flex h-dvh overflow-x-hidden bg-[var(--color-surface-muted)]">
+    // h-svh (not min-h-dvh, and not h-dvh) is load-bearing on two separate
+    // counts:
+    //
+    // 1. A *minimum* height still lets this wrapper grow taller than the
+    //    viewport once content is added, at which point there's nothing
+    //    left to scroll internally — the whole page (Header, Sidebar,
+    //    BottomNav included) scrolls as one long document instead, which is
+    //    what made the header/bottom nav drift away while scrolling on
+    //    mobile/iPad instead of staying put. Pinning the shell to exactly
+    //    the viewport height forces the inner overflow-y-auto region below
+    //    to be the only thing that scrolls.
+    //
+    // 2. `svh` over `dvh`: `dvh` (dynamic viewport height) recalculates
+    //    LIVE as the browser's address bar/toolbar auto-hides during a
+    //    scroll gesture — exactly the trigger for the mobile QBank bug
+    //    where cards vanished into a large blank area mid-scroll and
+    //    reappeared on scrolling back. With this shell (and therefore the
+    //    inner overflow-y-auto scroll region below it) pinned to a height
+    //    that changes WHILE the browser is actively compositing the
+    //    scroll, Android Chrome/iOS Safari can paint the newly-scrolled-
+    //    into-view content against a stale height snapshot until a
+    //    subsequent repaint (scroll-direction reversal, or the chrome-hide
+    //    animation settling) corrects it — the content was never gone,
+    //    only unpainted for that window. `svh` (small viewport height)
+    //    is pinned to the SMALLEST the viewport can ever be and never
+    //    changes when the address bar shows/hides, removing that
+    //    live-recalculation entirely. Same fix already proven for the
+    //    identical bug class in globals.css's `.hm-app-shell` (see its own
+    //    "Android Daily Test white-screen fix" comment) — this brings the
+    //    shared shell every other page uses onto the same stable unit.
+    <div className="flex h-svh overflow-x-hidden bg-[var(--color-surface-muted)]">
       {showNav && <Sidebar />}
       {/* min-w-0 on both flex children below is load-bearing, not decorative:
           a flex item's default min-width is `auto`, meaning the browser won't
@@ -24,7 +46,7 @@ export default function AppShell({ children, showNav = true }) {
           sticky Header — wider than the viewport on mobile, which is what
           produced the "half the page is cut off, have to scroll right"
           symptom across multiple pages that all render through AppShell. */}
-      <div className="flex h-dvh min-w-0 flex-1 flex-col">
+      <div className="flex h-svh min-w-0 flex-1 flex-col">
         {/* min-h-0 alongside flex-1: a flex item's default min-height is
             `auto` (its content's own height), which can let this div ignore
             flex-1's computed height and grow past the shell instead of

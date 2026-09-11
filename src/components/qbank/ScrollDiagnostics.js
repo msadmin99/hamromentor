@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 /** TEMPORARY, INVESTIGATION-ONLY instrumentation for the QBank mobile
  * blank-content bug. Not wired into normal navigation — only mounts when
@@ -17,53 +18,85 @@ import { useEffect, useRef, useState } from "react";
  *  - Phase 2 geometry: live scroll/viewport metrics + getBoundingClientRect()
  *    for the named elements, snapshotted on every scroll + layout-shift event.
  *  - A real PerformanceObserver('layout-shift') feed — the actual browser
- *    API measuring Cumulative Layout Shift — which answers Phase 2's A-vs-B
- *    question directly: if a shift is reported for a given blank episode,
- *    the browser's own layout genuinely moved; if no shift is reported
- *    while the user reports a blank area, layout stayed put and it's a
- *    pure paint/composite failure instead.
- *  - A requestAnimationFrame jank detector (frame-to-frame gaps > 50ms),
- *    a rough proxy for "the main thread stalled" / "a frame was dropped",
- *    since a full DevTools Performance timeline isn't available right now.
+ *    API measuring Cumulative Layout Shift.
+ *  - A requestAnimationFrame jank detector (frame-to-frame gaps > 50ms).
  *  - Phase 4 one-variable toggles, applied as scoped CSS via data
- *    attributes on <html> - every toggle is independent and reversible at
- *    runtime, so one deploy covers all eight variants without needing
- *    eight separate builds.
+ *    attributes on <html>.
  *  - Phase 5: a toggle that blocks interaction until QBank's three async
- *    fetches (subjects, dashboard stats, recommended) have all resolved,
- *    directly testing whether the bug needs mid-scroll async insertion.
- *  - Phase 6 (this revision): rich DOM identification for every
- *    layout-shift source node (tag/id/class/testid/aria-label/role/text/
- *    parent+grandparent/nearest section/computed style), a standalone
- *    geometry scanner that searches the scroll container for any element
- *    whose rect falls near the recurring "303-359px tall, top 383-439px"
- *    pattern reported from real-device testing (independent of whether
- *    PerformanceObserver attributed a shift to it — a real, documented
- *    Chrome limitation is that `LayoutShiftAttribution.node` can be null
- *    once the node has moved/been replaced by the time attribution is
- *    read), and MARK BLANK START / MARK BLANK END buttons that force an
- *    immediate, detailed capture (including the layout-vs-paint style
- *    fields: transform/filter/will-change/opacity/overflow/position/
- *    z-index/background) so the geometry data can be correlated against
- *    exactly when the user sees the blank area, not just against scroll
- *    events in general.
+ *    fetches (subjects, dashboard stats, recommended) have all resolved.
+ *  - Phase 6: rich DOM identification for every layout-shift source node,
+ *    a standalone geometry scanner for the recurring "303-359px tall, top
+ *    383-439px" pattern, and MARK BLANK START/END buttons.
+ *
+ * PHASE 7 (this revision) — self-contamination fix. A real-device JSON
+ * export showed the recurring 303<->359 / 383<->439 pattern was traced
+ * directly to THIS PANEL ITSELF: its own text ("QBank Scroll Diagnostics
+ * (?debug=1) ... MARK BLANK START ...") turned up as the geometry-scan
+ * candidate. Root cause: `findGeometryMatches()` swept
+ * `scrollEl.querySelectorAll('div, section')`, and this component is
+ * rendered as a DOM *child* of that same scroll container in
+ * qbank/page.js — its own `position: fixed` removes it from layout flow
+ * (it never affects the scroll container's scrollHeight/content position)
+ * but does NOT remove it from a `querySelectorAll` sweep of that
+ * container's descendants, so it was eligible to match its own tolerance
+ * band. Its height legitimately does move in that same 300-360px range
+ * (content grows/shrinks as log entries and MARK buttons render, `bottom:
+ * 0` + variable height ⇒ variable `top`), so once it was in the candidate
+ * pool it was a very good match. This revision fixes it three ways,
+ * layered (any one alone would have been enough, together they make the
+ * exclusion robust rather than reliant on a single mechanism):
+ *   1. `data-qbank-debug-overlay` marks the panel root; every scanner
+ *      (geometry scanner, findTargets, layout-shift source processing)
+ *      explicitly excludes the root and all descendants via
+ *      `el.closest('[data-qbank-debug-overlay]')` — never by text match.
+ *   2. The panel is rendered through a React portal directly onto
+ *      `document.body`, so it is no longer a DOM descendant of the QBank
+ *      scroll container (or of QBank at all) — structurally, not just by
+ *      filter.
+ *   3. The panel's own on-screen height is now fixed (not content-driven
+ *      `maxHeight: auto`), so it can no longer generate genuine
+ *      self-inflicted layout shifts as its log grows, independent of the
+ *      exclusion logic above.
+ * The original "MASTER ENGINEERING TASK" report's 303/359 evidence used
+ * the identical numbers reported here — it was very likely this same
+ * panel the whole time, not a QBank component. Recorded honestly, not
+ * glossed over: see the final report for what that does and doesn't mean
+ * for the stage 4 NextPracticeCard/SubjectGrid fixes (those were
+ * evidenced independently, from source code, not from this pattern).
+ *
  *  - Export: every captured event is appended to an in-memory log with a
  *    "Copy JSON" button, since there is no server to stream telemetry to
  *    from here - you copy/paste or screenshot the log back for analysis. */
 
+const DEBUG_OVERLAY_SELECTOR = "[data-qbank-debug-overlay]";
+
+function isDebugOverlayNode(el) {
+  return !!el && typeof el.closest === "function" && !!el.closest(DEBUG_OVERLAY_SELECTOR);
+}
+
 const TARGETS = [
   { key: "scrollContainer", match: (el) => el.classList?.contains("overflow-y-auto") && el.classList?.contains("hm-scrollbar-none") },
+  { key: "pageRoot", match: (el) => el.classList?.contains("hm-page") },
   { key: "header", match: (el) => el.tagName === "HEADER" },
   { key: "bottomNav", match: (el) => el.tagName === "NAV" && el.getAttribute("aria-label") === "Primary navigation" },
+  { key: "qbankHero", match: (el) => el.textContent?.includes("What would you like to practice today?") },
+  { key: "nextPracticeCard", match: (el) => el.textContent?.includes("Your Next Practice") && el.classList?.contains("hm-card") },
   { key: "progressSummary", match: (el) => el.textContent?.trim().startsWith("Your Progress") && el.classList?.contains("hm-card") },
   { key: "recommendedForYou", match: (el) => el.textContent?.trim().startsWith("Recommended for You") },
+  { key: "subjectGrid", match: (el) => el.id === "subjects" },
   { key: "quickPractice", match: (el) => el.textContent?.includes("Quick Practice") && el.textContent?.includes("Practice a few questions anytime") },
+  // ChapterGrid/ChapterHero deliberately not matched here — they render
+  // on /qbank/[subjectSlug], not on this page; this instrumentation only
+  // ever mounts on qbank/page.js (see the ?debug=1 gate there), so a
+  // matcher for them would only ever resolve to null and isn't included
+  // rather than fabricate a guess at their markup.
 ];
 
 function findTargets() {
   const found = {};
   const all = document.querySelectorAll("div, section, header, nav");
   for (const el of all) {
+    if (isDebugOverlayNode(el)) continue;
     for (const t of TARGETS) {
       if (!found[t.key] && t.match(el)) found[t.key] = el;
     }
@@ -82,16 +115,6 @@ function rect(el) {
 }
 
 // --- Phase 6: rich node identification --------------------------------
-// Item 1/2 of the follow-up investigation: a PerformanceObserver source
-// previously only reported `node.className || node.tagName`, which is
-// exactly why every prior source came back as an anonymous "DIV". This
-// walks the real node (when still attached — see the docstring above for
-// why it sometimes won't be) and records everything asked for: tag, id,
-// class, data-testid, aria-label, role, an accessible "name" best-effort,
-// short text, parent/grandparent, nearest <section>/.hm-card ancestor,
-// nearest ancestor with any non-empty className, full rect, and the
-// layout-vs-paint style fields (transform/filter/will-change/opacity/
-// overflow/position/z-index/background).
 function shortText(el, limit = 120) {
   const t = el?.textContent?.trim().replace(/\s+/g, " ") || "";
   return t.length > limit ? `${t.slice(0, limit)}…` : t;
@@ -151,14 +174,11 @@ function describeNode(el) {
   };
 }
 
-// Item 3: an independent scanner, not dependent on PerformanceObserver
-// attribution at all. Searches the scroll container (not the whole
-// document, to keep this cheap enough to run on every scroll tick on a
-// real phone) for any element whose rect falls near the recurring
-// "303-359px tall, top 383-439px" pattern reported from real-device
-// testing, with a generous +/-30px tolerance since exact pixels vary by
-// device/zoom/address-bar state. Returns full descriptors, capped to 5
-// matches so the log stays readable.
+// Item 3 (Phase 6) / re-scoped in Phase 7 to explicitly exclude the debug
+// overlay itself — see the docstring's contamination writeup above. Scans
+// the scroll container (not the whole document, to keep this cheap enough
+// to run every scroll tick on a real phone) for any element whose rect
+// falls near the reported pattern, +/-~16px tolerance.
 const GEOMETRY_WATCH = { heightMin: 273, heightMax: 389, topMin: 353, topMax: 469 };
 
 function findGeometryMatches(scrollEl) {
@@ -166,6 +186,7 @@ function findGeometryMatches(scrollEl) {
   const all = root.querySelectorAll("div, section");
   const matches = [];
   for (const el of all) {
+    if (isDebugOverlayNode(el)) continue;
     const r = el.getBoundingClientRect();
     if (
       r.height >= GEOMETRY_WATCH.heightMin && r.height <= GEOMETRY_WATCH.heightMax &&
@@ -178,8 +199,17 @@ function findGeometryMatches(scrollEl) {
   return matches;
 }
 
+// Phase 7, item 6: the initial "mount" snapshot could race the very first
+// paint and misreport a real (about-to-be-measurable) scroll container as
+// scrollHeight:0/clientHeight:0 — not a valid geometry reading, just an
+// unsettled one. `measurementUnavailable` makes that distinction explicit
+// instead of letting a literal 0 be read as real data, for every
+// snapshot, not only the first.
 function snapshot(scrollEl, reason) {
   const t = findTargets();
+  const scrollHeight = scrollEl ? scrollEl.scrollHeight : null;
+  const clientHeight = scrollEl ? scrollEl.clientHeight : null;
+  const measurementUnavailable = !!scrollEl && scrollHeight === 0 && clientHeight === 0;
   return {
     t: Math.round(performance.now()),
     reason,
@@ -187,8 +217,9 @@ function snapshot(scrollEl, reason) {
     docClientHeight: document.documentElement.clientHeight,
     visualViewportHeight: window.visualViewport ? Math.round(window.visualViewport.height) : null,
     scrollTop: scrollEl ? Math.round(scrollEl.scrollTop) : null,
-    scrollHeight: scrollEl ? scrollEl.scrollHeight : null,
-    clientHeight: scrollEl ? scrollEl.clientHeight : null,
+    scrollHeight,
+    clientHeight,
+    measurementUnavailable,
     rects: Object.fromEntries(Object.entries(t).map(([k, el]) => [k, rect(el)])),
   };
 }
@@ -215,10 +246,31 @@ const VARIANT_CSS = {
   noHeaderFx: `[data-diag-noHeaderFx] .hm-header-gradient { background: #1a4d5c !important; box-shadow: none !important; }`,
 };
 
+// Phase 7, item 4: fixed (not content-driven) panel dimensions per mode,
+// so the panel's own log growing (Copy JSON (6) -> (7), more log rows,
+// longer JSON in a source dump, etc.) can never change its own height —
+// which is exactly the self-inflicted-shift mechanism this revision
+// exists to eliminate. `maxHeight: auto` previously let content dictate
+// height; a fixed `height` with internal scrolling does not.
+const PANEL_HEIGHT_EXPANDED = "45vh";
+const PANEL_HEIGHT_MINIMIZED = 44;
+
 export default function ScrollDiagnostics({ dataReady, preload, onTogglePreload }) {
   const [log, setLog] = useState([]);
   const [variants, setVariants] = useState({});
   const [minimized, setMinimized] = useState(false);
+  // Phase 7, item 2/3: portal the panel directly onto document.body so it
+  // is structurally never a DOM descendant of the QBank scroll container
+  // (or of QBank at all) — not just filtered out by attribute, actually
+  // moved out of that subtree. `mounted` avoids an SSR/hydration mismatch
+  // from calling createPortal before document.body exists; a lazy
+  // initializer (not an effect) so no setState-in-effect is needed —
+  // /qbank is fully static-prerendered, so this component's render code
+  // never executes during any server pass in the first place (debugMode
+  // is only ever true client-side, after hydration, once ?debug=1's
+  // search param is read), meaning `document` is always defined by the
+  // time this actually runs.
+  const [mounted] = useState(() => typeof document !== "undefined");
   const rafRef = useRef(null);
   const lastFrameRef = useRef(null);
   const lastGeomScanRef = useRef(0);
@@ -234,14 +286,14 @@ export default function ScrollDiagnostics({ dataReady, preload, onTogglePreload 
     return document.querySelector(".hm-scrollbar-none.overflow-y-auto");
   }
 
-  // Real Cumulative-Layout-Shift observer — the actual browser signal for
-  // "did layout genuinely move", not an inference from a screen recording.
-  // Item 1/2/7: every source now carries a full describeNode() (not just
-  // className/tagName), sub-pixel-precision prev/cur rects (rounding was
-  // masking real sub-pixel-only deltas — see the docstring), an explicit
-  // `changed` flag so a "reported shift, unchanged rect" entry is visible
-  // rather than silently confusing, and a dedup guard against the same
-  // (startTime,value) pair ever being logged twice.
+  // Real Cumulative-Layout-Shift observer. Phase 7: every source whose
+  // node is the debug overlay itself or a descendant of it is dropped
+  // before it ever reaches the log — never merely tagged, per the
+  // explicit instruction that the JSON must not contain the overlay's own
+  // text as a "source" at all. If EVERY source for a given entry turns
+  // out to be the overlay, the entry is kept (so the observer's raw
+  // activity stays auditable) but flagged `debugOverlayOnly: true` and
+  // excluded from the QBank-relevant shift count shown in the UI.
   useEffect(() => {
     if (typeof PerformanceObserver === "undefined") return undefined;
     let po;
@@ -251,12 +303,11 @@ export default function ScrollDiagnostics({ dataReady, preload, onTogglePreload 
           const sig = `${entry.startTime}:${entry.value}`;
           if (seenShiftsRef.current.has(sig)) continue;
           seenShiftsRef.current.add(sig);
-          push({
-            kind: "layout-shift",
-            t: Math.round(entry.startTime),
-            value: entry.value,
-            hadRecentInput: entry.hadRecentInput,
-            sources: (entry.sources || []).slice(0, 8).map((s) => {
+          const rawSources = entry.sources || [];
+          const sources = rawSources
+            .filter((s) => !s.node || !isDebugOverlayNode(s.node))
+            .slice(0, 8)
+            .map((s) => {
               const prev = s.previousRect && { top: s.previousRect.top, height: s.previousRect.height };
               const cur = s.currentRect && { top: s.currentRect.top, height: s.currentRect.height };
               const changed = !!(prev && cur && (Math.abs(prev.top - cur.top) > 0.5 || Math.abs(prev.height - cur.height) > 0.5));
@@ -264,7 +315,16 @@ export default function ScrollDiagnostics({ dataReady, preload, onTogglePreload 
                 node: s.node ? describeNode(s.node) : { nodeAvailable: false, note: "node no longer attached at attribution time" },
                 prev, cur, changed,
               };
-            }),
+            });
+          push({
+            kind: "layout-shift",
+            t: Math.round(entry.startTime),
+            value: entry.value,
+            hadRecentInput: entry.hadRecentInput,
+            visualViewportHeight: window.visualViewport ? Math.round(window.visualViewport.height) : null,
+            debugOverlayOnly: rawSources.length > 0 && sources.length === 0,
+            excludedOverlaySourceCount: rawSources.length - sources.length,
+            sources,
           });
         }
       });
@@ -275,10 +335,7 @@ export default function ScrollDiagnostics({ dataReady, preload, onTogglePreload 
     return () => po && po.disconnect();
   }, []);
 
-  // rAF jank detector: flags any frame-to-frame gap over 50ms (roughly 3
-  // dropped frames at 60fps) as a rough main-thread-stall proxy. Also
-  // drives the throttled geometry scanner (item 3) so matches are found
-  // continuously during scroll, not just on scroll events themselves.
+  // rAF jank detector + throttled geometry scanner (item 3).
   useEffect(() => {
     lastFrameRef.current = performance.now();
     function tick(now) {
@@ -300,10 +357,17 @@ export default function ScrollDiagnostics({ dataReady, preload, onTogglePreload 
     return () => cancelAnimationFrame(rafRef.current);
   }, []);
 
-  // Scroll-driven geometry snapshots (throttled) + one on mount.
+  // Phase 7, item 6: the mount snapshot now waits two animation frames
+  // before capturing, so it isn't racing the very first paint, and flags
+  // (rather than silently reports) a still-zero measurement afterward.
   useEffect(() => {
+    let cancelled = false;
     const scrollEl = scrollElement();
-    push(snapshot(scrollEl, "mount"));
+    let raf1 = requestAnimationFrame(() => {
+      raf1 = requestAnimationFrame(() => {
+        if (!cancelled) push(snapshot(scrollEl, "mount"));
+      });
+    });
     let ticking = false;
     function onScroll() {
       if (ticking) return;
@@ -314,7 +378,11 @@ export default function ScrollDiagnostics({ dataReady, preload, onTogglePreload 
       });
     }
     scrollEl?.addEventListener("scroll", onScroll, { passive: true });
-    return () => scrollEl?.removeEventListener("scroll", onScroll);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf1);
+      scrollEl?.removeEventListener("scroll", onScroll);
+    };
   }, []);
 
   // Apply Phase 4 variant toggles as data-attributes on <html> + inject
@@ -338,21 +406,21 @@ export default function ScrollDiagnostics({ dataReady, preload, onTogglePreload 
     setVariants((v) => ({ ...v, [key]: !v[key] }));
   }
 
-  // Item 8/9: MARK BLANK START / MARK BLANK END. Forces an immediate,
-  // untruttled capture — the full snapshot() fields, an unthrottled
-  // geometry-match scan (item 3, no waiting for the next 400ms tick), and
-  // the last few seconds of layout-shift/jank history already in the log
-  // — so the exact moment the user sees (or stops seeing) the blank area
-  // can be lined up against the geometry data, instead of only ever
-  // having scroll-event-driven snapshots that may land slightly before or
-  // after the visual episode.
+  // Item 8: captures the named QBank elements only (findTargets() already
+  // excludes the debug overlay structurally) with full rect + style detail
+  // (display/visibility/opacity/position/transform/filter/willChange/
+  // overflow/zIndex/background) via describeNode(), plus an unthrottled,
+  // overlay-excluded geometry scan and the last ~3s of shift/jank history.
   function markBlank(edge) {
     const scrollEl = scrollElement();
     const base = snapshot(scrollEl, `blank-${edge}`);
+    const targets = findTargets();
+    const targetDetails = Object.fromEntries(Object.entries(targets).map(([k, el]) => [k, describeNode(el)]));
     const recentWindow = 3000;
     push({
       kind: `blank-${edge}`,
       ...base,
+      targetDetails,
       geometryMatches: findGeometryMatches(scrollEl),
       activeVariants: { ...variants },
       recentShifts: logRef.current.filter((e) => e.kind === "layout-shift" && base.t - e.t <= recentWindow && base.t - e.t >= -200),
@@ -366,17 +434,21 @@ export default function ScrollDiagnostics({ dataReady, preload, onTogglePreload 
   }
 
   const lastSnapshot = [...log].reverse().find((e) => e.kind === undefined || e.reason);
-  const shiftCount = log.filter((e) => e.kind === "layout-shift").length;
+  const qbankShiftEvents = log.filter((e) => e.kind === "layout-shift" && !e.debugOverlayOnly);
+  const overlayOnlyShiftCount = log.filter((e) => e.kind === "layout-shift" && e.debugOverlayOnly).length;
   const jankCount = log.filter((e) => e.kind === "jank").length;
   const geomMatchCount = log.filter((e) => e.kind === "geometry-scan").length;
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <div
+      data-qbank-debug-overlay="true"
       style={{
         position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 999999,
-        maxHeight: minimized ? "auto" : "45vh", overflowY: "auto",
+        height: minimized ? PANEL_HEIGHT_MINIMIZED : PANEL_HEIGHT_EXPANDED, overflowY: "auto",
         background: "rgba(10,14,20,0.94)", color: "#d6ffb3", fontFamily: "monospace",
-        fontSize: 11, padding: 8, borderTop: "2px solid #4ade80",
+        fontSize: 11, padding: 8, borderTop: "2px solid #4ade80", boxSizing: "border-box",
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
@@ -409,9 +481,9 @@ export default function ScrollDiagnostics({ dataReady, preload, onTogglePreload 
           </div>
 
           <div style={{ marginBottom: 6 }}>
-            data ready: {String(dataReady)} · layout-shift events: {shiftCount} · jank frames(&gt;50ms): {jankCount} · geometry-scan hits: {geomMatchCount}
+            data ready: {String(dataReady)} · QBank layout-shift events: {qbankShiftEvents.length} (+{overlayOnlyShiftCount} overlay-only, excluded) · jank frames(&gt;50ms): {jankCount} · geometry-scan hits: {geomMatchCount}
             {lastSnapshot && (
-              <> · scrollTop={lastSnapshot.scrollTop} scrollHeight={lastSnapshot.scrollHeight}</>
+              <> · scrollTop={lastSnapshot.scrollTop} scrollHeight={lastSnapshot.scrollHeight}{lastSnapshot.measurementUnavailable ? " (measurementUnavailable)" : ""}</>
             )}
           </div>
 
@@ -439,19 +511,20 @@ export default function ScrollDiagnostics({ dataReady, preload, onTogglePreload 
             {log.slice(-25).reverse().map((e, i) => (
               <div key={i} style={{ marginBottom: 2, borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
                 {e.kind === "layout-shift"
-                  ? `[${e.t}ms] SHIFT value=${e.value.toFixed(4)} hadRecentInput=${e.hadRecentInput} sources=${JSON.stringify(e.sources)}`
+                  ? `[${e.t}ms] SHIFT value=${e.value.toFixed(4)} hadRecentInput=${e.hadRecentInput}${e.debugOverlayOnly ? " DEBUG-OVERLAY-ONLY(excluded)" : ""} sources=${JSON.stringify(e.sources)}`
                   : e.kind === "jank"
                     ? `[${e.t}ms] JANK gap=${e.gapMs}ms`
                     : e.kind === "geometry-scan"
                       ? `[${e.t}ms] GEOM-MATCH ${e.matches.length} candidate(s)=${JSON.stringify(e.matches)}`
                       : e.kind === "blank-start" || e.kind === "blank-end"
-                        ? `[${e.t}ms] ${e.kind.toUpperCase()} scrollTop=${e.scrollTop} geomMatches=${JSON.stringify(e.geometryMatches)} recentShifts=${e.recentShifts.length} recentJank=${e.recentJank.length}`
-                        : `[${e.t}ms] ${e.reason} scrollTop=${e.scrollTop} rects=${JSON.stringify(e.rects)}`}
+                        ? `[${e.t}ms] ${e.kind.toUpperCase()} scrollTop=${e.scrollTop} targets=${JSON.stringify(e.targetDetails)} geomMatches=${JSON.stringify(e.geometryMatches)}`
+                        : `[${e.t}ms] ${e.reason} scrollTop=${e.scrollTop}${e.measurementUnavailable ? " measurementUnavailable=true" : ""} rects=${JSON.stringify(e.rects)}`}
               </div>
             ))}
           </div>
         </>
       )}
-    </div>
+    </div>,
+    document.body
   );
 }

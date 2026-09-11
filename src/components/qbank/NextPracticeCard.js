@@ -34,12 +34,29 @@ export default function NextPracticeCard() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Reserves space for the tallest common loaded shape (title + weak-area
+  // line + meta row + button, with the accuracy ring stacked below on
+  // mobile where this card is flex-col) — not just a generic placeholder.
+  // This card sits highest in the scrollable content (right after the
+  // search bar), so an async height jump here shifts every card below it
+  // at once; matching the skeleton's height to the real content avoids
+  // that shift regardless of when /questions/recommended/ resolves
+  // relative to the user's scroll position. See ProgressSummary.js for
+  // the full mechanism this fixes (confirmed via screen-recording
+  // analysis of the reported mobile scroll bug).
   if (loading) {
     return (
       <div className="hm-card animate-pulse p-5 sm:p-6">
-        <div className="h-4 w-40 rounded bg-[var(--color-surface-muted)]" />
-        <div className="mt-3 h-6 w-64 rounded bg-[var(--color-surface-muted)]" />
-        <div className="mt-6 h-10 w-40 rounded-xl bg-[var(--color-surface-muted)]" />
+        <div className="h-3 w-40 rounded bg-[var(--color-surface-muted)]" />
+        <div className="mt-5 flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="h-6 w-64 rounded bg-[var(--color-surface-muted)]" />
+            <div className="mt-2 h-4 w-40 rounded bg-[var(--color-surface-muted)]" />
+            <div className="mt-3 h-4 w-48 rounded bg-[var(--color-surface-muted)]" />
+            <div className="mt-4 h-10 w-40 rounded-xl bg-[var(--color-surface-muted)]" />
+          </div>
+          <div className="h-28 w-28 flex-none rounded-full bg-[var(--color-surface-muted)]" />
+        </div>
       </div>
     );
   }

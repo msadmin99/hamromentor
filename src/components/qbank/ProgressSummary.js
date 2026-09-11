@@ -16,11 +16,34 @@ function formatStudyTime(seconds) {
  * Detailed breakdowns (by subject/chapter/topic, trends, mastery) stay on
  * the existing /performance page, not duplicated here. */
 export default function ProgressSummary({ stats, loading }) {
+  // Sized to match the loaded layout below almost exactly (same 112px
+  // ring, same 4 stat rows at the same gap, same link line) — NOT
+  // decorative. A shorter skeleton that jumps taller once `stats` arrives
+  // is a real, reproduced mobile bug: when that height change lands while
+  // the user is mid-scroll (this card sits mid-page, well past the fold),
+  // the browser can commit the new, taller layout without having painted
+  // the newly-added region yet, showing this card's title with a large
+  // blank gap below it until a later repaint (e.g. reversing scroll
+  // direction) catches up — exactly the "content blanks mid-scroll,
+  // reappears on scroll back" report, confirmed frame-by-frame against a
+  // screen recording that showed precisely this card's title rendering
+  // with its body missing. Matching the skeleton height removes the shift
+  // regardless of when the data happens to arrive relative to scrolling.
   if (loading || !stats) {
     return (
       <div className="hm-card animate-pulse p-4">
-        <div className="h-4 w-32 rounded bg-[var(--color-surface-muted)]" />
-        <div className="mt-4 h-24 w-24 rounded-full bg-[var(--color-surface-muted)]" />
+        <div className="h-4 w-24 rounded bg-[var(--color-surface-muted)]" />
+        <div className="mb-3 mt-1.5 h-3 w-32 rounded bg-[var(--color-surface-muted)]" />
+        <div className="flex items-center gap-5">
+          <div className="h-28 w-28 flex-none rounded-full bg-[var(--color-surface-muted)]" />
+          <div className="flex flex-1 flex-col gap-1.5">
+            <div className="h-5 rounded bg-[var(--color-surface-muted)]" />
+            <div className="h-5 rounded bg-[var(--color-surface-muted)]" />
+            <div className="h-5 rounded bg-[var(--color-surface-muted)]" />
+            <div className="h-5 rounded bg-[var(--color-surface-muted)]" />
+          </div>
+        </div>
+        <div className="mt-3 h-4 w-32 rounded bg-[var(--color-surface-muted)]" />
       </div>
     );
   }

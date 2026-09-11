@@ -112,8 +112,26 @@ export default function NextPracticeCard() {
           </Link>
         </div>
 
-        {isRealPractice && top.accuracy_pct != null && (
+        {isRealPractice && top.accuracy_pct != null ? (
           <AccuracyRing percent={Math.round(top.accuracy_pct)} label="Accuracy" />
+        ) : (
+          // Fourth-stage mobile scroll fix. The skeleton above always
+          // reserves this 112px (h-28 w-28) ring slot, but until now the
+          // loaded content only rendered it for a `revise_topic`/
+          // `improve_subject` top suggestion — never for `retry_mistakes`,
+          // `new_subject`, or `start_new` (confirmed against
+          // academics/views.py's recommended(): only those first two types
+          // ever set an `accuracy` key). `start_new` is exactly the
+          // suggestion every brand-new/lightly-active student gets (no
+          // subject with 3+ attempts yet) — an everyday case, not an edge
+          // case. That made this card shrink by ~130px the instant
+          // /questions/recommended/ resolved for that student, the same
+          // mid-scroll-layout-shift mechanism ProgressSummary was fixed
+          // for earlier (see its own comment), just running in reverse.
+          // This invisible spacer keeps the card's shape identical to its
+          // own skeleton in every case, so there is never a transition to
+          // fix regardless of which suggestion type loads.
+          <div className="h-28 w-28 flex-none" aria-hidden="true" />
         )}
       </div>
     </div>

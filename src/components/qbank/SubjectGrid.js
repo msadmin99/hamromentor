@@ -80,7 +80,17 @@ export default function SubjectGrid({ subjects, loading }) {
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {loading
-          ? Array.from({ length: 4 }).map((_, i) => <SubjectCardSkeleton key={i} />)
+          ? // Fourth-stage mobile scroll fix: this used to render 4
+            // skeleton cards while the loaded view below shows up to
+            // INITIAL_COUNT (5) — an off-by-one height mismatch that fired
+            // on nearly every page load (`subjects.length` is almost
+            // always >= 5 for a real course), shrinking or growing this
+            // whole grid by one card's height (~85px on mobile's single
+            // column) the instant `/subjects/` resolved. Matching the
+            // skeleton count to INITIAL_COUNT removes that transition
+            // entirely, the same technique already used for the other
+            // QBank cards' skeletons.
+            Array.from({ length: INITIAL_COUNT }).map((_, i) => <SubjectCardSkeleton key={i} />)
           : visible.map((s, i) => <SubjectCard key={s.id} subject={s} theme={themeForIndex(i)} />)}
       </div>
       {!loading && subjects.length === 0 && (

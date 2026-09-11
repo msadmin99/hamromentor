@@ -3,7 +3,32 @@
 import BottomNav from "./BottomNav";
 import Sidebar from "./Sidebar";
 
-export default function AppShell({ children, showNav = true }) {
+/** Second-stage mobile-scroll fix (see the h-svh comment below for stage
+ * one). Header used to be rendered wherever a caller put it inside
+ * `children` — which, for every page, meant INSIDE the scroll region
+ * below, kept visually pinned only by its own `position: sticky`.
+ * Real-device testing after the h-svh fix showed content still going
+ * blank mid-scroll and reappearing on scroll-back — consistent with a
+ * known mobile WebKit/Blink compositing risk for a `sticky` element whose
+ * nearest scrolling ancestor is a nested (non-document-body)
+ * `overflow-y-auto` container, exactly this shape. The already-working
+ * `.hm-app-shell` (Solve/Practice pages, globals.css) never has this
+ * problem because its Header sits OUTSIDE its scroll region entirely, as
+ * a plain flex sibling — sticky positioning is structurally never engaged
+ * there.
+ *
+ * `header` is an explicit, optional slot that renders in that same
+ * outside-the-scroller position: <AppShell header={<Header .../>}>. It
+ * is the ONLY way to get a page's Header out of the scroll region —
+ * deliberately no automatic detection of a `<Header>` child, so only
+ * pages that explicitly opt in are affected (today: just QBank, the page
+ * with a confirmed real-device report). Every other existing caller keeps
+ * rendering `<Header>` as a plain child inside `children`, unchanged,
+ * exactly as before this fix. Header.js itself needs no change either
+ * way — its `sticky` class is only ever inert (no scrolling ancestor) or
+ * active (inside the scroll region, current behavior for unmigrated
+ * pages), never broken by this prop's presence or absence. */
+export default function AppShell({ children, header = null, showNav = true }) {
   return (
     // h-svh (not min-h-dvh, and not h-dvh) is load-bearing on two separate
     // counts:
@@ -19,22 +44,15 @@ export default function AppShell({ children, showNav = true }) {
     //
     // 2. `svh` over `dvh`: `dvh` (dynamic viewport height) recalculates
     //    LIVE as the browser's address bar/toolbar auto-hides during a
-    //    scroll gesture — exactly the trigger for the mobile QBank bug
-    //    where cards vanished into a large blank area mid-scroll and
-    //    reappeared on scrolling back. With this shell (and therefore the
-    //    inner overflow-y-auto scroll region below it) pinned to a height
-    //    that changes WHILE the browser is actively compositing the
-    //    scroll, Android Chrome/iOS Safari can paint the newly-scrolled-
-    //    into-view content against a stale height snapshot until a
-    //    subsequent repaint (scroll-direction reversal, or the chrome-hide
-    //    animation settling) corrects it — the content was never gone,
-    //    only unpainted for that window. `svh` (small viewport height)
-    //    is pinned to the SMALLEST the viewport can ever be and never
-    //    changes when the address bar shows/hides, removing that
-    //    live-recalculation entirely. Same fix already proven for the
+    //    scroll gesture. `svh` (small viewport height) is pinned to the
+    //    SMALLEST the viewport can ever be and never changes when the
+    //    address bar shows/hides. Same fix already proven for the
     //    identical bug class in globals.css's `.hm-app-shell` (see its own
     //    "Android Daily Test white-screen fix" comment) — this brings the
     //    shared shell every other page uses onto the same stable unit.
+    //    (Kept from the first-stage fix; real-device testing afterward
+    //    showed a second, independent contributor — see the `header` prop
+    //    docstring above for the fix that addresses it.)
     <div className="flex h-svh overflow-x-hidden bg-[var(--color-surface-muted)]">
       {showNav && <Sidebar />}
       {/* min-w-0 on both flex children below is load-bearing, not decorative:
@@ -42,11 +60,12 @@ export default function AppShell({ children, showNav = true }) {
           shrink it below its content's natural (min-content) width. Without
           this, any wide descendant anywhere in `children` (an unwrapped
           table, a fixed-width chart, a long unbreakable string) silently
-          forces this whole column — and everything in it, including the
+          forces this whole column — and everything in it, including a
           sticky Header — wider than the viewport on mobile, which is what
           produced the "half the page is cut off, have to scroll right"
           symptom across multiple pages that all render through AppShell. */}
       <div className="flex h-svh min-w-0 flex-1 flex-col">
+        {header}
         {/* min-h-0 alongside flex-1: a flex item's default min-height is
             `auto` (its content's own height), which can let this div ignore
             flex-1's computed height and grow past the shell instead of

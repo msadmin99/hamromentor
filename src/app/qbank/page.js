@@ -48,25 +48,27 @@ function QBankContent() {
   }
 
   return (
-    <AppShell>
-      <Header
-        title="Dr Gutka"
-        right={
-          <>
-            <Link href="/qbank/bookmarks" aria-label="Bookmarks">
-              <BookmarkIcon />
-            </Link>
-            <button type="button" onClick={focusSearch} aria-label="Search questions">
-              <SearchIcon />
-            </button>
-            <Link href="/profile" aria-label="Profile">
-              <UserIcon />
-            </Link>
-          </>
-        }
-        courseSwitcher={<CourseSwitcher />}
-      />
-
+    <AppShell
+      header={
+        <Header
+          title="Dr Gutka"
+          right={
+            <>
+              <Link href="/qbank/bookmarks" aria-label="Bookmarks">
+                <BookmarkIcon />
+              </Link>
+              <button type="button" onClick={focusSearch} aria-label="Search questions">
+                <SearchIcon />
+              </button>
+              <Link href="/profile" aria-label="Profile">
+                <UserIcon />
+              </Link>
+            </>
+          }
+          courseSwitcher={<CourseSwitcher />}
+        />
+      }
+    >
       <div className="hm-page flex flex-col gap-5">
         <QBankHero />
 

@@ -32,6 +32,21 @@ import { useEffect, useRef, useState } from "react";
  *  - Phase 5: a toggle that blocks interaction until QBank's three async
  *    fetches (subjects, dashboard stats, recommended) have all resolved,
  *    directly testing whether the bug needs mid-scroll async insertion.
+ *  - Phase 6 (this revision): rich DOM identification for every
+ *    layout-shift source node (tag/id/class/testid/aria-label/role/text/
+ *    parent+grandparent/nearest section/computed style), a standalone
+ *    geometry scanner that searches the scroll container for any element
+ *    whose rect falls near the recurring "303-359px tall, top 383-439px"
+ *    pattern reported from real-device testing (independent of whether
+ *    PerformanceObserver attributed a shift to it — a real, documented
+ *    Chrome limitation is that `LayoutShiftAttribution.node` can be null
+ *    once the node has moved/been replaced by the time attribution is
+ *    read), and MARK BLANK START / MARK BLANK END buttons that force an
+ *    immediate, detailed capture (including the layout-vs-paint style
+ *    fields: transform/filter/will-change/opacity/overflow/position/
+ *    z-index/background) so the geometry data can be correlated against
+ *    exactly when the user sees the blank area, not just against scroll
+ *    events in general.
  *  - Export: every captured event is appended to an in-memory log with a
  *    "Copy JSON" button, since there is no server to stream telemetry to
  *    from here - you copy/paste or screenshot the log back for analysis. */
@@ -64,6 +79,103 @@ function rect(el) {
     top: Math.round(r.top), bottom: Math.round(r.bottom), height: Math.round(r.height), width: Math.round(r.width),
     visibility: cs.visibility, display: cs.display, opacity: cs.opacity,
   };
+}
+
+// --- Phase 6: rich node identification --------------------------------
+// Item 1/2 of the follow-up investigation: a PerformanceObserver source
+// previously only reported `node.className || node.tagName`, which is
+// exactly why every prior source came back as an anonymous "DIV". This
+// walks the real node (when still attached — see the docstring above for
+// why it sometimes won't be) and records everything asked for: tag, id,
+// class, data-testid, aria-label, role, an accessible "name" best-effort,
+// short text, parent/grandparent, nearest <section>/.hm-card ancestor,
+// nearest ancestor with any non-empty className, full rect, and the
+// layout-vs-paint style fields (transform/filter/will-change/opacity/
+// overflow/position/z-index/background).
+function shortText(el, limit = 120) {
+  const t = el?.textContent?.trim().replace(/\s+/g, " ") || "";
+  return t.length > limit ? `${t.slice(0, limit)}…` : t;
+}
+
+function tagClass(el) {
+  if (!el) return null;
+  return { tag: el.tagName, className: typeof el.className === "string" ? el.className : null };
+}
+
+function nearestSection(el) {
+  let cur = el?.parentElement;
+  while (cur && cur !== document.body) {
+    if (cur.tagName === "SECTION" || cur.classList?.contains("hm-card")) return cur;
+    cur = cur.parentElement;
+  }
+  return null;
+}
+
+function nearestNamedAncestor(el) {
+  let cur = el?.parentElement;
+  let hops = 0;
+  while (cur && cur !== document.body && hops < 8) {
+    if (typeof cur.className === "string" && cur.className.trim()) return cur;
+    cur = cur.parentElement;
+    hops += 1;
+  }
+  return null;
+}
+
+function describeNode(el) {
+  if (!el || typeof el.getBoundingClientRect !== "function") return null;
+  const r = el.getBoundingClientRect();
+  const cs = getComputedStyle(el);
+  const section = nearestSection(el);
+  const named = nearestNamedAncestor(el);
+  return {
+    tag: el.tagName,
+    id: el.id || null,
+    className: typeof el.className === "string" ? el.className : null,
+    testId: el.getAttribute?.("data-testid") || null,
+    ariaLabel: el.getAttribute?.("aria-label") || null,
+    role: el.getAttribute?.("role") || null,
+    name: el.getAttribute?.("aria-label") || el.getAttribute?.("title") || el.getAttribute?.("name") || null,
+    text: shortText(el),
+    innerHtmlSig: (el.innerHTML || "").slice(0, 80),
+    parent: tagClass(el.parentElement),
+    grandparent: tagClass(el.parentElement?.parentElement),
+    nearestSection: section ? { ...tagClass(section), text: shortText(section, 60) } : null,
+    nearestNamedAncestor: named && named !== section ? tagClass(named) : null,
+    rect: { top: r.top, left: r.left, width: r.width, height: r.height },
+    style: {
+      display: cs.display, visibility: cs.visibility, opacity: cs.opacity, overflow: cs.overflow,
+      position: cs.position, transform: cs.transform, filter: cs.filter, willChange: cs.willChange,
+      zIndex: cs.zIndex, background: cs.backgroundColor,
+    },
+  };
+}
+
+// Item 3: an independent scanner, not dependent on PerformanceObserver
+// attribution at all. Searches the scroll container (not the whole
+// document, to keep this cheap enough to run on every scroll tick on a
+// real phone) for any element whose rect falls near the recurring
+// "303-359px tall, top 383-439px" pattern reported from real-device
+// testing, with a generous +/-30px tolerance since exact pixels vary by
+// device/zoom/address-bar state. Returns full descriptors, capped to 5
+// matches so the log stays readable.
+const GEOMETRY_WATCH = { heightMin: 273, heightMax: 389, topMin: 353, topMax: 469 };
+
+function findGeometryMatches(scrollEl) {
+  const root = scrollEl || document;
+  const all = root.querySelectorAll("div, section");
+  const matches = [];
+  for (const el of all) {
+    const r = el.getBoundingClientRect();
+    if (
+      r.height >= GEOMETRY_WATCH.heightMin && r.height <= GEOMETRY_WATCH.heightMax &&
+      r.top >= GEOMETRY_WATCH.topMin && r.top <= GEOMETRY_WATCH.topMax
+    ) {
+      matches.push(describeNode(el));
+      if (matches.length >= 5) break;
+    }
+  }
+  return matches;
 }
 
 function snapshot(scrollEl, reason) {
@@ -109,6 +221,8 @@ export default function ScrollDiagnostics({ dataReady, preload, onTogglePreload 
   const [minimized, setMinimized] = useState(false);
   const rafRef = useRef(null);
   const lastFrameRef = useRef(null);
+  const lastGeomScanRef = useRef(0);
+  const seenShiftsRef = useRef(new Set());
   const logRef = useRef([]);
 
   function push(entry) {
@@ -116,24 +230,41 @@ export default function ScrollDiagnostics({ dataReady, preload, onTogglePreload 
     setLog(logRef.current);
   }
 
+  function scrollElement() {
+    return document.querySelector(".hm-scrollbar-none.overflow-y-auto");
+  }
+
   // Real Cumulative-Layout-Shift observer — the actual browser signal for
   // "did layout genuinely move", not an inference from a screen recording.
+  // Item 1/2/7: every source now carries a full describeNode() (not just
+  // className/tagName), sub-pixel-precision prev/cur rects (rounding was
+  // masking real sub-pixel-only deltas — see the docstring), an explicit
+  // `changed` flag so a "reported shift, unchanged rect" entry is visible
+  // rather than silently confusing, and a dedup guard against the same
+  // (startTime,value) pair ever being logged twice.
   useEffect(() => {
     if (typeof PerformanceObserver === "undefined") return undefined;
     let po;
     try {
       po = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
+          const sig = `${entry.startTime}:${entry.value}`;
+          if (seenShiftsRef.current.has(sig)) continue;
+          seenShiftsRef.current.add(sig);
           push({
             kind: "layout-shift",
             t: Math.round(entry.startTime),
             value: entry.value,
             hadRecentInput: entry.hadRecentInput,
-            sources: (entry.sources || []).slice(0, 4).map((s) => ({
-              node: s.node ? (s.node.className || s.node.tagName) : null,
-              prev: s.previousRect && { top: Math.round(s.previousRect.top), h: Math.round(s.previousRect.height) },
-              cur: s.currentRect && { top: Math.round(s.currentRect.top), h: Math.round(s.currentRect.height) },
-            })),
+            sources: (entry.sources || []).slice(0, 8).map((s) => {
+              const prev = s.previousRect && { top: s.previousRect.top, height: s.previousRect.height };
+              const cur = s.currentRect && { top: s.currentRect.top, height: s.currentRect.height };
+              const changed = !!(prev && cur && (Math.abs(prev.top - cur.top) > 0.5 || Math.abs(prev.height - cur.height) > 0.5));
+              return {
+                node: s.node ? describeNode(s.node) : { nodeAvailable: false, note: "node no longer attached at attribution time" },
+                prev, cur, changed,
+              };
+            }),
           });
         }
       });
@@ -145,7 +276,9 @@ export default function ScrollDiagnostics({ dataReady, preload, onTogglePreload 
   }, []);
 
   // rAF jank detector: flags any frame-to-frame gap over 50ms (roughly 3
-  // dropped frames at 60fps) as a rough main-thread-stall proxy.
+  // dropped frames at 60fps) as a rough main-thread-stall proxy. Also
+  // drives the throttled geometry scanner (item 3) so matches are found
+  // continuously during scroll, not just on scroll events themselves.
   useEffect(() => {
     lastFrameRef.current = performance.now();
     function tick(now) {
@@ -154,6 +287,13 @@ export default function ScrollDiagnostics({ dataReady, preload, onTogglePreload 
         push({ kind: "jank", t: Math.round(now), gapMs: Math.round(gap) });
       }
       lastFrameRef.current = now;
+      if (now - lastGeomScanRef.current > 400) {
+        lastGeomScanRef.current = now;
+        const matches = findGeometryMatches(scrollElement());
+        if (matches.length) {
+          push({ kind: "geometry-scan", t: Math.round(now), matches });
+        }
+      }
       rafRef.current = requestAnimationFrame(tick);
     }
     rafRef.current = requestAnimationFrame(tick);
@@ -162,7 +302,7 @@ export default function ScrollDiagnostics({ dataReady, preload, onTogglePreload 
 
   // Scroll-driven geometry snapshots (throttled) + one on mount.
   useEffect(() => {
-    const scrollEl = document.querySelector(".hm-scrollbar-none.overflow-y-auto");
+    const scrollEl = scrollElement();
     push(snapshot(scrollEl, "mount"));
     let ticking = false;
     function onScroll() {
@@ -198,6 +338,28 @@ export default function ScrollDiagnostics({ dataReady, preload, onTogglePreload 
     setVariants((v) => ({ ...v, [key]: !v[key] }));
   }
 
+  // Item 8/9: MARK BLANK START / MARK BLANK END. Forces an immediate,
+  // untruttled capture — the full snapshot() fields, an unthrottled
+  // geometry-match scan (item 3, no waiting for the next 400ms tick), and
+  // the last few seconds of layout-shift/jank history already in the log
+  // — so the exact moment the user sees (or stops seeing) the blank area
+  // can be lined up against the geometry data, instead of only ever
+  // having scroll-event-driven snapshots that may land slightly before or
+  // after the visual episode.
+  function markBlank(edge) {
+    const scrollEl = scrollElement();
+    const base = snapshot(scrollEl, `blank-${edge}`);
+    const recentWindow = 3000;
+    push({
+      kind: `blank-${edge}`,
+      ...base,
+      geometryMatches: findGeometryMatches(scrollEl),
+      activeVariants: { ...variants },
+      recentShifts: logRef.current.filter((e) => e.kind === "layout-shift" && base.t - e.t <= recentWindow && base.t - e.t >= -200),
+      recentJank: logRef.current.filter((e) => e.kind === "jank" && base.t - e.t <= recentWindow && base.t - e.t >= -200),
+    });
+  }
+
   function copyLog() {
     const payload = JSON.stringify({ log: logRef.current, activeVariants: variants, dataReady, ua: navigator.userAgent }, null, 2);
     navigator.clipboard?.writeText(payload).catch(() => {});
@@ -206,6 +368,7 @@ export default function ScrollDiagnostics({ dataReady, preload, onTogglePreload 
   const lastSnapshot = [...log].reverse().find((e) => e.kind === undefined || e.reason);
   const shiftCount = log.filter((e) => e.kind === "layout-shift").length;
   const jankCount = log.filter((e) => e.kind === "jank").length;
+  const geomMatchCount = log.filter((e) => e.kind === "geometry-scan").length;
 
   return (
     <div
@@ -230,8 +393,23 @@ export default function ScrollDiagnostics({ dataReady, preload, onTogglePreload 
 
       {!minimized && (
         <>
+          <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+            <button
+              onClick={() => markBlank("start")}
+              style={{ flex: 1, background: "#7f1d1d", color: "#fff", border: "2px solid #fca5a5", borderRadius: 8, padding: "12px 8px", fontSize: 13, fontWeight: "bold" }}
+            >
+              MARK BLANK START
+            </button>
+            <button
+              onClick={() => markBlank("end")}
+              style={{ flex: 1, background: "#14532d", color: "#fff", border: "2px solid #86efac", borderRadius: 8, padding: "12px 8px", fontSize: 13, fontWeight: "bold" }}
+            >
+              MARK BLANK END
+            </button>
+          </div>
+
           <div style={{ marginBottom: 6 }}>
-            data ready: {String(dataReady)} · layout-shift events: {shiftCount} · jank frames(&gt;50ms): {jankCount}
+            data ready: {String(dataReady)} · layout-shift events: {shiftCount} · jank frames(&gt;50ms): {jankCount} · geometry-scan hits: {geomMatchCount}
             {lastSnapshot && (
               <> · scrollTop={lastSnapshot.scrollTop} scrollHeight={lastSnapshot.scrollHeight}</>
             )}
@@ -259,12 +437,16 @@ export default function ScrollDiagnostics({ dataReady, preload, onTogglePreload 
 
           <div style={{ maxHeight: "16vh", overflowY: "auto", background: "rgba(0,0,0,0.3)", padding: 4 }}>
             {log.slice(-25).reverse().map((e, i) => (
-              <div key={i}>
+              <div key={i} style={{ marginBottom: 2, borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
                 {e.kind === "layout-shift"
-                  ? `[${e.t}ms] SHIFT value=${e.value.toFixed(4)} sources=${JSON.stringify(e.sources)}`
+                  ? `[${e.t}ms] SHIFT value=${e.value.toFixed(4)} hadRecentInput=${e.hadRecentInput} sources=${JSON.stringify(e.sources)}`
                   : e.kind === "jank"
                     ? `[${e.t}ms] JANK gap=${e.gapMs}ms`
-                    : `[${e.t}ms] ${e.reason} scrollTop=${e.scrollTop} rects=${JSON.stringify(e.rects)}`}
+                    : e.kind === "geometry-scan"
+                      ? `[${e.t}ms] GEOM-MATCH ${e.matches.length} candidate(s)=${JSON.stringify(e.matches)}`
+                      : e.kind === "blank-start" || e.kind === "blank-end"
+                        ? `[${e.t}ms] ${e.kind.toUpperCase()} scrollTop=${e.scrollTop} geomMatches=${JSON.stringify(e.geometryMatches)} recentShifts=${e.recentShifts.length} recentJank=${e.recentJank.length}`
+                        : `[${e.t}ms] ${e.reason} scrollTop=${e.scrollTop} rects=${JSON.stringify(e.rects)}`}
               </div>
             ))}
           </div>

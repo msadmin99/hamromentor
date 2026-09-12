@@ -12,12 +12,28 @@ import TestGuidelines from "@/components/testpage/TestGuidelines";
 import TestPageFooter from "@/components/testpage/TestPageFooter";
 import TestPageHeaderIcons from "@/components/testpage/TestPageHeaderIcons";
 import TestPageHero from "@/components/testpage/TestPageHero";
+import UpcomingTestRow from "@/components/testpage/UpcomingTestRow";
 import UserTestStats from "@/components/testpage/UserTestStats";
 import WhyTakeTests from "@/components/testpage/WhyTakeTests";
 import { api } from "@/lib/api";
 import { useCourse } from "@/lib/course-context";
 
 const PAST_PAGE_SIZE = 4;
+const UPCOMING_PAGE_SIZE = 4;
+
+// Daily Test schedule audit: card_status === "upcoming" was previously
+// treated as "today" unconditionally (get_card_status() on the backend
+// returns 'upcoming' for ANY future scheduled_start, whether that's later
+// today or 20 days from now — see tests_app/serializers.py's own
+// docstring). With Admin now able to schedule 20-30 days of Daily Tests
+// at once, that put every not-yet-open test into "Today's Daily Tests"
+// regardless of date. This is a frontend-only date check — no backend
+// field needed, scheduled_start is already on every test.
+function isSameCalendarDay(value, reference) {
+  if (!value) return true; // no schedule info at all -> never excluded from Today (legacy safety)
+  const d = new Date(value);
+  return d.getFullYear() === reference.getFullYear() && d.getMonth() === reference.getMonth() && d.getDate() === reference.getDate();
+}
 
 function DailyTestContent() {
   const { activeCourse } = useCourse();
@@ -25,6 +41,7 @@ function DailyTestContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [pastVisible, setPastVisible] = useState(PAST_PAGE_SIZE);
+  const [upcomingVisible, setUpcomingVisible] = useState(UPCOMING_PAGE_SIZE);
 
   function load() {
     setLoading(true);
@@ -40,11 +57,17 @@ function DailyTestContent() {
 
   useEffect(load, [activeCourse?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const today = tests.filter((t) => t.card_status === "available" || t.card_status === "upcoming" || t.card_status === "in_progress");
+  const now = new Date();
+  const today = tests.filter(
+    (t) => t.card_status === "available" || t.card_status === "in_progress" || (t.card_status === "upcoming" && isSameCalendarDay(t.scheduled_start, now)),
+  );
+  const upcoming = tests
+    .filter((t) => t.card_status === "upcoming" && t.scheduled_start && !isSameCalendarDay(t.scheduled_start, now))
+    .sort((a, b) => new Date(a.scheduled_start) - new Date(b.scheduled_start));
   const past = tests
     .filter((t) => t.card_status === "completed" || t.card_status === "missed")
     .sort((a, b) => new Date(b.scheduled_start || b.created_at) - new Date(a.scheduled_start || a.created_at));
-  const todayLabel = new Date().toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
+  const todayLabel = now.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
 
   return (
     <AppShell>
@@ -78,15 +101,23 @@ function DailyTestContent() {
           exactly once each (not duplicated for two layouts), just
           repositioned per breakpoint via CSS order, so there's no risk of
           them fetching their data twice.
+
+          Daily Test schedule audit: a new "Upcoming Daily Tests" section
+          is inserted between Today's and Past — order-2/lg:order-3 — with
+          every later section's order bumped by one accordingly. It never
+          renders a Play/Start action (see UpcomingTestRow.js): a
+          future-dated Daily Test can't be started until its
+          scheduled_start (server-enforced), so it's view-only by design,
+          not by an omitted feature.
         */}
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-5">
-          <div className="order-3 lg:order-1">
+          <div className="order-4 lg:order-1">
             <UserTestStats examType="daily" />
           </div>
-          <div className="order-4 lg:order-1">
+          <div className="order-5 lg:order-1">
             <WhyTakeTests examType="daily" />
           </div>
-          <div className="order-5 lg:order-1">
+          <div className="order-6 lg:order-1">
             <TestGuidelines />
           </div>
 
@@ -126,8 +157,33 @@ function DailyTestContent() {
             )}
           </section>
 
-          {!loading && !error && past.length > 0 && (
+          {!loading && !error && upcoming.length > 0 && (
             <section className="order-2 lg:order-3 lg:col-span-3">
+              <p className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
+                <span aria-hidden="true">📅</span> Upcoming Daily Tests
+                <span className="rounded-full bg-[var(--color-surface-muted)] px-2 py-0.5 text-[10px] font-bold text-[var(--color-text)]">
+                  {upcoming.length}
+                </span>
+              </p>
+              <div className="hm-card p-4">
+                {upcoming.slice(0, upcomingVisible).map((t) => (
+                  <UpcomingTestRow key={t.id} test={t} />
+                ))}
+              </div>
+              {upcoming.length > upcomingVisible && (
+                <button
+                  type="button"
+                  onClick={() => setUpcomingVisible((v) => v + UPCOMING_PAGE_SIZE)}
+                  className="mt-2 w-full rounded-xl border border-[var(--color-border)] py-2.5 text-sm font-semibold text-[var(--color-text)]"
+                >
+                  View More Upcoming Tests ⌄
+                </button>
+              )}
+            </section>
+          )}
+
+          {!loading && !error && past.length > 0 && (
+            <section className="order-3 lg:order-4 lg:col-span-3">
               <p className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
                 <span aria-hidden="true">📅</span> Past Daily Tests
               </p>

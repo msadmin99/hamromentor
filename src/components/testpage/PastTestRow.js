@@ -43,12 +43,30 @@ export default function PastTestRow({ test }) {
             {isMissed ? "You missed this test" : test.best_score != null ? `Best Score: ${test.best_score}%` : ""}
           </p>
         </div>
-        <Link
-          href={isMissed || !test.latest_attempt_id ? `/tests/${test.id}` : `/tests/result/${test.latest_attempt_id}`}
-          className="flex-none rounded-lg border border-[var(--color-border)] px-3.5 py-2 text-xs font-bold text-[var(--color-text)]"
-        >
-          {isMissed ? "Attempt Now →" : "Review Test →"}
-        </Link>
+        {isMissed ? (
+          // Daily Test schedule audit: this used to be a live "Attempt
+          // Now →" link — before backend enforcement existed for Daily
+          // Test's scheduled_start/end, that button actually worked,
+          // letting a student attempt a test long after its 24-hour
+          // window closed. Enforcement now exists (_start_attempt), so
+          // the button would just fail with a 403 — replaced with the
+          // same honest, disabled-button treatment ExamCard.js already
+          // uses for a closed/missed exam, instead of offering an action
+          // the server refuses.
+          <span
+            className="flex-none rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3.5 py-2 text-xs font-bold text-[var(--color-text-muted)]"
+            aria-disabled="true"
+          >
+            <span aria-hidden>⌛</span> Window Closed
+          </span>
+        ) : (
+          <Link
+            href={!test.latest_attempt_id ? `/tests/${test.id}` : `/tests/result/${test.latest_attempt_id}`}
+            className="flex-none rounded-lg border border-[var(--color-border)] px-3.5 py-2 text-xs font-bold text-[var(--color-text)]"
+          >
+            Review Test →
+          </Link>
+        )}
       </div>
     </div>
   );

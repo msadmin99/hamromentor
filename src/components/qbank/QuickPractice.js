@@ -20,7 +20,17 @@ export default function QuickPractice() {
     // setting), `count` sizes the session to roughly match — the builder
     // treats them as independent settings, so Quick Practice sets both to
     // actually deliver "N min -> ~N questions."
-    router.push(`/qbank/practice?time=${m}&count=${m}&auto=1`);
+    //
+    // QBank 2.0 (§12): "intelligent mix, not merely random" — reuse the
+    // exact same status combination SmartPracticeGrid's AI Mixed Practice
+    // tile already sends (weak, need_revision, incorrect, new questions),
+    // instead of drawing from the student's entire question pool
+    // unfiltered. If that narrow mix doesn't have enough questions for
+    // this course/subject yet, the existing Practice Builder's own
+    // zero-results fallback on /qbank/practice already reopens the form
+    // with "No questions found... try a wider selection" — no new
+    // fallback logic needed here.
+    router.push(`/qbank/practice?time=${m}&count=${m}&status=weak,incorrect,need_revision,new&auto=1`);
   }
 
   return (

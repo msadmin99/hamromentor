@@ -2,16 +2,23 @@
 
 import Link from "next/link";
 import { ChevronRightIcon } from "@/components/icons";
-import { themeForIndex } from "@/lib/theme";
+import { themeForKey } from "@/lib/theme";
 
 /** Subject drill-down grid — one card per Chapter ("Unit" in the UI),
  * reusing the same progress-bar presentation as the QBank home SubjectGrid
- * so the visual language stays consistent one level deeper. */
+ * so the visual language stays consistent one level deeper.
+ *
+ * QBank 2.0 (§10): every chapter card under one subject shares that
+ * subject's own color (themeForKey(subjectSlug) — the same call
+ * ChapterHero.js already makes on the chapter's own detail page), rather
+ * than each chapter cycling through a different color by position. The
+ * color identifies "this belongs to Anatomy," not "this is the 3rd
+ * chapter in the list." */
 export default function ChapterGrid({ chapters, subjectSlug, icon }) {
+  const theme = themeForKey(subjectSlug);
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-      {chapters.map((chapter, i) => {
-        const theme = themeForIndex(i);
+      {chapters.map((chapter) => {
         const total = chapter.mcq_count || 0;
         const solved = chapter.solved_count || 0;
         const pct = total > 0 ? Math.round((solved / total) * 100) : 0;

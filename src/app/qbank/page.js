@@ -91,7 +91,7 @@ function QBankContent() {
         </div>
       ) : (
         <div className="hm-page flex flex-col gap-5">
-          <QBankHero />
+          <QBankHero accuracy={dashboardStats?.accuracy} attempted={dashboardStats?.attempted} />
 
           <QBankSearch />
 

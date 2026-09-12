@@ -79,8 +79,14 @@ const TARGETS = [
   { key: "pageRoot", match: (el) => el.classList?.contains("hm-page") },
   { key: "header", match: (el) => el.tagName === "HEADER" },
   { key: "bottomNav", match: (el) => el.tagName === "NAV" && el.getAttribute("aria-label") === "Primary navigation" },
-  { key: "qbankHero", match: (el) => el.textContent?.includes("What would you like to practice today?") },
-  { key: "nextPracticeCard", match: (el) => el.textContent?.includes("Your Next Practice") && el.classList?.contains("hm-card") },
+  // QBank 2.0: QBankHero's headline copy changed to "Let's make progress
+  // today." (Qbank12.png) — updated here so this diagnostic's target
+  // matcher doesn't silently go stale.
+  { key: "qbankHero", match: (el) => el.textContent?.includes("Let's make progress today.") },
+  // QBank 2.0 visual QA: label copy changed to "Your Next Best Action"
+  // (Qbank12.png) — updated here so this diagnostic's target matcher
+  // doesn't silently go stale.
+  { key: "nextPracticeCard", match: (el) => el.textContent?.includes("Your Next Best Action") && el.classList?.contains("hm-card") },
   { key: "progressSummary", match: (el) => el.textContent?.trim().startsWith("Your Progress") && el.classList?.contains("hm-card") },
   { key: "recommendedForYou", match: (el) => el.textContent?.trim().startsWith("Recommended for You") },
   { key: "subjectGrid", match: (el) => el.id === "subjects" },

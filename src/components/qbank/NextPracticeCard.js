@@ -66,9 +66,17 @@ export default function NextPracticeCard() {
   const area = top ? weakAreaLabel(top) : null;
 
   return (
-    <div className="hm-card p-5 sm:p-6">
+    // QBank 2.0 visual QA (Qbank12.png): this card reads as a plain white
+    // hm-card identical to every other card on the page today — the
+    // reference gives "Next Best Action" its own light blue tint so it
+    // stands out as the page's single top recommendation. Reusing the
+    // existing --color-info/--color-info-soft tokens (the same ones the
+    // "Exam Pearl" callout in QuestionSolver already tints with), not a
+    // new color. `!` overrides keep hm-card's shared radius/border-width
+    // mechanics (and ScrollDiagnostics' `.hm-card` matcher) intact.
+    <div className="hm-card !border-info-soft !bg-info-soft p-5 sm:p-6">
       <p className="mb-3 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
-        <span aria-hidden="true">🎯</span> Your Next Practice
+        <span aria-hidden="true">🎯</span> Your Next Best Action
       </p>
 
       <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:justify-between">

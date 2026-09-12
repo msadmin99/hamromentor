@@ -3,10 +3,18 @@
 import Link from "next/link";
 import { useState } from "react";
 import { LockIcon } from "@/components/icons";
-import { themeForIndex } from "@/lib/theme";
+import { themeForKey } from "@/lib/theme";
 
 const INITIAL_COUNT = 5;
 
+// QBank 2.0 (§10): color must be deterministic per subject, not per list
+// position — themeForKey(subject.slug) is the same function
+// [subjectSlug]/page.js and [chapterId]/page.js already use for the
+// subject/chapter detail pages, so a subject now reads as the exact same
+// color on this home grid as it does one level deeper (previously
+// themeForIndex(i), which could shift a subject's color whenever its
+// position in the list changed — e.g. reordering, or a new subject
+// inserted before it).
 function SubjectCard({ subject, theme }) {
   const pct = subject.percent_practiced ?? 0;
 
@@ -91,7 +99,7 @@ export default function SubjectGrid({ subjects, loading }) {
             // entirely, the same technique already used for the other
             // QBank cards' skeletons.
             Array.from({ length: INITIAL_COUNT }).map((_, i) => <SubjectCardSkeleton key={i} />)
-          : visible.map((s, i) => <SubjectCard key={s.id} subject={s} theme={themeForIndex(i)} />)}
+          : visible.map((s) => <SubjectCard key={s.id} subject={s} theme={themeForKey(s.slug)} />)}
       </div>
       {!loading && subjects.length === 0 && (
         <p className="hm-card p-4 text-center text-sm text-[var(--color-text-muted)]">

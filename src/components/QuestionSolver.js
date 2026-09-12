@@ -27,6 +27,14 @@ export default function QuestionSolver({
   const [result, setResult] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  // QBank 2.0 (§17): a failed answer submission used to be swallowed
+  // silently ("ignore network hiccups in demo") — the student's tap
+  // registered visually (selectedId was already set optimistically) but
+  // no `result` ever arrived, so the Next button stayed disabled forever
+  // with zero explanation. Now the failure is surfaced with a Retry
+  // action, and the selection itself is never cleared, so retrying
+  // resubmits the same option instead of making the student re-pick.
+  const [submitError, setSubmitError] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [bookmarking, setBookmarking] = useState(false);
   const [confidence, setConfidence] = useState(null);
@@ -40,6 +48,7 @@ export default function QuestionSolver({
   useEffect(() => {
     setBookmarked(!!question?.is_bookmarked);
     setConfidence(null);
+    setSubmitError(false);
     questionShownAtRef.current = Date.now();
     scrollRef.current?.scrollTo({ top: 0 });
   }, [question?.id]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -83,16 +92,24 @@ export default function QuestionSolver({
   async function selectOption(option) {
     if (result) return;
     setSelectedId(option.id);
+    setSubmitError(false);
     setSubmitting(true);
     try {
       const time_taken_seconds = Math.round((Date.now() - questionShownAtRef.current) / 1000);
       const res = await api.post(answerUrl(question.id), { option_id: option.id, time_taken_seconds });
       setResult(res);
     } catch {
-      // ignore network hiccups in demo
+      // Keep selectedId as-is — the student's choice stays visible and
+      // Retry resubmits it without asking them to pick again.
+      setSubmitError(true);
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function retrySubmit() {
+    const option = question.options.find((o) => o.id === selectedId);
+    if (option) selectOption(option);
   }
 
   function goNext() {
@@ -103,6 +120,7 @@ export default function QuestionSolver({
     setIndex((i) => i + 1);
     setResult(null);
     setSelectedId(null);
+    setSubmitError(false);
     setConfidence(null);
   }
 
@@ -178,6 +196,20 @@ export default function QuestionSolver({
             );
           })}
         </div>
+
+        {submitError && !result && (
+          <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-brand-red bg-brand-red-light px-4 py-3">
+            <p className="text-sm font-semibold text-brand-red">Your answer wasn&apos;t saved. Check your connection and try again.</p>
+            <button
+              type="button"
+              onClick={retrySubmit}
+              disabled={submitting}
+              className="flex-none rounded-lg bg-brand-red px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
+            >
+              {submitting ? "Retrying…" : "Retry"}
+            </button>
+          </div>
+        )}
 
         {result && (
           <div className="mt-4 flex flex-col gap-4">

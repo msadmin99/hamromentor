@@ -22,6 +22,30 @@ const DIFFICULTY_META = {
   hard: { label: "Hard", className: "bg-brand-red-light text-brand-red" },
 };
 
+// Grand Test / Daily Test card visual update: shows the exam's scheduled
+// date/time (ISO date + full weekday + 12h time, e.g. "2026-09-01
+// Wednesday  8:00 AM") directly on the card, above the Questions/Minutes
+// stats row — students no longer have to open Details to see when a
+// Grand Test opens or a Daily Test's window starts. `scheduled_start` is
+// already serialized on every Test by TestListSerializer
+// (tests_app/serializers.py) — no backend change needed, and Daily Test
+// listing already sorts by this same field (daily-test/page.js), so it's
+// the correct source for both exam types, not something new only Grand
+// Test happens to have. `en-CA` reliably formats as YYYY-MM-DD (a
+// well-known toLocaleDateString quirk); all three pieces read the
+// viewer's own local time, matching GrandTestStatusPanel's existing date
+// formatting approach elsewhere in the exam detail page.
+function formatScheduleParts(value) {
+  if (!value) return null;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  return {
+    isoDate: d.toLocaleDateString("en-CA"),
+    weekday: d.toLocaleDateString("en-US", { weekday: "long" }),
+    time: d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
+  };
+}
+
 function StatBlock({ icon, value, label }) {
   return (
     <div className="flex flex-1 items-center justify-center gap-2 py-2">
@@ -48,6 +72,7 @@ export default function ExamCard({ test }) {
   // on the platform. It no longer infers anything.
   const presentation = cardPresentation(test);
   const locked = isLocked(test);
+  const schedule = ["grand", "daily"].includes(test.exam_type) ? formatScheduleParts(test.scheduled_start) : null;
   const access = test.access || {};
   const attemptsLeft = access.attempts_left ?? Math.max(0, (test.max_attempts ?? 1) - (test.attempts_used ?? 0));
   const href = `/tests/${test.id}`;
@@ -89,6 +114,15 @@ export default function ExamCard({ test }) {
       </div>
 
       <p className="line-clamp-1 text-xs text-[var(--color-text-muted)]">{test.description || meta.tagline}</p>
+
+      {schedule && (
+        <div className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-2 text-xs font-bold text-[var(--color-navy)]">
+          <span aria-hidden>📅</span>
+          <span>{schedule.isoDate}</span>
+          <span>{schedule.weekday}</span>
+          <span>{schedule.time}</span>
+        </div>
+      )}
 
       <div className="flex items-center rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
         <StatBlock icon="❓" value={test.question_count} label="Questions" />

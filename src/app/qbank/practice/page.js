@@ -122,7 +122,7 @@ function PracticeContent() {
         <Header title="Practice" showBack />
         <QuestionSolver
           questions={questions}
-          finishLabel="Done"
+          finishLabel="Finish Practice"
           timeLimitMinutes={timeMinutes || undefined}
           onFinish={() => router.push("/qbank")}
         />

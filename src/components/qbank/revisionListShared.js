@@ -7,12 +7,16 @@
 // they're defined once here instead of copy-pasted into both pages.
 
 export const MASTERY_META = {
-  weak: { label: "Weak", className: "bg-brand-red-light text-brand-red" },
-  need_practice: { label: "Need Practice", className: "bg-warning-soft text-amber-700" },
-  learning: { label: "Learning", className: "bg-info-soft text-info" },
-  mastered: { label: "Mastered", className: "bg-brand-green-light text-brand-green" },
+  weak: { label: "Weak", emoji: "🔴", className: "bg-brand-red-light text-brand-red" },
+  need_practice: { label: "Need Practice", emoji: "🟠", className: "bg-warning-soft text-amber-700" },
+  learning: { label: "Learning", emoji: "🔵", className: "bg-info-soft text-info" },
+  mastered: { label: "Mastered", emoji: "🟢", className: "bg-brand-green-light text-brand-green" },
   // "new" is intentionally not in this map — a question with no real
-  // mastery signal yet would just be visual noise, not information.
+  // mastery signal yet would just be visual noise on a list of many
+  // questions (Bookmarks/Mistakes, the two existing consumers of this
+  // map). QBank 2.0 Phase 2D: QuestionSolver shows "🆕 New" for this case
+  // itself, locally, rather than adding it here and changing what those
+  // two existing list pages render for every never-attempted question.
 };
 
 export function stripHtml(html) {

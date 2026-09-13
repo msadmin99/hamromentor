@@ -124,11 +124,21 @@ export default function SmartPracticeGrid({ stats, loading }) {
   function renderTile(t) {
     const isConceptTile = t.key === "strengthen_concepts";
     const isMixTile = t.key === "ai_mixed";
+    // QBank 2.0 Phase 3N: these two tiles now route to their richer,
+    // purpose-built destinations (Revision Center / Mistake Bank 2.0)
+    // instead of straight into an unstructured random practice session —
+    // same real counts as before (Phase 1 already wired those), just a
+    // better landing spot now that one exists. Every other tile's
+    // destination is unchanged.
     const href = isConceptTile
       ? weakSuggestion
         ? `/qbank/practice?subject=${weakSuggestion.subject_id}&auto=1`
         : "/qbank/practice?auto=1"
-      : hrefFor(t.status);
+      : t.key === "need_revision"
+        ? "/qbank/revision"
+        : t.key === "incorrect"
+          ? "/qbank/mistakes"
+          : hrefFor(t.status);
     const count = stats && !isConceptTile && !isMixTile ? stats[t.key] : null;
     return (
       <Tile

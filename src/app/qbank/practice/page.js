@@ -54,6 +54,13 @@ function PracticeContent() {
   const [difficulty, setDifficulty] = useState(searchParams.get("difficulty") || "any");
   const [statuses, setStatuses] = useState(searchParams.get("status") ? searchParams.get("status").split(",").filter(Boolean) : []);
   const [timeMinutes, setTimeMinutes] = useState(Number(searchParams.get("time")) || 0);
+  // QBank 2.0 Phase 3B/3C: "Start Smart Revision" (Revision Center) reuses
+  // this exact same page/endpoint — smart_revision=1 is the only thing
+  // that distinguishes it, forwarded straight into the POST body below.
+  // Every other caller (manual builder, Quick Practice, Smart Practice
+  // tiles) omits it and gets byte-for-byte the same random selection as
+  // before.
+  const smartRevision = searchParams.get("smart_revision") === "1";
 
   const [questions, setQuestions] = useState(null);
   const [starting, setStarting] = useState(false);
@@ -100,6 +107,7 @@ function PracticeContent() {
       if (subject) payload.subject = subject;
       if (chapter) payload.chapter = chapter;
       if (topics.length) payload.topics = topics.map(Number);
+      if (smartRevision) payload.smart_revision = true;
       const data = await api.post("/questions/practice-session/", payload);
       setQuestions(data);
       if (data.length === 0) setShowForm(true);
@@ -119,12 +127,12 @@ function PracticeContent() {
   if (questions?.length > 0) {
     return (
       <div className="hm-app-shell">
-        <Header title="Practice" showBack />
+        <Header title={smartRevision ? "Smart Revision" : "Practice"} showBack />
         <QuestionSolver
           questions={questions}
           finishLabel="Finish Practice"
           timeLimitMinutes={timeMinutes || undefined}
-          onFinish={() => router.push("/qbank")}
+          onFinish={() => router.push(smartRevision ? "/qbank/revision" : "/qbank")}
         />
       </div>
     );

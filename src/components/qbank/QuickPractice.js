@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -85,6 +86,18 @@ export default function QuickPractice() {
           </button>
         </div>
       </div>
+
+      {/* QBank 2.0 Phase 3O: a fixed, small "revision-only" preset —
+          reuses the exact same time-based Practice Builder flow above
+          (just a different status combination: due + mistakes only, no
+          new/weak questions), so a 5-minute revision session never
+          requires opening the full Revision Center. */}
+      <Link
+        href="/qbank/practice?time=5&count=5&status=need_revision,incorrect&auto=1"
+        className="mt-3 flex items-center justify-center gap-1.5 rounded-xl border border-[var(--color-border)] py-2 text-xs font-bold text-[var(--color-text-muted)] transition hover:border-brand-blue hover:text-brand-blue"
+      >
+        <span aria-hidden="true">⚡</span> Quick Revision (5 min): Due + Mistakes
+      </Link>
     </section>
   );
 }

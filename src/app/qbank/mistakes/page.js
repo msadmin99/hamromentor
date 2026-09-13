@@ -9,6 +9,7 @@ import { MASTERY_META, SkeletonCard, stripHtml } from "@/components/qbank/revisi
 import RequireAuth from "@/components/RequireAuth";
 import RichContent from "@/components/RichContent";
 import { api } from "@/lib/api";
+import { useCourse } from "@/lib/course-context";
 
 // Phase D, Area 1b: same /questions/mistakes/?scope=&subject= endpoint,
 // same by_subject counts and scope tabs as before. `results` already
@@ -19,17 +20,43 @@ import { api } from "@/lib/api";
 // straight off data this endpoint already returned, same as Area 1a.
 // Search is client-side over whatever `results` the server already sent
 // for the current scope/subject — it doesn't add a request.
+//
+// QBank 2.0 Phase 3D/3E — Mistake Bank 2.0:
+// - `?course=` is now sent (mistakes() previously had zero course
+//   scoping at all — the documented inconsistency vs. Bookmarks).
+// - Weak / High Confidence are client-side filters over `results`
+//   (mastery_status/confidence are now real, populated fields — see
+//   mistakes()'s own fix — not a second backend query).
+// - Repeated (incorrect_count >= 2, the same documented threshold
+//   academics/views.py uses) replaces the old vague "Frequently
+//   Repeated" scope label with the exact number shown per card.
 const SCOPES = [
   { key: "all", label: "All" },
   { key: "recent", label: "Recent" },
-  { key: "frequent", label: "Frequently Repeated" },
+  { key: "frequent", label: "Repeated" },
 ];
 
+const REPEATED_MISTAKE_MIN_COUNT = 2; // mirrors academics/views.py's own documented constant
+
+function formatLastAttempted(iso) {
+  if (!iso) return null;
+  const diffDays = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  if (diffDays <= 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  return `${diffDays} days ago`;
+}
+
 function MistakesContent() {
+  const { activeCourse } = useCourse();
   const [data, setData] = useState(null);
   const [scope, setScope] = useState("all");
   const [subject, setSubject] = useState("");
   const [search, setSearch] = useState("");
+  // QBank 2.0 Phase 3D: client-side, over already-loaded `results` — both
+  // fields are real (mastery_status/confidence, now populated by the
+  // mistakes() fix), not a second backend query.
+  const [weakOnly, setWeakOnly] = useState(false);
+  const [highConfidenceOnly, setHighConfidenceOnly] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [bookmarking, setBookmarking] = useState(null);
@@ -40,6 +67,7 @@ function MistakesContent() {
     setError(false);
     const params = new URLSearchParams({ scope });
     if (subject) params.set("subject", subject);
+    if (activeCourse?.id) params.set("course", activeCourse.id);
     api
       .get(`/questions/mistakes/?${params.toString()}`)
       .then((d) => {
@@ -52,7 +80,7 @@ function MistakesContent() {
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scope, subject]);
+  }, [scope, subject, activeCourse?.id]);
 
   // Memoized (not a plain `data?.x || []`) so a null `data` doesn't hand
   // useMemo below a fresh [] reference on every render.
@@ -62,9 +90,16 @@ function MistakesContent() {
 
   const filteredResults = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return results;
-    return results.filter((q) => stripHtml(q.text).toLowerCase().includes(term));
-  }, [results, search]);
+    return results.filter((q) => {
+      if (term && !stripHtml(q.text).toLowerCase().includes(term)) return false;
+      if (weakOnly && q.mastery_status !== "weak") return false;
+      // Confidence Trap: answered incorrectly while self-reporting high
+      // confidence — real data (QuestionAttempt.confidence), never a
+      // guess. See QuestionAttempt.CONFIDENCE_CHOICES.
+      if (highConfidenceOnly && q.confidence !== "confident") return false;
+      return true;
+    });
+  }, [results, search, weakOnly, highConfidenceOnly]);
 
   async function toggleBookmark(question) {
     const next = !(localBookmarks[question.id] ?? question.is_bookmarked);
@@ -135,6 +170,34 @@ function MistakesContent() {
             ))}
           </div>
 
+          {/* QBank 2.0 Phase 3D/3F: client-side filters, only shown once
+              there's something to filter — real mastery/confidence data,
+              never a fake filter with no backing data. */}
+          {!loading && !error && results.length > 0 && (
+            <div className="hm-scrollbar-none mt-1.5 flex gap-1.5 overflow-x-auto">
+              <button
+                type="button"
+                onClick={() => setWeakOnly((v) => !v)}
+                aria-pressed={weakOnly}
+                className={`flex-none rounded-full px-3 py-1 text-[11px] font-bold transition ${
+                  weakOnly ? "bg-brand-red text-white" : "bg-brand-red-light text-brand-red"
+                }`}
+              >
+                🔴 Weak
+              </button>
+              <button
+                type="button"
+                onClick={() => setHighConfidenceOnly((v) => !v)}
+                aria-pressed={highConfidenceOnly}
+                className={`flex-none rounded-full px-3 py-1 text-[11px] font-bold transition ${
+                  highConfidenceOnly ? "bg-amber-600 text-white" : "bg-warning-soft text-amber-700"
+                }`}
+              >
+                ⚠️ Confidence Trap
+              </button>
+            </div>
+          )}
+
           {!loading && !error && results.length > 0 && (
             <div className="relative mt-3">
               <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">
@@ -180,13 +243,22 @@ function MistakesContent() {
             {!loading && !error && results.length > 0 && filteredResults.length === 0 && (
               <div className="hm-card p-6 text-center">
                 <p className="text-sm font-semibold text-[var(--color-text)]">No matches</p>
-                <p className="mt-1 text-xs text-[var(--color-text-muted)]">Try a different search term.</p>
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                  {weakOnly || highConfidenceOnly ? "Try a different filter." : "Try a different search term."}
+                </p>
               </div>
             )}
 
             {!loading && !error && filteredResults.map((q) => {
               const mastery = MASTERY_META[q.mastery_status];
               const bookmarked = localBookmarks[q.id] ?? q.is_bookmarked;
+              // QBank 2.0 Phase 3D: repeated/confidence-trap badges — both
+              // read straight off real QuestionAttempt fields the
+              // mistakes() fix now exposes (incorrect_count/confidence),
+              // never a guess.
+              const isRepeated = (q.incorrect_count ?? 0) >= REPEATED_MISTAKE_MIN_COUNT;
+              const isConfidenceTrap = q.confidence === "confident";
+              const lastAttempted = formatLastAttempted(q.last_attempted_at);
               return (
                 <div key={q.id} className="hm-card flex items-start gap-2 p-3.5 transition hover:-translate-y-0.5 hover:shadow-md">
                   <Link href={`/qbank/question/${q.id}`} className="min-w-0 flex-1">
@@ -208,6 +280,20 @@ function MistakesContent() {
                     </div>
                     <div className="line-clamp-2 text-sm text-[var(--color-text)]">
                       <RichContent html={q.text} />
+                    </div>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] text-[var(--color-text-muted)]">
+                      {q.incorrect_count != null && (
+                        <span className={isRepeated ? "font-bold text-brand-red" : ""}>
+                          {isRepeated && <span aria-hidden="true">🔁 </span>}
+                          {q.incorrect_count === 1 ? "Wrong once" : `Wrong ${q.incorrect_count} times`}
+                        </span>
+                      )}
+                      {lastAttempted && <span>Last attempted: {lastAttempted}</span>}
+                      {isConfidenceTrap && (
+                        <span className="font-bold text-amber-700">
+                          <span aria-hidden="true">⚠️</span> Confidence Trap
+                        </span>
+                      )}
                     </div>
                   </Link>
                   <button

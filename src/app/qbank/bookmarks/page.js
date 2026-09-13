@@ -181,34 +181,55 @@ function BookmarksContent() {
                 <p className="text-[11px] font-semibold text-[var(--color-text-muted)]">{chapter}</p>
                 {items.map((q) => {
                   const mastery = MASTERY_META[q.mastery_status];
+                  // QBank 2.0 Phase 3M: explicit [Revise] [Practice Similar]
+                  // actions. Revise reuses the exact same /qbank/question/
+                  // destination the card itself already opens (bookmark
+                  // semantics are unchanged); Practice Similar reuses the
+                  // same topic->chapter->subject fallback QuestionSolver's
+                  // own "Practice Similar Questions" (Phase 2) already uses.
+                  const similarParams = new URLSearchParams();
+                  if (q.topic) similarParams.set("topic", q.topic);
+                  else if (q.chapter) similarParams.set("chapter", q.chapter);
+                  else if (q.subject) similarParams.set("subject", q.subject);
+                  similarParams.set("auto", "1");
                   return (
-                    <div key={q.id} className="hm-card flex items-start gap-2 p-4">
-                      <Link href={`/qbank/question/${q.id}`} className="min-w-0 flex-1">
-                        <div className="mb-1 flex flex-wrap items-center gap-1.5">
-                          {q.topic_name && (
-                            <span className="inline-block rounded-full bg-[var(--color-surface-muted)] px-2 py-0.5 text-[10px] font-semibold text-[var(--color-text-muted)]">
-                              {q.topic_name}
-                            </span>
-                          )}
-                          {mastery && (
-                            <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold ${mastery.className}`}>
-                              {mastery.label}
-                            </span>
-                          )}
-                        </div>
-                        <div className="line-clamp-3 overflow-hidden text-sm text-[var(--color-text)]">
-                          <RichContent html={q.text} />
-                        </div>
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => removeBookmark(q)}
-                        disabled={removingId === q.id}
-                        aria-label={`Remove bookmark: ${stripHtml(q.text).slice(0, 60)}`}
-                        className="flex h-9 w-9 flex-none items-center justify-center rounded-lg text-brand-blue transition hover:bg-[var(--color-surface-muted)] disabled:opacity-40"
-                      >
-                        <BookmarkIcon fill="currentColor" />
-                      </button>
+                    <div key={q.id} className="hm-card flex flex-col gap-2 p-4">
+                      <div className="flex items-start gap-2">
+                        <Link href={`/qbank/question/${q.id}`} className="min-w-0 flex-1">
+                          <div className="mb-1 flex flex-wrap items-center gap-1.5">
+                            {q.topic_name && (
+                              <span className="inline-block rounded-full bg-[var(--color-surface-muted)] px-2 py-0.5 text-[10px] font-semibold text-[var(--color-text-muted)]">
+                                {q.topic_name}
+                              </span>
+                            )}
+                            {mastery && (
+                              <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold ${mastery.className}`}>
+                                {mastery.label}
+                              </span>
+                            )}
+                          </div>
+                          <div className="line-clamp-3 overflow-hidden text-sm text-[var(--color-text)]">
+                            <RichContent html={q.text} />
+                          </div>
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => removeBookmark(q)}
+                          disabled={removingId === q.id}
+                          aria-label={`Remove bookmark: ${stripHtml(q.text).slice(0, 60)}`}
+                          className="flex h-9 w-9 flex-none items-center justify-center rounded-lg text-brand-blue transition hover:bg-[var(--color-surface-muted)] disabled:opacity-40"
+                        >
+                          <BookmarkIcon fill="currentColor" />
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-3 border-t border-[var(--color-border)] pt-2">
+                        <Link href={`/qbank/question/${q.id}`} className="text-xs font-bold text-brand-blue">
+                          Revise →
+                        </Link>
+                        <Link href={`/qbank/practice?${similarParams.toString()}`} className="text-xs font-bold text-brand-blue">
+                          Practice Similar →
+                        </Link>
+                      </div>
                     </div>
                   );
                 })}

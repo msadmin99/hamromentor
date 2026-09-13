@@ -3,11 +3,10 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { MASTERY_META } from "./qbank/revisionListShared";
+import ExplanationDisplay from "./ExplanationDisplay";
 import { BookmarkIcon } from "./icons";
 import OptionResultBar from "./OptionResultBar";
 import PerformanceMessage from "./PerformanceMessage";
-import ReferenceCard from "./ReferenceCard";
-import ReferencesList from "./ReferencesList";
 import ReportQuestionButton from "./ReportQuestionModal";
 import RichContent from "./RichContent";
 import { api } from "@/lib/api";
@@ -44,17 +43,6 @@ function Chip({ children, tone = "neutral" }) {
   const toneClass = tone === "brand" ? "bg-info-soft text-info" : "bg-[var(--color-surface-muted)] text-[var(--color-text-muted)]";
   return <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${toneClass}`}>{children}</span>;
 }
-
-// Purely decorative variety for "why other options are wrong" cards
-// (Qbank12.png: each wrong option gets its own pastel badge color, not a
-// uniform one) — literal classes only, cycled by position among the
-// wrong options actually shown, never tied to a fixed letter.
-const WRONG_OPTION_BADGES = [
-  "bg-brand-red-light text-brand-red",
-  "bg-violet-100 text-violet-600",
-  "bg-pink-100 text-pink-600",
-  "bg-warning-soft text-amber-700",
-];
 
 // revision_due_at is a real timestamp (academics/services.py:
 // record_question_result) — this only turns it into a relative label, it
@@ -361,10 +349,15 @@ export default function QuestionSolver({
                 list above still carries per-option peer statistics, which
                 this summary doesn't duplicate. */}
             <div className="flex flex-col gap-2.5">
+              {/* Redesign §11: a restrained left-accent instead of a full
+                  color-filled block — correctness stays obvious (icon +
+                  label + accent bar) without reading as a "giant" colored
+                  card, matching the calmer textbook feel of the rest of
+                  this surface. */}
               {!result.is_correct && selectedOpt && (
-                <div className="flex items-center gap-3 rounded-2xl bg-brand-red-light p-4">
+                <div className="flex items-center gap-3 rounded-xl border-l-4 border-brand-red bg-brand-red-light/40 py-2.5 pl-3.5 pr-4">
                   <span
-                    className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-brand-red text-base font-bold text-white"
+                    className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-brand-red text-sm font-bold text-white"
                     aria-hidden="true"
                   >
                     ✕
@@ -379,9 +372,9 @@ export default function QuestionSolver({
                 </div>
               )}
               {correctOpt && (
-                <div className="flex items-center gap-3 rounded-2xl bg-brand-green-light p-4">
+                <div className="flex items-center gap-3 rounded-xl border-l-4 border-brand-green bg-brand-green-light/40 py-2.5 pl-3.5 pr-4">
                   <span
-                    className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-brand-green text-base font-bold text-white"
+                    className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-brand-green text-sm font-bold text-white"
                     aria-hidden="true"
                   >
                     ✓
@@ -402,87 +395,35 @@ export default function QuestionSolver({
               />
             </div>
 
-            {/* Phase 2C: explanation, restructured into "why correct" / "why
-                others wrong" sections instead of one undifferentiated block. */}
-            <div className="rounded-xl bg-[var(--color-surface-muted)] p-4">
-              {result.explanation || result.explanation_latex || result.explanation_image || result.explanation_video_url ? (
-                <>
-                  <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">Why this is correct</p>
-                  <RichContent
-                    html={result.explanation}
-                    latex={result.explanation_latex}
-                    image={result.explanation_image}
-                    imageData={result.explanation_image_data}
-                    video={result.explanation_video_url}
-                    className="text-sm leading-relaxed text-[var(--color-text-muted)]"
-                  />
-                </>
-              ) : (
-                <p className="text-sm text-[var(--color-text-muted)]">Explanation not available yet.</p>
-              )}
-
-              {result.options?.some((o) => o.explanation) && (
-                <div className="mt-3 flex flex-col gap-2">
-                  <p className="text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
-                    Why the other options are wrong
-                  </p>
-                  {(() => {
-                    let badgeIndex = -1;
-                    return question.options.map((opt, i) => {
-                      const optResult = result.options.find((o) => o.id === opt.id);
-                      if (!optResult?.explanation || opt.id === result.correct_option_id) return null;
-                      badgeIndex += 1;
-                      const badgeClass = WRONG_OPTION_BADGES[badgeIndex % WRONG_OPTION_BADGES.length];
-                      return (
-                        <div key={opt.id} className="flex items-start gap-2.5 rounded-xl border border-[var(--color-border)] bg-white p-3">
-                          <span className={`flex h-7 w-7 flex-none items-center justify-center rounded-full text-xs font-bold ${badgeClass}`}>
-                            {letterFor(i)}
-                          </span>
-                          <div className="min-w-0">
-                            <div className="text-sm font-bold text-[var(--color-text)]">
-                              <RichContent html={opt.text} latex={opt.latex} />
-                            </div>
-                            <p className="text-xs leading-relaxed text-[var(--color-text-muted)]">{optResult.explanation}</p>
-                          </div>
-                        </div>
-                      );
-                    });
-                  })()}
-                </div>
-              )}
-
-              <p className="mt-3 text-[11px] text-[var(--color-text-muted)]">MCQ ID: {question.public_id}</p>
-            </div>
-
-            {/* Phase 2C: relabeled from "Exam Pearl" — the backing field is
-                key_takeaway ("one high-yield exam point"), which is exactly
-                a Key Takeaway. There is no separate Exam Pearl field, so no
-                second, fabricated section is added for it. */}
-            {result.key_takeaway && (
-              <div className="rounded-xl border border-info/20 bg-info-soft p-4">
-                <p className="mb-1 flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-info">
-                  <span aria-hidden="true">💡</span> Key Takeaway
-                </p>
-                <p className="text-sm leading-relaxed text-[var(--color-text)]">{result.key_takeaway}</p>
-              </div>
-            )}
-
-            {(result.reference_book_name || result.references?.length > 0) && (
-              <div className="rounded-xl border border-[var(--color-border)] p-4">
-                <p className="mb-2 flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
-                  <span aria-hidden="true">📚</span> Reference
-                </p>
-                <ReferenceCard
-                  bookName={result.reference_book_name}
-                  edition={result.reference_edition}
-                  chapter={result.reference_chapter}
-                  page={result.reference_page}
-                  url={result.reference_url}
-                  className="!border-0 !p-0"
-                />
-                <ReferencesList references={result.references} className={result.reference_book_name ? "mt-3" : ""} />
-              </div>
-            )}
+            {/* Explanation redesign — one shared presentation surface
+                (ExplanationDisplay.js) reused by every exam type's result
+                screen, replacing the hand-rolled block that used to live
+                here. `answerOptions` carries this call's own facts
+                (letter/correctness/existing per-option explanation) —
+                ExplanationDisplay never guesses at them from prose. */}
+            <ExplanationDisplay
+              explanation={result.explanation}
+              explanationLatex={result.explanation_latex}
+              explanationImage={result.explanation_image}
+              explanationImageData={result.explanation_image_data}
+              explanationVideoUrl={result.explanation_video_url}
+              keyTakeaway={result.key_takeaway}
+              referenceBookName={result.reference_book_name}
+              referenceEdition={result.reference_edition}
+              referenceChapter={result.reference_chapter}
+              referencePage={result.reference_page}
+              referenceUrl={result.reference_url}
+              references={result.references}
+              options={question.options.map((opt, i) => ({
+                id: opt.id,
+                letter: letterFor(i),
+                text: opt.text,
+                latex: opt.latex,
+                isCorrect: opt.id === result.correct_option_id,
+                explanation: result.options?.find((o) => o.id === opt.id)?.explanation || "",
+              }))}
+              footer={<p className="text-[11px] text-[var(--color-text-muted)]">MCQ ID: {question.public_id}</p>}
+            />
 
             {/* Phase 2D: confidence — same mechanism/endpoint as before,
                 relabeled to match Qbank12.png's exact copy. QBank practice

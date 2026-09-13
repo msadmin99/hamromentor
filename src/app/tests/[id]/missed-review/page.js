@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
+import ExplanationDisplay from "@/components/ExplanationDisplay";
 import Header from "@/components/Header";
 import RequireAuth from "@/components/RequireAuth";
 import RichContent from "@/components/RichContent";
@@ -59,39 +60,42 @@ function MissedQuestion({ q, index }) {
         ))}
       </div>
 
-      {q.explanation && (
-        <RichContent
-          html={q.explanation}
-          latex={q.explanation_latex}
-          image={q.explanation_image}
-          imageData={q.explanation_image_data}
-          video={q.explanation_video_url}
-          className="mt-3 text-xs leading-relaxed text-[var(--color-text-muted)]"
+      {/* Explanation redesign — same shared presentation surface every
+          other exam-type result screen now uses (ExplanationDisplay.js).
+          Previously this page's own hand-rolled gate here was
+          `q.explanation &&` alone — missing explanation_latex/_image/
+          _image_data/_video_url entirely, so a latex-only or image-only
+          explanation rendered nothing at all on this page even though it
+          displayed correctly everywhere else. ExplanationDisplay fixes
+          that by construction (it checks every content type, matching
+          the regular Test result page's already-correct behavior) —
+          purely a presentation fix, the access gate above this component
+          (participation === 'missed' + review-window check, GrandTestMissedReviewView)
+          is completely untouched. */}
+      <div className="mt-3">
+        <ExplanationDisplay
+          explanation={q.explanation}
+          explanationLatex={q.explanation_latex}
+          explanationImage={q.explanation_image}
+          explanationImageData={q.explanation_image_data}
+          explanationVideoUrl={q.explanation_video_url}
+          keyTakeaway={q.key_takeaway}
+          referenceBookName={q.reference_book_name}
+          referenceEdition={q.reference_edition}
+          referenceChapter={q.reference_chapter}
+          referencePage={q.reference_page}
+          referenceUrl={q.reference_url}
+          references={q.references}
+          options={(q.options || []).map((opt, oi) => ({
+            id: opt.id,
+            letter: String.fromCharCode(65 + oi),
+            text: opt.text,
+            latex: opt.latex,
+            isCorrect: opt.is_correct,
+            explanation: opt.explanation || "",
+          }))}
         />
-      )}
-
-      {(q.options || []).some((o) => o.explanation && !o.is_correct) && (
-        <div className="mt-3 flex flex-col gap-1">
-          <p className="text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
-            Why the other options are incorrect
-          </p>
-          {(q.options || []).map((opt, oi) =>
-            !opt.explanation || opt.is_correct ? null : (
-              <p key={opt.id} className="text-xs leading-relaxed text-[var(--color-text-muted)]">
-                <span className="font-semibold text-[var(--color-text)]">{String.fromCharCode(65 + oi)}: </span>
-                {opt.explanation}
-              </p>
-            )
-          )}
-        </div>
-      )}
-
-      {q.key_takeaway && (
-        <div className="mt-3 rounded-xl border border-info/20 bg-info-soft p-3">
-          <p className="mb-1 text-xs font-bold uppercase tracking-wide text-info">Key Takeaway</p>
-          <p className="text-xs leading-relaxed text-[var(--color-text)]">{q.key_takeaway}</p>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

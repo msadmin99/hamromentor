@@ -5,11 +5,10 @@ import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
 import Header from "@/components/Header";
+import ExplanationDisplay from "@/components/ExplanationDisplay";
 import { CheckCircleIcon, WarningTriangleIcon } from "@/components/icons";
 import OptionResultBar from "@/components/OptionResultBar";
 import PerformanceMessage from "@/components/PerformanceMessage";
-import ReferenceCard from "@/components/ReferenceCard";
-import ReferencesList from "@/components/ReferencesList";
 import ReportQuestionButton from "@/components/ReportQuestionModal";
 import RequireAuth from "@/components/RequireAuth";
 import RichContent from "@/components/RichContent";
@@ -393,56 +392,42 @@ function ResultContent() {
                 })}
               </div>
 
+              {/* Explanation redesign — one shared presentation surface
+                  (ExplanationDisplay.js) reused by every exam type's result
+                  screen. Kept behind the exact same `!q.solutions_locked`
+                  gate as before (unchanged access control) — this also now
+                  covers the Reference card, which previously rendered
+                  unconditionally below this block; that was harmless in
+                  practice (the backend already strips reference_book_name
+                  et al. while locked, so ReferenceCard self-nulled) but is
+                  now explicit rather than incidental. */}
               {!q.solutions_locked && (
-                <>
-                  <div className="mt-3">
-                    <PerformanceMessage statsAvailable={q.stats_available} correctPercent={q.students_correct_percent} totalResponses={q.total_responses} />
-                  </div>
-
-                  <RichContent
-                    html={q.explanation}
-                    latex={q.explanation_latex}
-                    image={q.explanation_image}
-                    imageData={q.explanation_image_data}
-                    video={q.explanation_video_url}
-                    className="mt-3 text-xs leading-relaxed text-[var(--color-text-muted)]"
+                <div className="mt-3 flex flex-col gap-3">
+                  <PerformanceMessage statsAvailable={q.stats_available} correctPercent={q.students_correct_percent} totalResponses={q.total_responses} />
+                  <ExplanationDisplay
+                    explanation={q.explanation}
+                    explanationLatex={q.explanation_latex}
+                    explanationImage={q.explanation_image}
+                    explanationImageData={q.explanation_image_data}
+                    explanationVideoUrl={q.explanation_video_url}
+                    keyTakeaway={q.key_takeaway}
+                    referenceBookName={q.reference_book_name}
+                    referenceEdition={q.reference_edition}
+                    referenceChapter={q.reference_chapter}
+                    referencePage={q.reference_page}
+                    referenceUrl={q.reference_url}
+                    references={q.references}
+                    options={q.options.map((opt, oi) => ({
+                      id: opt.id,
+                      letter: String.fromCharCode(65 + oi),
+                      text: opt.text,
+                      latex: opt.latex,
+                      isCorrect: opt.is_correct,
+                      explanation: opt.explanation || "",
+                    }))}
                   />
-
-                  {q.options.some((o) => o.explanation && !o.is_correct) && (
-                    <div className="mt-3 flex flex-col gap-1">
-                      <p className="text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
-                        Why the other options are incorrect
-                      </p>
-                      {q.options.map((opt, oi) =>
-                        !opt.explanation || opt.is_correct ? null : (
-                          <p key={opt.id} className="text-xs leading-relaxed text-[var(--color-text-muted)]">
-                            <span className="font-semibold text-[var(--color-text)]">{String.fromCharCode(65 + oi)}: </span>
-                            {opt.explanation}
-                          </p>
-                        )
-                      )}
-                    </div>
-                  )}
-
-                  <ReferencesList references={q.references} className="mt-3" />
-
-                  {q.key_takeaway && (
-                    <div className="mt-3 rounded-xl border border-info/20 bg-info-soft p-3">
-                      <p className="mb-1 text-xs font-bold uppercase tracking-wide text-info">Key Takeaway</p>
-                      <p className="text-xs leading-relaxed text-[var(--color-text)]">{q.key_takeaway}</p>
-                    </div>
-                  )}
-                </>
+                </div>
               )}
-
-              <ReferenceCard
-                bookName={q.reference_book_name}
-                edition={q.reference_edition}
-                chapter={q.reference_chapter}
-                page={q.reference_page}
-                url={q.reference_url}
-                className="mt-3"
-              />
 
               {/* Phase 8: q.id can be null for a historical snapshot whose
                   live Question no longer exists — nothing to report against. */}

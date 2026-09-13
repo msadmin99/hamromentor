@@ -248,6 +248,128 @@ body {
   border-color: var(--color-brand-blue);
 }
 
+/* Explanation redesign — base typography for rich-text content.
+   Tailwind's preflight reset strips all default browser spacing/weight
+   from <p>/<h1-6>/<strong>/<ul>/<ol>, and none of it was ever replaced
+   here — so admin-authored HTML that already has real <p>/<strong>/<ul>
+   structure still rendered as one visually flat run of text with no
+   paragraph gaps, no heading hierarchy, and no list rhythm. This is the
+   single biggest lever for the "wall of AI text" complaint, since it
+   improves every already-well-structured explanation (and every question
+   stem/option, which shares this same class) with zero content changes,
+   not just the newly-segmented ones. */
+.hm-richtext-content p {
+  margin: 0;
+}
+.hm-richtext-content p + p {
+  margin-top: 0.85em;
+}
+.hm-richtext-content h1,
+.hm-richtext-content h2,
+.hm-richtext-content h3,
+.hm-richtext-content h4,
+.hm-richtext-content h5,
+.hm-richtext-content h6 {
+  margin: 1.1em 0 0.4em;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--color-text);
+}
+.hm-richtext-content h1 {
+  font-size: 1.25em;
+}
+.hm-richtext-content h2 {
+  font-size: 1.15em;
+}
+.hm-richtext-content h3,
+.hm-richtext-content h4,
+.hm-richtext-content h5,
+.hm-richtext-content h6 {
+  font-size: 1.05em;
+}
+.hm-richtext-content strong,
+.hm-richtext-content b {
+  font-weight: 700;
+  color: var(--color-text);
+}
+.hm-richtext-content ul,
+.hm-richtext-content ol {
+  /* list-style/padding-left are already set by the existing rules further
+     below in this file (disc/decimal, 1.25rem) — only adding the vertical
+     rhythm (flex-column gap + block margin) that was missing, not
+     duplicating or overriding the bullet/number style itself. */
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+  margin: 0.75em 0;
+}
+.hm-richtext-content li {
+  line-height: 1.6;
+}
+/* Numbered mechanism/step lists read as a premium textbook's numbered
+   steps (redesign brief §13) for a real <ol> — a badge-style counter
+   instead of the browser's plain "1." marker. Deliberately scoped to
+   `.hm-explanation-copy` (the explanation reading surface) only, NOT
+   `.hm-richtext-content` globally — a question stem or option can
+   legitimately contain its own short numbered list (e.g. "1. Sound
+   travels through... 2. ..." as part of the question itself), and that
+   context is compact/dense in a way a 24px circular badge is designed
+   for the opposite of (a spacious, long-form reading surface). Pre-
+   commit CSS-scope audit: confirmed this is the ONLY block-level style
+   difference between the explanation surface and every other
+   `.hm-richtext-content` consumer (question stems, options) — everything
+   above this rule (paragraph/heading/bold/list spacing) is shared
+   because a short, single-paragraph question/option either never
+   contains that markup or benefits identically from it with no plausible
+   regression (verified: RichContent.js is the only place
+   `.hm-richtext-content` is applied, and question/option content is
+   render-order-independent of it). */
+.hm-explanation-copy .hm-richtext-content ol {
+  list-style: none;
+  padding-left: 0;
+  counter-reset: hm-step;
+}
+.hm-explanation-copy .hm-richtext-content ol > li {
+  position: relative;
+  padding-left: 2.25rem;
+  counter-increment: hm-step;
+}
+.hm-explanation-copy .hm-richtext-content ol > li::before {
+  content: counter(hm-step);
+  position: absolute;
+  left: 0;
+  top: 0.05em;
+  display: flex;
+  height: 1.5rem;
+  width: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: var(--color-info-soft);
+  color: var(--color-brand-blue);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+/* Explanation redesign — the primary reading surface for a question's
+   explanation specifically (ExplanationDisplay.js), distinct from the
+   smaller text used for a question stem/option: mobile-first reading
+   research and the redesign brief both land on ~16-17px/1.6-1.75 line
+   height as the comfortable range for continuous prose, noticeably
+   roomier than this app's default text-sm/text-[15px] UI copy. */
+.hm-explanation-copy {
+  /* Desktop comfortable-reading-width cap (redesign brief §22) — a long
+     explanation paragraph must not stretch edge-to-edge on a wide result
+     card. Mobile is unaffected (every mobile viewport this app targets is
+     already narrower than this). */
+  max-width: 46rem;
+}
+.hm-explanation-copy .hm-richtext-content {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--color-text);
+}
+
 /* A wide \[...\]/$$...$$ display equation (a long derivation, a matrix)
    renders wider than a phone screen. KaTeX's own docs recommend this rule
    so that span scrolls horizontally within itself instead of pushing the

@@ -80,7 +80,21 @@ export default function QBankHero({ accuracy, attempted }) {
         </div>
       </div>
 
-      {kpis && (
+      {/* Mobile scroll-blanking fix: this stat row previously rendered
+          NOTHING at all until /performance/overview/ resolved ({kpis &&
+          (...)}, no skeleton) — the same class of bug already fixed
+          elsewhere on this exact page (ProgressSummary, NextPracticeCard,
+          RecommendedForYou, SubjectGrid — see their own comments), just
+          never applied here since this component didn't exist yet when
+          those fixes shipped. Sitting at the very top of the page, its
+          height jump on load pushed every card below it down at once —
+          exactly the reported real-device symptom. Same fix: reserve the
+          identical hm-card/divide-x shape whether or not `kpis` has
+          arrived yet, so there is never a transition to cause a shift.
+          A fetch failure leaves `kpis` null forever, same as every other
+          fixed component here — staying on the skeleton shape rather than
+          collapsing to nothing, which is the safer failure mode. */}
+      {kpis ? (
         <div className="hm-card flex items-stretch divide-x divide-[var(--color-border)]">
           {/* Icon-per-stat swapped to match Qbank12.png exactly: 🎯 for
               Qs Today, 📈 for Overall Accuracy (was 📝/🎯 — visually close
@@ -88,6 +102,15 @@ export default function QBankHero({ accuracy, attempted }) {
           <StatChip icon="🔥" value={streak} label={`Day Streak${streak === 1 ? "" : "s"}`} />
           <StatChip icon="🎯" value={questionsToday} label="Qs Today" />
           <StatChip icon="📈" value={hasAccuracy ? `${accuracy}%` : "—"} label="Overall Accuracy" />
+        </div>
+      ) : (
+        <div className="hm-card flex animate-pulse items-stretch divide-x divide-[var(--color-border)]">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="flex flex-1 flex-col items-center gap-1.5 py-2">
+              <div className="h-4 w-10 rounded bg-[var(--color-surface-muted)]" />
+              <div className="h-2.5 w-14 rounded bg-[var(--color-surface-muted)]" />
+            </div>
+          ))}
         </div>
       )}
     </div>

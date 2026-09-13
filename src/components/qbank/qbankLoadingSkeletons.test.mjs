@@ -17,6 +17,16 @@
  * (h-dvh -> h-svh, and Header moved outside AppShell's scroll region) —
  * both stay in place; this fixes a third, independent contributor.
  *
+ * QBankHero addendum (found via real-device manual testing after Phase
+ * 1-4 shipped, not caught by any test at the time): QBankHero's own
+ * streak/questions-today/accuracy stat row has the EXACT same bug —
+ * {kpis && (...)}, nothing rendered at all until /performance/overview/
+ * resolves — just introduced later (QBank 2.0 Phase 1) than the other
+ * three components this file was originally written for, so it was never
+ * covered here. Sitting at the very top of the page (above even
+ * NextPracticeCard), its shift pushes down everything below it. Fixed
+ * the same way: a matching-shape skeleton instead of rendering nothing.
+ *
  * No DOM/rendering test infra in this repo (see mcqSemantics.test.mjs) —
  * these are source assertions confirming each skeleton's structure now
  * mirrors its loaded content's shape/height, not rendered-pixel
@@ -34,6 +44,7 @@ const read = (rel) => readFileSync(join(here, rel), "utf8");
 const progressSummary = read("ProgressSummary.js");
 const nextPracticeCard = read("NextPracticeCard.js");
 const recommendedForYou = read("RecommendedForYou.js");
+const qbankHero = read("QBankHero.js");
 
 test("ProgressSummary's skeleton reserves the loaded content's height", async (t) => {
   await t.test("skeleton includes a ring placeholder sized to match AccuracyRing's default 112px (h-28/w-28)", () => {
@@ -90,9 +101,29 @@ test("RecommendedForYou now reserves space while loading instead of rendering no
   });
 });
 
+test("QBankHero's stat row reserves height instead of rendering nothing while loading", async (t) => {
+  await t.test("the stat row is no longer gated on a bare `{kpis && (...)}` with no skeleton", () => {
+    assert.doesNotMatch(
+      qbankHero,
+      /\{kpis && \(\s*<div className="hm-card flex items-stretch/,
+      "must not silently render nothing until /performance/overview/ resolves — this was the exact bug",
+    );
+  });
+
+  await t.test("a matching-shape skeleton (same hm-card/divide-x row) renders while kpis is null", () => {
+    assert.match(qbankHero, /\{kpis \? \(/);
+    assert.match(qbankHero, /hm-card flex animate-pulse items-stretch divide-x divide-\[var\(--color-border\)\]/);
+  });
+
+  await t.test("the skeleton reserves 3 stat-chip placeholders, matching the 3 real StatChips", () => {
+    const skeletonBlock = qbankHero.slice(qbankHero.indexOf(") : ("), qbankHero.lastIndexOf(")}"));
+    assert.match(skeletonBlock, /\[0, 1, 2\]\.map/);
+  });
+});
+
 test("Neither earlier mobile-scroll fix was touched or reverted", async (t) => {
-  await t.test("these three files have nothing to do with AppShell/h-svh/Header placement", () => {
-    for (const src of [progressSummary, nextPracticeCard, recommendedForYou]) {
+  await t.test("these four files have nothing to do with AppShell/h-svh/Header placement", () => {
+    for (const src of [progressSummary, nextPracticeCard, recommendedForYou, qbankHero]) {
       assert.doesNotMatch(src, /h-svh|h-dvh|overflow-y-auto|position:\s*sticky/);
     }
   });

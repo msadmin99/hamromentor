@@ -7,6 +7,41 @@ import { themeForKey } from "@/lib/theme";
 
 const INITIAL_COUNT = 5;
 
+// "Browse by Subject" cards, presentation-only: a subject/institution name
+// → representative emoji. Purely a frontend display choice — Subject.icon
+// (Backend/academics/models.py, DB default 'book') is never read from or
+// written to here, so no backend/data change is needed or made. Keyed by
+// the subject's own existing `name` field, normalized (trimmed + upper-
+// cased) since real subject names are stored in Title Case ("Physiology")
+// while this mapping's keys read naturally in caps.
+const SUBJECT_EMOJIS = {
+  BOTANY: "🌿",
+  CHEMISTRY: "⚗️",
+  PHYSICS: "⚡",
+  BIOLOGY: "🧬",
+  ANATOMY: "🫀",
+  PHYSIOLOGY: "🫀",
+  ZOOLOGY: "🐾",
+  MATHEMATICS: "📐",
+  ENGLISH: "📖",
+  "GENERAL KNOWLEDGE": "🌐",
+  // Institution/source collections (e.g. PYQ grouped by university) have
+  // no obvious academic-subject emoji of their own.
+  BPKIHS: "🏛️",
+  IOM: "🏛️",
+  KU: "🏛️",
+  MOE: "🏛️",
+};
+
+// Falls back to the subject's own existing `icon` value (today's behavior
+// — the generic 'book' default for most rows, or a real emoji a subject
+// already had set) whenever the name isn't a recognised match, exactly as
+// required: never guess at an emoji, never show nothing.
+function emojiForSubject(subject) {
+  const key = subject.name?.trim().toUpperCase();
+  return (key && SUBJECT_EMOJIS[key]) || subject.icon;
+}
+
 // QBank 2.0 (§10): color must be deterministic per subject, not per list
 // position — themeForKey(subject.slug) is the same function
 // [subjectSlug]/page.js and [chapterId]/page.js already use for the
@@ -33,7 +68,7 @@ function SubjectCard({ subject, theme }) {
         className={`flex h-11 w-11 flex-none items-center justify-center rounded-full text-xl ${theme.iconBg} ${theme.fg}`}
         aria-hidden="true"
       >
-        {subject.icon}
+        {emojiForSubject(subject)}
       </span>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-bold uppercase tracking-wide text-[var(--color-text)]">{subject.name}</p>

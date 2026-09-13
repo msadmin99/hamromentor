@@ -36,10 +36,35 @@ test("real multi-paragraph HTML (docx import shape) is segmented by label withou
     "<p><strong>Review Point:</strong> Vitamin D synthesis begins in the skin through UVB-dependent conversion of 7-dehydrocholesterol.</p>";
   const out = formatExplanation(raw);
   assert.equal(out.hasStructure, true);
-  assert.match(out.concept, /Vitamin D synthesis begins in the skin\.<\/p>/);
+  // Exact-equality, not substring match: a substring check alone would
+  // have missed the real dangling-</strong> bug this section's own fix
+  // comment describes — it only asserted the END of the string, so a
+  // stray tag left at the START never failed this test even before the
+  // fix. See "AUDIT: label colon lands INSIDE <strong>...</strong>" below
+  // for the markdown-converted variant of the same bug.
+  assert.equal(out.concept, "<p>Vitamin D synthesis begins in the skin.</p>");
   assert.match(out.body, /isomerizes to vitamin D3/);
   assert.doesNotMatch(out.body, /Core Concept/i, "the label text itself must not leak into the rendered body");
-  assert.match(out.takeaway, /UVB-dependent conversion/);
+  assert.equal(out.takeaway, "<p>Vitamin D synthesis begins in the skin through UVB-dependent conversion of 7-dehydrocholesterol.</p>");
+});
+
+test("AUDIT: a label whose colon lands INSIDE <strong>...</strong> (the exact shape applyInlineMarkdown produces) leaves no dangling close tag", () => {
+  // Real bug found during the stage-2 audit: **Core Concept:** converts to
+  // <strong>Core Concept:</strong> — the colon ends up BEFORE the closing
+  // tag, not after it. The label regex originally only handled closing
+  // tags landing before the colon (the hand-authored-HTML shape in the
+  // test above), so it stopped consuming right after the colon and left
+  // "</strong>" as literal, visible stray markup at the start of the
+  // section's rendered content.
+  const raw =
+    "<p>**Core Concept:** The reaction proceeds when the pH rises.\n" +
+    "**Detailed Explanation:**\n" +
+    "- Step one happens\n" +
+    "- Step two happens</p>";
+  const out = formatExplanation(raw);
+  assert.equal(out.concept, "<p>The reaction proceeds when the pH rises.</p>");
+  assert.doesNotMatch(out.concept, /<\/strong>|<strong>/, "no stray or leftover bold tag may remain");
+  assert.equal(out.body, "<ul><li>Step one happens</li><li>Step two happens</li></ul>");
 });
 
 test("emoji-prefixed labels (the exact current-production pattern) are recognised and stripped", () => {

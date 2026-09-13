@@ -278,8 +278,20 @@ const MARKER_EMOJI = "(?:✅|✓|✔️?|🧠|📖|📚|❌|✗|🔵|💡|📌|�
 const OPEN_INLINE = "(?:<(?:strong|b|em|i)>\\s*)*";
 const CLOSE_INLINE = "(?:\\s*</(?:strong|b|em|i)>)*";
 
+// Production bug (explanation redesign, stage 2): the markdown-lite bold
+// conversion (applyInlineMarkdown) turns "**Core Concept:**" into
+// "<strong>Core Concept:</strong>" — the COLON ends up INSIDE the tag
+// pair, not after it. The original version of this pattern only allowed
+// closing tags BEFORE the colon (matching hand-authored real HTML like
+// "<strong>Core Concept</strong>:"), so for the markdown-converted shape
+// it stopped consuming right after the colon and left "</strong>" stranded
+// at the start of the section's own content — a real, visible dangling
+// close-tag bug. CLOSE_INLINE now appears on both sides of the colon
+// (each independently optional) so either real-content shape is consumed
+// in full, regardless of which side of the punctuation the closing tag
+// landed on.
 function labelRegexFor(words) {
-  return new RegExp(`^(?:\\s|&nbsp;)*(?:${MARKER_EMOJI}\\s*)?${OPEN_INLINE}(?:${words})${CLOSE_INLINE}\\s*:\\s*`, "i");
+  return new RegExp(`^(?:\\s|&nbsp;)*(?:${MARKER_EMOJI}\\s*)?${OPEN_INLINE}(?:${words})${CLOSE_INLINE}\\s*:\\s*${CLOSE_INLINE}\\s*`, "i");
 }
 
 const LABEL_REGEXES = SECTION_LABEL_DEFS.map((def) => ({ key: def.key, re: labelRegexFor(def.words) }));

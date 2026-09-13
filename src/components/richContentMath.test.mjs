@@ -15,12 +15,23 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import katex from "katex";
 
-import { renderMathInHtml } from "../lib/mathDelimiters.js";
+import { decodeHtmlEntities, renderMathInHtml } from "../lib/mathDelimiters.js";
+
+// Mirrors RichContent.js's stripEmbeddedTags exactly (not exported from
+// that file, since it's a browser/dompurify-importing component that
+// can't itself be loaded under plain `node --test` — see this file's own
+// docstring) so this test proves the REAL production pipeline, entity
+// decode included, not just the delimiter-matching logic in isolation.
+function stripEmbeddedTags(expr) {
+  return expr.replace(/<\/?[a-zA-Z][^>]*>/g, "").replace(/&lt;\/?[a-zA-Z][^&]*?&gt;/g, "");
+}
 
 function renderLikeRichContent(html) {
-  return renderMathInHtml(html, (expr, { displayMode }) =>
-    katex.renderToString(expr, { throwOnError: false, displayMode })
-  );
+  return renderMathInHtml(html, (expr, { displayMode }) => {
+    const cleaned = stripEmbeddedTags(decodeHtmlEntities(expr)).trim();
+    if (!cleaned) return null;
+    return katex.renderToString(cleaned, { throwOnError: false, displayMode });
+  });
 }
 
 // No raw delimiter or backslash-command source should ever remain visible
@@ -105,4 +116,50 @@ test("a genuinely broken command degrades to a KaTeX error span, not a crash, an
 test("plain HTML with no math anywhere is returned byte-for-byte unchanged", () => {
   const input = "<p>No mathematics in this explanation at all.</p>";
   assert.equal(renderLikeRichContent(input), input);
+});
+
+/**
+ * Explanation redesign, stage 2 — real production bug reports. Each case
+ * reproduces the exact stored-HTML shape (a literal "<"/">" inside a math
+ * delimiter, legitimately HTML-escaped by the bulk-import pipeline before
+ * storage) that was reaching the browser as visible "&lt;"/"&gt;" text.
+ */
+// Isolates the VISIBLE rendering (.katex-html) from the MathML fallback
+// tree (.katex-mathml, aria-hidden — screen-reader/copy-paste only) and
+// the <annotation> it carries, which always contains the raw TeX source
+// verbatim BY DESIGN (see the existing "chemical formula H_2O" test above)
+// and, being real XML content, correctly re-escapes a literal "<"/">"/"&"
+// as "&lt;"/"&gt;"/"&amp;" itself — that is correct, valid markup, not the
+// bug. The bug this fix closes is specifically about what a real browser
+// ends up DISPLAYING, i.e. the visible branch only.
+function visibleBranch(out) {
+  return out.split('class="katex-html"')[1] ?? "";
+}
+
+test("production bug: an HTML-escaped comparison operator inside \\(...\\) renders as real math, not visible entity text", () => {
+  const cases = [
+    ["K_a < 6", String.raw`\(K_a &lt; 6\)`, /<span class="mrel">&lt;<\/span>/],
+    ["M > 1", String.raw`\(M &gt; 1\)`, /<span class="mrel">&gt;<\/span>/],
+    ["M < 1", String.raw`\(M &lt; 1\)`, /<span class="mrel">&lt;<\/span>/],
+  ];
+  for (const [label, input, visiblePattern] of cases) {
+    const out = renderLikeRichContent(input);
+    // The real, previously-reproduced bug: a DOUBLE-escaped entity
+    // ("&amp;lt;") anywhere in the output, which is what a browser
+    // decodes down to literal visible "&lt;" text. A single-escaped
+    // "&lt;" (correct, valid HTML/XML markup for a literal "<") is fine
+    // and expected — see this file's own note above.
+    assert.doesNotMatch(out, /&amp;(lt|gt|amp);/, `${label}: must never be double-escaped`);
+    assert.match(visibleBranch(out), visiblePattern, `${label}: the visible KaTeX rendering must contain the real operator, not have silently dropped it`);
+  }
+});
+
+test("production bug: a bare, undelimited \\Rightarrow reaches the student as a rendered arrow, not literal backslash text", () => {
+  const out = renderLikeRichContent("A high pH \\Rightarrow more unionized drug.");
+  // \Rightarrow legitimately still appears once, inside the hidden
+  // MathML <annotation> (the raw-source fallback every rendered
+  // expression carries) — what must never happen is the VISIBLE branch
+  // falling back to showing the raw command text instead of the ⇒ glyph.
+  assert.doesNotMatch(visibleBranch(out), /\\Rightarrow/, "the visible rendering must not fall back to literal backslash text");
+  assert.match(visibleBranch(out), /⇒/, "the visible rendering must contain the actual rendered arrow glyph");
 });

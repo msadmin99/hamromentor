@@ -3,7 +3,24 @@
 import { useMemo } from "react";
 import DOMPurify from "dompurify";
 import katex from "katex";
-import { classifyStandaloneLatex, renderMathInHtml } from "@/lib/mathDelimiters";
+import { classifyStandaloneLatex, decodeHtmlEntities, renderMathInHtml } from "@/lib/mathDelimiters";
+
+/** Explanation redesign, stage 2 — production bug: a value that was
+ * legitimately HTML-escaped once at import time (e.g. bulk-import content
+ * containing a literal "&" or comparison operator) occasionally reaches
+ * this component already escaped a SECOND time — "&amp;lt;" instead of
+ * "&lt;" — most likely from a content author copy-pasting already-escaped
+ * markup, or re-saving already-escaped text through a path that escapes
+ * again. A double-escaped "&amp;lt;" only ever decodes ONE level through
+ * normal HTML parsing, leaving the literal text "&lt;" visible to the
+ * student. This collapses exactly one extra level of encoding for the five
+ * standard entities — never a blind global string replace, and never
+ * touching a genuinely single-escaped (i.e. correct) "&lt;", which this
+ * regex cannot match at all since it requires the literal "&amp;" prefix. */
+function collapseDoubleEncodedEntities(html) {
+  if (!html) return html;
+  return html.replace(/&amp;(lt|gt|amp|quot|apos|#39);/g, "&$1;");
+}
 
 /** GT3-7 §37 — question/option/explanation HTML comes from the admin
  * rich-text editor and the bulk-import pipeline (which can include
@@ -57,7 +74,15 @@ function stripEmbeddedTags(expr) {
 function renderInlineLatex(html) {
   if (!html) return html;
   return renderMathInHtml(html, (expr, { displayMode }) => {
-    const cleaned = stripEmbeddedTags(expr).trim();
+    // decodeHtmlEntities BEFORE stripEmbeddedTags: an entity-encoded tag
+    // ("&lt;strong&gt;...&lt;/strong&gt;") becomes a real tag first, so the
+    // existing tag-stripping regex below catches it the same way it always
+    // caught a literal <strong> — see decodeHtmlEntities's own docstring
+    // in mathDelimiters.js for the production bug this closes (a real "<"/
+    // ">" comparison operator inside a math expression, legitimately
+    // HTML-escaped by the storage layer, must reach KaTeX as the literal
+    // character it represents, not as unrendered entity text).
+    const cleaned = stripEmbeddedTags(decodeHtmlEntities(expr)).trim();
     if (!cleaned) return null;
     try {
       return katex.renderToString(cleaned, { throwOnError: false, displayMode });
@@ -107,7 +132,10 @@ function buildResponsiveImage(imageData) {
  * should leave this false so the browser doesn't fetch dozens of images
  * that are never scrolled into view. */
 export default function RichContent({ html, latex, image, imageData, video, className = "", priority = false }) {
-  const renderedHtml = useMemo(() => sanitizeRichHtml(renderInlineLatex(html)), [html]);
+  const renderedHtml = useMemo(
+    () => sanitizeRichHtml(renderInlineLatex(collapseDoubleEncodedEntities(html))),
+    [html]
+  );
 
   const latexHtml = useMemo(() => {
     if (!latex?.trim()) return "";
@@ -119,7 +147,12 @@ export default function RichContent({ html, latex, image, imageData, video, clas
     const { expr, display } = classifyStandaloneLatex(latex);
     if (!expr) return "";
     try {
-      return sanitizeRichHtml(katex.renderToString(expr, { throwOnError: false, displayMode: display }));
+      // Same entity-decode this field's own explanation/option counterparts
+      // get (see decodeHtmlEntities's docstring) — this dedicated field
+      // isn't populated by the bulk-import pipeline today so it's lower
+      // risk, but a hand-typed or copy-pasted value could still carry an
+      // escaped "&lt;"/"&gt;", and decoding it here costs nothing.
+      return sanitizeRichHtml(katex.renderToString(decodeHtmlEntities(expr), { throwOnError: false, displayMode: display }));
     } catch {
       return "";
     }

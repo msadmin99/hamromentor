@@ -161,6 +161,18 @@ export default function ExplanationDisplay({
         <Section divider={nextDivider()}>
           <div className="rounded-xl border border-info/20 bg-info-soft p-4">
             <p className="mb-1 text-xs font-bold uppercase tracking-wide text-info">Exam Takeaway</p>
+            {/* Verified against Admin/src/components/QuestionCard.js: Key
+                Takeaway is a single plain <input> (not the rich-text
+                editor, never touched by the bulk-import HTML-escaping
+                pipeline either) — its DB value is always raw, unescaped
+                text, e.g. a literal "M>1" typed directly, never "M&gt;1".
+                Rendering it as a plain JSX text child is therefore both
+                correct (nothing to decode — there's never an entity here)
+                and safer than routing it through dangerouslySetInnerHTML,
+                which would risk misparsing a literal "<" immediately
+                followed by a letter as an attempted tag. `formatted.takeaway`
+                (parsed out of the free-text explanation body, which IS real
+                HTML) still goes through RichContent, correctly. */}
             {keyTakeaway ? (
               <p className="text-sm leading-relaxed text-[var(--color-text)]">{keyTakeaway}</p>
             ) : (

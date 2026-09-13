@@ -16,6 +16,7 @@ import { test } from "node:test";
 
 import {
   classifyStandaloneLatex,
+  decodeHtmlEntities,
   normalizeNestedDelimiters,
   renderMathInHtml,
   unwrapRedundant,
@@ -175,5 +176,84 @@ test("renderMathInHtml — never drops content", async (t) => {
     const digitHeavyRender = () => "<span>annotation 123 456</span>";
     const out = renderMathInHtml(String.raw`\(a\) and \(b\)`, digitHeavyRender);
     assert.equal(out, "<span>annotation 123 456</span> and <span>annotation 123 456</span>");
+  });
+});
+
+test("decodeHtmlEntities", async (t) => {
+  await t.test("decodes the standard named entities", () => {
+    assert.equal(decodeHtmlEntities("K_a &lt; 6"), "K_a < 6");
+    assert.equal(decodeHtmlEntities("M&gt;1"), "M>1");
+    assert.equal(decodeHtmlEntities("A &amp; B"), "A & B");
+    assert.equal(decodeHtmlEntities("5&nbsp;mg"), "5 mg");
+    assert.equal(decodeHtmlEntities("&quot;quoted&quot; and &#39;apos&#39;"), '"quoted" and \'apos\'');
+  });
+
+  await t.test("decodes numeric and hex entities", () => {
+    assert.equal(decodeHtmlEntities("&#60;&#62;"), "<>");
+    assert.equal(decodeHtmlEntities("&#x3C;&#x3E;"), "<>");
+  });
+
+  await t.test("decodes exactly ONE level — a doubly-escaped value stays partially escaped, never over-decoded", () => {
+    // &amp;lt; is genuinely a different string than &lt; — collapsing it
+    // all the way to "<" would be guessing at intent this function
+    // deliberately doesn't have. RichContent's collapseDoubleEncodedEntities
+    // is the (separate, narrower) place double-encoding gets fixed.
+    assert.equal(decodeHtmlEntities("&amp;lt;"), "&lt;");
+  });
+
+  await t.test("text with no entities at all is returned unchanged", () => {
+    assert.equal(decodeHtmlEntities("Plain text, no entities."), "Plain text, no entities.");
+  });
+
+  await t.test("an unrecognised entity-shaped sequence is left as-is, never dropped", () => {
+    assert.equal(decodeHtmlEntities("A &notarealentity; B"), "A &notarealentity; B");
+  });
+
+  await t.test("empty/null/undefined input never throws", () => {
+    assert.equal(decodeHtmlEntities(""), "");
+    assert.equal(decodeHtmlEntities(null), null);
+    assert.equal(decodeHtmlEntities(undefined), undefined);
+  });
+});
+
+test("bare (undelimited) LaTeX commands", async (t) => {
+  await t.test("a bare command with no delimiters at all is still found and rendered", () => {
+    const out = renderMathInHtml("A \\Rightarrow B", fakeRender);
+    assert.equal(out, "A <KI>\\Rightarrow</KI> B");
+  });
+
+  await t.test("several different bare commands in one string are all found", () => {
+    const out = renderMathInHtml("\\alpha decays to \\beta via \\rightarrow", fakeRender);
+    assert.equal(out, "<KI>\\alpha</KI> decays to <KI>\\beta</KI> via <KI>\\rightarrow</KI>");
+  });
+
+  await t.test("a bare command already inside a real \\(...\\) expression is rendered once, not twice", () => {
+    const out = renderMathInHtml(String.raw`\(A \Rightarrow B\)`, fakeRender);
+    assert.equal(out, `<KI>A \\Rightarrow B</KI>`);
+  });
+
+  await t.test("a bare command's own {argument} is captured as part of the same span", () => {
+    const out = renderMathInHtml("The rate is \\frac{a}{b} overall.", fakeRender);
+    assert.equal(out, "The rate is <KI>\\frac{a}{b}</KI> overall.");
+  });
+
+  await t.test("a command name NOT on the allowlist is left completely untouched", () => {
+    const input = "A \\notarealcommand B";
+    assert.equal(renderMathInHtml(input, fakeRender), input);
+  });
+
+  await t.test("never matches inside an HTML tag — protects the Admin equation editor's own data-equation attribute", () => {
+    const input = '<span data-equation="\\Rightarrow" class="hm-equation-render"><math>rendered</math></span>';
+    assert.equal(renderMathInHtml(input, fakeRender), input, "the attribute value must never be touched");
+  });
+
+  await t.test("a longer coincidental word is not partially matched at the command-name prefix", () => {
+    const input = "\\alphabetical order";
+    assert.equal(renderMathInHtml(input, fakeRender), input);
+  });
+
+  await t.test("ordinary prose with a literal backslash-free sentence is completely unaffected", () => {
+    const input = "This is a normal sentence with no math in it.";
+    assert.equal(renderMathInHtml(input, fakeRender), input);
   });
 });

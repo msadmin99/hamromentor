@@ -106,9 +106,76 @@ const PUA = String.fromCharCode(0xe000);
 const openSlot = (n) => `${PUA}${n}${PUA}`;
 const SLOT_RE = new RegExp(`${PUA}(\\d+)${PUA}`, "g");
 
+// Production bug (explanation redesign, stage 2): a real HTML `<`/`>`/`&`
+// character inside a math expression is legitimately HTML-escaped by the
+// bulk-import pipeline before storage (academics/importers: `html.escape`)
+// — e.g. a content author typing `\(K_a < 6\)` straight into a spreadsheet
+// cell lands in the DB as `\(K_a &lt; 6\)`, which is completely correct
+// HTML. The bug was downstream: the extracted math expression was handed
+// to KaTeX still carrying the entity text ("K_a &lt; 6") instead of the
+// literal character it represents ("K_a < 6"). KaTeX has no concept of
+// HTML entities — it treats "&lt;" as four ordinary characters to render
+// literally, and since ANY correct HTML generator must escape a literal
+// `&` it is asked to display, KaTeX's own output ends up containing
+// "&amp;lt;" — which the browser then decodes exactly once, leaving the
+// literal text "&lt;" visible to the student. Decoding entities in the
+// expression BEFORE handing it to KaTeX (see RichContent.js's
+// `renderInlineLatex`, which calls this) closes the gap at its root: KaTeX
+// receives the real "<" character, which is itself valid, legitimate math
+// syntax, and its own output escaping then behaves correctly.
+const NAMED_HTML_ENTITIES = { lt: "<", gt: ">", amp: "&", quot: '"', apos: "'", nbsp: " " };
+
+export function decodeHtmlEntities(text) {
+  if (!text) return text;
+  return String(text).replace(/&(#x[0-9a-fA-F]+|#\d+|[a-zA-Z]+);/g, (match, ref) => {
+    if (ref[0] === "#") {
+      const isHex = ref[1] === "x" || ref[1] === "X";
+      const codePoint = isHex ? parseInt(ref.slice(2), 16) : parseInt(ref.slice(1), 10);
+      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : match;
+    }
+    return Object.prototype.hasOwnProperty.call(NAMED_HTML_ENTITIES, ref) ? NAMED_HTML_ENTITIES[ref] : match;
+  });
+}
+
+// Production bug (explanation redesign, stage 2): a content author
+// sometimes types a bare LaTeX command directly into prose without
+// wrapping it in \(...\)/$...$ at all (e.g. "A \Rightarrow B" with no
+// delimiters around the arrow) — since renderMathInHtml only ever looked
+// for delimited spans, an undelimited command was never found at all and
+// reached the browser as literal backslash-prefixed text. This is a
+// closed, finite allowlist of command names actually used in this app's
+// science/medical content (never a generic `\[A-Za-z]+` scan) — a bare
+// backslash immediately followed by one of these names is, in practice,
+// unambiguously intended as math in this domain; anything not on the list
+// is left completely untouched rather than guessed at.
+const BARE_LATEX_COMMANDS = [
+  "alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "theta", "iota", "kappa",
+  "lambda", "mu", "nu", "xi", "pi", "rho", "sigma", "tau", "upsilon", "phi", "chi", "psi", "omega",
+  "Gamma", "Delta", "Theta", "Lambda", "Xi", "Pi", "Sigma", "Upsilon", "Phi", "Psi", "Omega",
+  "rightarrow", "Rightarrow", "leftarrow", "Leftarrow", "leftrightarrow", "Leftrightarrow",
+  "longrightarrow", "Longrightarrow",
+  "times", "div", "pm", "mp", "cdot", "circ", "leq", "geq", "neq", "approx", "equiv", "propto",
+  "sim", "infty", "partial", "nabla", "degree",
+  "frac", "sqrt", "sum", "prod", "int", "oint", "text", "mathrm", "mathbf", "mathit", "ce",
+  "overline", "underline", "vec", "hat", "bar",
+];
+// `(?![a-zA-Z])` after the command name stops a coincidental longer word
+// (an unlikely but possible "\alphabet"-shaped run) from partially
+// matching just the "\alpha" prefix; up to two `{...}` argument groups
+// covers every listed command, including two-argument `\frac{a}{b}`.
+const BARE_LATEX_RE = new RegExp(`\\\\(?:${BARE_LATEX_COMMANDS.join("|")})(?![a-zA-Z])(?:\\{[^{}]*\\}){0,2}`, "g");
+
+function wrapBareLatexCommands(text) {
+  return text.replace(BARE_LATEX_RE, (m) => `\\(${m}\\)`);
+}
+
 /**
  * Replace every `$...$`, `$$...$$`, `\(...\)` and `\[...\]` span in `html`
- * with `render(expr, { displayMode })`.
+ * with `render(expr, { displayMode })`. Also catches a bare, undelimited
+ * command from the allowlist above (see `wrapBareLatexCommands`) as a
+ * second pass, after every properly-delimited span has already been
+ * consumed — never before, so a command legitimately already inside a
+ * `\(...\)` expression is never re-wrapped a second time.
  *
  * - Malformed nested delimiters are normalised first.
  * - Each rendered span is parked behind the PUA placeholder above and only
@@ -118,27 +185,44 @@ const SLOT_RE = new RegExp(`${PUA}(\\d+)${PUA}`, "g");
  * - If `render` returns a non-string / empty value, or throws, the
  *   ORIGINAL delimited source is kept verbatim - content is never
  *   silently dropped.
+ * - The bare-command pass only ever runs on text OUTSIDE any HTML tag —
+ *   critical so it can never reach into e.g. the Admin equation editor's
+ *   own `data-equation="\Rightarrow"` attribute value and corrupt the tag.
  */
 export function renderMathInHtml(html, render) {
   if (!html) return html;
   const slots = [];
-  let out = normalizeNestedDelimiters(html);
 
-  for (const { display, re } of DELIMITERS) {
-    out = out.replace(re, (match, expr) => {
-      const cleaned = unwrapRedundant(expr);
-      if (!cleaned) return match;
-      let rendered;
-      try {
-        rendered = render(cleaned, { displayMode: display });
-      } catch {
-        return match;
-      }
-      if (typeof rendered !== "string" || !rendered) return match;
-      slots.push(rendered);
-      return openSlot(slots.length - 1);
-    });
+  function applyDelimiters(str) {
+    let result = str;
+    for (const { display, re } of DELIMITERS) {
+      result = result.replace(re, (match, expr) => {
+        const cleaned = unwrapRedundant(expr);
+        if (!cleaned) return match;
+        let rendered;
+        try {
+          rendered = render(cleaned, { displayMode: display });
+        } catch {
+          return match;
+        }
+        if (typeof rendered !== "string" || !rendered) return match;
+        slots.push(rendered);
+        return openSlot(slots.length - 1);
+      });
+    }
+    return result;
   }
+
+  let out = applyDelimiters(normalizeNestedDelimiters(html));
+
+  out = out
+    .split(/(<[^>]*>)/)
+    .map((segment, i) => {
+      if (i % 2 === 1) return segment; // an HTML tag itself — never touched
+      const wrapped = wrapBareLatexCommands(segment);
+      return wrapped === segment ? segment : applyDelimiters(wrapped);
+    })
+    .join("");
 
   return out.replace(SLOT_RE, (_, i) => slots[Number(i)] ?? "");
 }

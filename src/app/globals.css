@@ -379,6 +379,66 @@ body {
   overflow-y: hidden;
   padding: 0.15rem 0;
 }
+/* Production bug (explanation redesign, stage 2): the rule above only ever
+   covers DISPLAY-mode equations (\[...\]/$$...$$) — a long reaction/nuclear
+   equation typed with the INLINE delimiter \(...\)/$...$ (a very easy
+   mistake for a bulk-import content author to make, since both delimiters
+   look equally "correct" to someone who doesn't know the distinction) had
+   no such protection at all. KaTeX's own base CSS never sets a `display`
+   on plain `.katex` (a bare inline <span> defaults to `display: inline`),
+   and `overflow` has NO EFFECT on an inline box in any browser — so a too-
+   wide inline equation wasn't clipped so much as simply ungoverned: however
+   this app's outer page shell happens to constrain horizontal overflow
+   (the AppShell/h-svh mobile-scroll fixes elsewhere in this codebase),
+   the equation's right side effectively disappeared rather than ever
+   producing a visible scrollbar. `display: inline-block` is the minimum
+   change needed to make `overflow-x` apply at all; `max-width: 100%`
+   bounds it to whatever width is actually available so a SHORT inline
+   equation still just sits inline exactly as before (this rule is a no-op
+   for anything narrower than its container), matching the "short
+   equations stay centered/inline, long equations get a scroll strategy"
+   requirement without a separate code path for each case. */
+.hm-richtext-content .katex {
+  display: inline-block;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+/* Pre-commit visual verification (real Playwright screenshots, real long
+   equations) caught a genuine regression the rule above introduced: KaTeX's
+   OWN bundled CSS has `.katex-display > .katex { display: block; ...
+   white-space: nowrap }` at the SAME specificity (two classes) as the rule
+   above, so which one wins is a source-order/cascade-layer coin flip rather
+   than something this app can rely on — and in the actual rendered page it
+   was KaTeX's `display: block` that won, silently overriding this file's
+   `display: inline-block`. That's the one property both rules touch, but
+   it's the one that matters: `max-width: 100%` from the rule above ALSO
+   applied to this now block-level nested `.katex`, permanently capping it
+   at its container's width — the equation could no longer grow wider than
+   that to be scrolled, so instead of scrolling it was simply, silently
+   clipped at the right edge. This reasserts KaTeX's own original
+   display-mode sizing at higher specificity (three combinators, not two),
+   letting the inner `.katex` grow to its true, un-clipped natural width
+   again — which is exactly what the EXISTING `.katex-display` rule above
+   (unchanged since before this stage) needs in order for its own
+   `overflow-x: auto` to have real overflow to scroll in the first place.
+   `overflow-y: visible` is NOT optional here even though only horizontal
+   scroll is wanted: the CSS Overflow spec computed-value rule ("if one of
+   overflow-x/overflow-y is `visible` and the other is not, UAs must treat
+   the `visible` one as `auto` instead") silently downgraded a first version
+   of this fix that set only `overflow-x: visible` — with `overflow-y`
+   still `hidden` from the base `.katex` rule above, the browser forced
+   `overflow-x` back to `auto` on ITS OWN, re-capping the equation to its
+   container width exactly as before. Setting both axes to `visible`
+   together avoids that UA-forced downgrade; the OUTER `.katex-display`
+   still clips/scrolls vertically-safely via its own unrelated
+   `overflow-y: hidden`, so nothing above this element is affected. */
+.hm-richtext-content .katex-display > .katex {
+  display: block;
+  max-width: none;
+  overflow-x: visible;
+  overflow-y: visible;
+}
 
 .hm-richtext-content img {
   max-width: 100%;

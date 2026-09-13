@@ -13,8 +13,12 @@ function formatStudyTime(seconds) {
 
 /** Compact progress card — all real, QBank-scoped numbers from the same
  * /questions/dashboard/ call the page already makes (no extra request).
- * Detailed breakdowns (by subject/chapter/topic, trends, mastery) stay on
- * the existing /performance page, not duplicated here. */
+ *
+ * QBank 2.0 Phase 4: detailed QBank-practice breakdowns (by subject/
+ * topic, accuracy trend, mastery distribution) now live at
+ * /qbank/progress, not /performance — that page remains the combined
+ * Test+QBank analytics view (subject rank, mock-test trends, negative
+ * marking) and is linked from there instead of duplicated. */
 export default function ProgressSummary({ stats, loading }) {
   // Sized to match the loaded layout below almost exactly (same 112px
   // ring, same 4 stat rows at the same gap, same link line) — NOT
@@ -70,7 +74,7 @@ export default function ProgressSummary({ stats, loading }) {
           ))}
         </div>
       </div>
-      <Link href="/performance" className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-brand-blue">
+      <Link href="/qbank/progress" className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-brand-blue">
         View detailed progress →
       </Link>
     </div>

@@ -29,7 +29,7 @@ function RefundPolicyContent() {
           </div>
         ))}
 
-        <a href="mailto:atech1627@gmail.com" className="hm-card p-4 text-center text-sm font-bold text-brand-blue">
+        <a href="/support" className="hm-card p-4 text-center text-sm font-bold text-brand-blue">
           Contact Support to request a refund →
         </a>
       </div>

@@ -106,7 +106,7 @@ function PlansContent() {
       </div>
 
       <div className="sticky bottom-0 z-10 border-t border-[var(--color-border)] bg-white/95 px-4 py-2.5 backdrop-blur md:hidden">
-        <a href="mailto:atech1627@gmail.com" className="block text-center text-xs font-bold text-brand-blue">
+        <a href="/support" className="block text-center text-xs font-bold text-brand-blue">
           Need help choosing? Contact Support →
         </a>
       </div>

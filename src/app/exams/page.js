@@ -178,6 +178,18 @@ function ExamsContent() {
         {EXAM_CATEGORIES.map((c) => (
           <ExamCategoryCard key={c.href} {...c} />
         ))}
+
+        {/* Deliberately a single plain text link, not the full
+            SupportContactInline block — this page's own layout comments
+            above document a tight, carefully-tuned mobile viewport budget,
+            so this stays outside that budget's risk by adding only one
+            line below the cards rather than a multi-line component. */}
+        <a
+          href="/support"
+          className="mt-1 text-center text-xs font-semibold text-[var(--color-text-muted)] underline underline-offset-2"
+        >
+          Need help? Contact Dr. Gutka Support
+        </a>
       </div>
     </AppShell>
   );

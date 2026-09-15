@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Logo from "@/components/Logo";
+import { SupportContactInline } from "@/components/SupportContact";
 import { useAuth } from "@/lib/auth-context";
 
 export default function LoginPage() {
@@ -108,6 +109,14 @@ export default function LoginPage() {
         <p className="mt-4 rounded-xl bg-[var(--color-surface-muted)] p-3 text-center text-[11px] text-[var(--color-text-muted)]">
           Demo login: student@hamromentor.com / Student@123
         </p>
+
+        <div className="mt-6 border-t border-[var(--color-border)] pt-4 text-center">
+          <SupportContactInline
+            heading="Having trouble accessing your account?"
+            whatsappMessage="Hello Dr. Gutka Support, I need help logging in."
+            className="mx-auto flex flex-col items-center [&_div]:justify-center"
+          />
+        </div>
       </div>
       </div>
     </div>

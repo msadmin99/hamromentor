@@ -10,6 +10,7 @@ import {
   DailyTestIcon,
   GrandTestIcon,
   HomeIcon,
+  MailIcon,
   MockTestIcon,
   QBankIcon,
   UserIcon,
@@ -30,6 +31,7 @@ const NAV = [
   { href: "/courses", label: "Video Lecture Courses", Icon: VideosIcon },
   { href: "/performance", label: "My Performance", Icon: ChartIcon },
   { href: "/subscriptions", label: "My Subscriptions", Icon: WalletIcon },
+  { href: "/support", label: "Help & Support", Icon: MailIcon },
 ];
 
 const SIDEBAR_WIDTH = 240; // px — matches w-60, kept in sync with the collapse/reveal math below

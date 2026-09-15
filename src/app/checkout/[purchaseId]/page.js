@@ -6,6 +6,7 @@ import AppShell from "@/components/AppShell";
 import Header from "@/components/Header";
 import RequireAuth from "@/components/RequireAuth";
 import { ClockIcon } from "@/components/icons";
+import { SupportContactInline } from "@/components/SupportContact";
 import { ErrorCard } from "@/components/subscription/billingShared";
 import { api, uploadFields } from "@/lib/api";
 
@@ -200,6 +201,16 @@ function CheckoutContent() {
               {succeeded ? "View Subscription" : "Go to My Subscriptions"}
             </button>
           </div>
+
+          {(failed || windowExpired) && !submitted && (
+            <div className="hm-card p-4 text-center">
+              <p className="text-sm font-bold text-[var(--color-text)]">Payment problem?</p>
+              <SupportContactInline
+                whatsappMessage="Hello Dr. Gutka Support, I need help with my payment."
+                className="mt-2 flex flex-col items-center [&_div]:justify-center"
+              />
+            </div>
+          )}
         </div>
       </AppShell>
     );

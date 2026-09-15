@@ -10,12 +10,7 @@ import TestPageHero from "@/components/testpage/TestPageHero";
 import UniversityCard from "@/components/pyq/UniversityCard";
 import { api } from "@/lib/api";
 import { useCourse } from "@/lib/course-context";
-
-// Same real support address already used platform-wide (see plans, refund
-// policy, subscriptions pages) — no separate "request a paper" backend
-// exists yet, so this reuses the existing contact channel rather than
-// fabricating a new one.
-const SUPPORT_EMAIL = "atech1627@gmail.com";
+import { buildMailtoUrl } from "@/lib/support";
 
 const INFO_TILES = [
   { icon: "📄", label: "Real Exam Questions", sub: "Past year papers" },
@@ -137,7 +132,7 @@ function PastYearQuestionsContent() {
             </p>
           </div>
           <a
-            href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Past Year Paper Request")}`}
+            href={buildMailtoUrl("Past Year Paper Request")}
             className="flex-none text-sm font-bold text-brand-blue"
           >
             Request a Paper →

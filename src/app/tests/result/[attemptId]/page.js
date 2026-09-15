@@ -251,6 +251,12 @@ function ResultContent() {
             {result.auto_submitted ? "Auto-submitted" : "Submitted"}
             {formatDate(result.end_time) && ` · ${formatDate(result.end_time)}`}
           </p>
+          <p className="mt-3 border-t border-[var(--color-border)] pt-2 text-xs text-[var(--color-text-muted)]">
+            Have a problem with your result?{" "}
+            <a href="/support" className="font-semibold text-brand-blue">
+              Contact Support
+            </a>
+          </p>
         </div>
 
         {/* 4. Key metrics — only real fields/tallies. */}

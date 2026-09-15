@@ -26,8 +26,7 @@ import {
 } from "@/components/icons";
 import { useAuth } from "@/lib/auth-context";
 import { useCourse } from "@/lib/course-context";
-
-const SUPPORT_EMAIL = "atech1627@gmail.com";
+import { SUPPORT_CONTACT } from "@/lib/support";
 
 /**
  * Student Account & Learning Center (Mobile Exams-style redesign, Phase B
@@ -86,7 +85,7 @@ function ProfileContent() {
 
             <ProfileNavSection title="Help & Support">
               <ProfileNavRow href="/faq" Icon={HelpCircleIcon} label="FAQ" description="Answers to common questions" />
-              <ProfileNavRow href={`mailto:${SUPPORT_EMAIL}`} Icon={MailIcon} label="Contact Support" description={SUPPORT_EMAIL} />
+              <ProfileNavRow href="/support" Icon={MailIcon} label="Contact Support" description={SUPPORT_CONTACT.email} />
             </ProfileNavSection>
           </div>
 

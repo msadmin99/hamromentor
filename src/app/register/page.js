@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import Logo from "@/components/Logo";
+import { SupportContactInline } from "@/components/SupportContact";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
@@ -182,6 +183,14 @@ export default function RegisterPage() {
             Log in
           </Link>
         </p>
+
+        <div className="mt-6 border-t border-[var(--color-border)] pt-4 text-center">
+          <SupportContactInline
+            heading="Need help? Contact Dr. Gutka Support"
+            whatsappMessage="Hello Dr. Gutka Support, I need help with registration."
+            className="mx-auto flex flex-col items-center [&_div]:justify-center"
+          />
+        </div>
       </div>
       </div>
     </div>

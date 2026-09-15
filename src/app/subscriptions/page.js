@@ -224,12 +224,12 @@ function SubscriptionsContent() {
             <Link href="/faq" className="rounded-lg border border-[var(--color-border)] p-3 text-center text-xs font-semibold text-[var(--color-text)]">
               FAQs
             </Link>
-            <a
-              href="mailto:atech1627@gmail.com"
+            <Link
+              href="/support"
               className="rounded-lg border border-[var(--color-border)] p-3 text-center text-xs font-semibold text-[var(--color-text)]"
             >
               Contact Support
-            </a>
+            </Link>
             <Link
               href="/refund-policy"
               className="rounded-lg border border-[var(--color-border)] p-3 text-center text-xs font-semibold text-[var(--color-text)]"

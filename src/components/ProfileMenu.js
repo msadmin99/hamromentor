@@ -3,13 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { buildMailtoUrl } from "@/lib/support";
 import { useDialogA11y } from "@/lib/useDialogA11y";
-
-const SUPPORT_EMAIL = "atech1627@gmail.com";
-
-function mailto(subject) {
-  return `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}`;
-}
 
 function formatValidity(enrollment) {
   if (!enrollment) return "No active plan";
@@ -59,13 +54,13 @@ async function shareApp() {
 
 const SUPPORT_LINKS = [
   { label: "Learn More", href: "/" },
-  { label: "FAQ", href: mailto("FAQ") },
-  { label: "Contact us", href: mailto("Contact") },
-  { label: "About us", href: mailto("About Us") },
-  { label: "Rate us", href: mailto("Feedback / Rating") },
-  { label: "T&C", href: mailto("Terms & Conditions") },
+  { label: "FAQ", href: buildMailtoUrl("FAQ") },
+  { label: "Help & Support", href: "/support" },
+  { label: "About us", href: buildMailtoUrl("About Us") },
+  { label: "Rate us", href: buildMailtoUrl("Feedback / Rating") },
+  { label: "T&C", href: buildMailtoUrl("Terms & Conditions") },
   { label: "Share the app", onClick: shareApp },
-  { label: "Report video piracy", href: mailto("Report video piracy") },
+  { label: "Report video piracy", href: buildMailtoUrl("Report video piracy") },
 ];
 
 export default function ProfileMenu({ user, onClose, align = "left" }) {

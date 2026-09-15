@@ -291,6 +291,19 @@ export function MailIcon(props) {
   );
 }
 
+/** Speech bubble with a check mark — WhatsApp Support (hand-drawn, not the
+ * trademarked WhatsApp glyph, matching this file's own stroke-based style
+ * rather than pulling in an icon library for one icon). */
+export function WhatsappIcon(props) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+      <path d="M4 20l1.3-4A8 8 0 1112 20a7.9 7.9 0 01-4-1.1L4 20z" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9 10.5c0 3 2.5 5 5 5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9 10.5c-.5-1 0-2 .5-2s1 0 1.2.5c.2.5-.3 1.2 0 1.7.4.7 1.3 1.6 2 2 .5.3 1.2-.2 1.7 0 .5.2.5.7.5 1.2s-1 1-2 1" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 /** Door + arrow — Log out. Extracted from MoreMenu.js's inline SVG (same
  * path data, byte-identical render) so Profile and MoreMenu share one
  * definition instead of two copies of the same icon. */

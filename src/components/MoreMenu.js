@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import Drawer from "./Drawer";
-import { ArchiveIcon, BookmarkIcon, LogoutIcon, UserIcon, VideosIcon, WalletIcon } from "./icons";
+import { ArchiveIcon, BookmarkIcon, LogoutIcon, MailIcon, UserIcon, VideosIcon, WalletIcon } from "./icons";
 
 // Mobile bottom-nav redesign: the secondary destinations that don't fit
 // in the 5-item primary bar. Built on the existing Drawer primitive (same
@@ -23,6 +23,7 @@ const ITEMS = [
   { href: "/courses", label: "Video Lecture Courses", Icon: ArchiveIcon },
   { href: "/subscriptions", label: "My Subscriptions", Icon: WalletIcon },
   { href: "/profile", label: "Profile", Icon: UserIcon },
+  { href: "/support", label: "Help & Support", Icon: MailIcon },
 ];
 
 export default function MoreMenu({ onClose }) {

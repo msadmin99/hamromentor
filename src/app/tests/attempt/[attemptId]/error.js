@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { SupportContactInline } from "@/components/SupportContact";
 
 /**
  * PRODUCTION INCIDENT (Daily Test white screen): this route had zero error
@@ -53,6 +54,13 @@ export default function AttemptError({ error, reset }) {
           >
             Back to Daily Tests
           </button>
+        </div>
+        <div className="mt-4 border-t border-[var(--color-border)] pt-3">
+          <SupportContactInline
+            heading="Still stuck? Contact Dr. Gutka Support."
+            whatsappMessage="Hello Dr. Gutka Support, I need help — my exam won't load."
+            className="flex flex-col items-center [&_div]:justify-center"
+          />
         </div>
       </div>
     </div>

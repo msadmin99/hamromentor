@@ -47,11 +47,21 @@ function PlansContent() {
         <PlansHero />
 
         {courses.length > 1 && (
-          <select value={courseId} onChange={(e) => setCourseId(e.target.value)} className="hm-input sm:max-w-xs">
-            {courses.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
+          <div className="flex items-center gap-3">
+            <label htmlFor="plans-course-select" className="text-sm font-bold text-[var(--color-text)]">
+              Select Course
+            </label>
+            <select
+              id="plans-course-select"
+              value={courseId}
+              onChange={(e) => setCourseId(e.target.value)}
+              className="hm-input sm:max-w-xs"
+            >
+              {courses.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
         )}
 
         {courseId && (

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
 import Header from "@/components/Header";
 import RequireAuth from "@/components/RequireAuth";
@@ -19,6 +19,17 @@ const PAYMENT_CHANNELS = [
 function SettingsContent() {
   const { user, refresh } = useAuth();
   const { enrollments, activeCourse, switchCourse, switching } = useCourse();
+
+  // Settings' "Active course" list intentionally shows EVERY course, not
+  // only ones the student is enrolled in — switching here is just a
+  // navigation pointer (see ActiveCourseView on the backend), never a
+  // subscription/access grant, so browsing to an unenrolled course is
+  // safe by design.
+  const [allCourses, setAllCourses] = useState([]);
+  useEffect(() => {
+    api.get("/courses/").then(setAllCourses).catch(() => {});
+  }, []);
+  const enrolledCourseIds = new Set(enrollments.map((e) => e.course));
 
   const [name, setName] = useState(`${user?.first_name || ""} ${user?.last_name || ""}`.trim());
   const [savingName, setSavingName] = useState(false);
@@ -128,27 +139,38 @@ function SettingsContent() {
 
         <section className="hm-card p-4">
           <p className="mb-1 text-sm font-bold text-[var(--color-text)]">Active course</p>
-          <p className="mb-3 text-xs text-[var(--color-text-muted)]">
+          <p className="mb-1 text-xs text-[var(--color-text-muted)]">
             Your dashboard, QBank, tests and analytics are scoped to this course.
           </p>
+          <p className="mb-3 text-xs text-[var(--color-text-muted)]">
+            You can switch to any course to browse it — this doesn&apos;t activate a subscription. If you switch to a
+            course you haven&apos;t purchased, you&apos;ll still need to buy access there before its paid content unlocks.
+          </p>
           <div className="flex flex-col gap-2">
-            {enrollments.map((e) => (
+            {allCourses.map((c) => (
               <button
-                key={e.id}
-                onClick={() => switchCourse(e.course)}
+                key={c.id}
+                onClick={() => switchCourse(c.id)}
                 disabled={switching}
                 className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-2.5 text-left text-sm font-medium disabled:opacity-60 ${
-                  e.course === activeCourse?.id
+                  c.id === activeCourse?.id
                     ? "border-brand-blue bg-brand-blue/5 text-brand-blue"
                     : "border-[var(--color-border)] text-[var(--color-text)]"
                 }`}
               >
-                <span className="min-w-0 truncate">{e.course_name}</span>
-                {e.course === activeCourse?.id && <span className="flex-none text-xs font-bold">Active</span>}
+                <span className="min-w-0 truncate">{c.name}</span>
+                <span className="flex flex-none items-center gap-2">
+                  {!enrolledCourseIds.has(c.id) && (
+                    <span className="rounded-full bg-[var(--color-surface-muted)] px-2 py-0.5 text-[10px] font-bold text-[var(--color-text-muted)]">
+                      Not purchased
+                    </span>
+                  )}
+                  {c.id === activeCourse?.id && <span className="text-xs font-bold">Active</span>}
+                </span>
               </button>
             ))}
-            {enrollments.length === 0 && (
-              <p className="text-xs text-[var(--color-text-muted)]">No active enrollments yet.</p>
+            {allCourses.length === 0 && (
+              <p className="text-xs text-[var(--color-text-muted)]">Loading courses…</p>
             )}
           </div>
         </section>

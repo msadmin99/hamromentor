@@ -21,6 +21,8 @@
  * actual KaTeX call is injected by the caller.
  */
 
+import { trivialMathToText } from "./trivialMath.js";
+
 /**
  * Fix malformed legacy nesting from imports: an inline pair wrapping a
  * display pair, or vice-versa. The INNER delimiter wins the block/inline
@@ -199,6 +201,16 @@ export function renderMathInHtml(html, render) {
       result = result.replace(re, (match, expr) => {
         const cleaned = unwrapRedundant(expr);
         if (!cleaned) return match;
+        // Plain numbers / quantities ("$20$", "\(800\ cc\)") wrapped in math
+        // delimiters stay ordinary text — KaTeX would set them in the larger
+        // serif math font. See trivialMath.js. Display math is always honoured.
+        if (!display) {
+          const plain = trivialMathToText(cleaned);
+          if (plain !== null) {
+            slots.push(plain);
+            return openSlot(slots.length - 1);
+          }
+        }
         let rendered;
         try {
           rendered = render(cleaned, { displayMode: display });

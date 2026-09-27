@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
+import EmailVerificationSection from "@/components/EmailVerificationSection";
 import Header from "@/components/Header";
 import RequireAuth from "@/components/RequireAuth";
 import { api } from "@/lib/api";
@@ -102,10 +103,6 @@ function SettingsContent() {
               <label className="mb-1 block text-xs font-semibold text-[var(--color-text-muted)]">Name</label>
               <input value={name} onChange={(e) => setName(e.target.value)} className="hm-input" />
             </div>
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-[var(--color-text-muted)]">Email</label>
-              <input value={user?.email || ""} disabled className="hm-input opacity-60" />
-            </div>
             {nameMsg && <p className="text-xs text-brand-blue">{nameMsg}</p>}
             <button type="submit" disabled={savingName} className="self-start rounded-xl bg-brand-blue px-5 py-2 text-sm font-bold text-white disabled:opacity-60">
               {savingName ? "Saving…" : "Save changes"}
@@ -115,6 +112,8 @@ function SettingsContent() {
             View full profile details →
           </Link>
         </section>
+
+        <EmailVerificationSection />
 
         <section className="hm-card p-4">
           <p className="mb-1 text-sm font-bold text-[var(--color-text)]">Preferred payment method</p>

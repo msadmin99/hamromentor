@@ -15,6 +15,7 @@ export default function RegisterPage() {
   const [form, setForm] = useState({
     name: "",
     email: "",
+    confirm_email: "",
     phone: "",
     password: "",
     college: "",
@@ -24,6 +25,15 @@ export default function RegisterPage() {
   });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // Registration itself never blocks on verification (accounts.User.email_verified
+  // is optional — see the backend field's own docstring): a successful
+  // register() call always logs the student in immediately. This screen
+  // only ever ADDS a "here's your registered email, verification is
+  // recommended but optional" message on top of that — it never becomes a
+  // dead end, and Continue always works even if verification is skipped.
+  const [registered, setRegistered] = useState(null); // { email } once registration succeeds
+  const [resendState, setResendState] = useState("idle"); // idle | sending | sent | error
+  const [resendMsg, setResendMsg] = useState("");
 
   useEffect(() => {
     // Read outside next/navigation's useSearchParams so this page can stay statically
@@ -68,15 +78,86 @@ export default function RegisterPage() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+    if (form.email.trim().toLowerCase() !== form.confirm_email.trim().toLowerCase()) {
+      setError("Email and Confirm Email must match.");
+      return;
+    }
     setSubmitting(true);
     try {
-      await register(form);
-      router.push("/home");
+      const user = await register(form);
+      // Registration already sends a verification email server-side
+      // (accounts.RegisterSerializer.create()) — this screen doesn't send
+      // a second one; it just tells the student what happened and lets
+      // them resend from here if needed.
+      setRegistered({ email: user?.email || form.email.trim() });
     } catch (err) {
       setError(err.message || "Registration failed.");
     } finally {
       setSubmitting(false);
     }
+  }
+
+  async function resendVerification() {
+    setResendState("sending");
+    setResendMsg("");
+    try {
+      const data = await api.post("/auth/resend-verification-email/");
+      setResendState("sent");
+      setResendMsg(data.detail || "Verification email sent. Please check your inbox.");
+    } catch (err) {
+      setResendState("error");
+      setResendMsg(err.status === 429 ? "Please wait a bit before requesting another email." : err.message || "Couldn't send the email.");
+    }
+  }
+
+  if (registered) {
+    return (
+      <div className="flex min-h-dvh flex-col bg-[var(--color-surface-muted)]">
+        <div className="hm-header-gradient flex flex-col items-center justify-center gap-2 px-6 py-10 text-white">
+          <Logo size={44} showWordmark={false} />
+          <h1 className="text-xl font-extrabold tracking-tight">Registration successful</h1>
+        </div>
+        <div className="flex flex-1 justify-center px-4 pb-10 sm:px-6 sm:pt-8">
+          <div className="-mt-6 w-full max-w-md rounded-t-3xl bg-white px-6 pt-8 pb-10 text-center sm:mt-0 sm:rounded-3xl sm:border sm:border-[var(--color-border)] sm:shadow-sm">
+            <p className="text-sm text-[var(--color-text)]">Your account has been created.</p>
+            <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Registered email</p>
+            <p className="mt-1 text-sm font-bold text-[var(--color-text)]">{registered.email}</p>
+
+            <p className="mt-4 text-sm text-[var(--color-text-muted)]">
+              We sent a verification email to this address. Please verify your email so we can send email notifications to
+              you.
+            </p>
+            <p className="mt-2 text-sm font-semibold text-[var(--color-text)]">
+              Verification is optional — you can continue using Dr. Gutka even if you verify later.
+            </p>
+
+            {resendMsg && (
+              <p className={`mt-3 text-xs font-medium ${resendState === "error" ? "text-brand-red" : "text-brand-blue"}`}>{resendMsg}</p>
+            )}
+
+            <div className="mt-6 flex flex-col gap-2.5">
+              <button
+                type="button"
+                onClick={() => router.push("/home")}
+                className="rounded-xl bg-brand-blue py-3 text-sm font-bold text-white transition active:scale-[0.99]"
+              >
+                Continue to Dr. Gutka
+              </button>
+              {resendState !== "sent" && (
+                <button
+                  type="button"
+                  onClick={resendVerification}
+                  disabled={resendState === "sending"}
+                  className="rounded-xl border border-brand-blue py-3 text-sm font-bold text-brand-blue transition hover:bg-brand-blue/5 disabled:opacity-60"
+                >
+                  {resendState === "sending" ? "Sending…" : "Resend Verification Email"}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -107,6 +188,20 @@ export default function RegisterPage() {
               placeholder="you@example.com"
               className="hm-input"
             />
+          </Field>
+          <Field label="Confirm Email">
+            <input
+              required
+              type="email"
+              value={form.confirm_email}
+              onChange={(e) => update("confirm_email", e.target.value)}
+              placeholder="Re-enter your email"
+              aria-describedby="confirm-email-hint"
+              className="hm-input"
+            />
+            <p id="confirm-email-hint" className="mt-1 text-[11px] text-[var(--color-text-muted)]">
+              This only checks for typos — verifying that you own this address happens later, by email.
+            </p>
           </Field>
           <Field label="Phone">
             <input

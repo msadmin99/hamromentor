@@ -9,6 +9,7 @@ import Header from "@/components/Header";
 import RequireAuth from "@/components/RequireAuth";
 import { SearchIcon, BookmarkIcon, UserIcon, VideosIcon } from "@/components/icons";
 import DailyGoalCard from "@/components/home/DailyGoalCard";
+import EmailVerificationBanner from "@/components/EmailVerificationBanner";
 import ExploreTestTypes from "@/components/home/ExploreTestTypes";
 import FreeAccessSummary from "@/components/FreeAccessSummary";
 import HomeHero from "@/components/home/HomeHero";
@@ -119,6 +120,7 @@ function HomeContent() {
       <AnnouncementBar announcement={dashboard?.announcement} />
 
       <div className="hm-page flex flex-col gap-5">
+        <EmailVerificationBanner />
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
           <div className="flex flex-col gap-5 lg:col-span-2">
             <HomeHero name={user?.first_name || "Student"} onStartTest={scrollToTestTypes} />

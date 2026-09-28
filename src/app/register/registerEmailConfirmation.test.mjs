@@ -57,6 +57,13 @@ test("resend on the success screen calls the existing backend endpoint, not a ne
   assert.match(code, /api\.post\("\/auth\/resend-verification-email\/"\)/);
 });
 
+test("Program/Course default to CEE-UG/MBBS specifically, not just whichever course loads first", () => {
+  const effectBlock = code.slice(code.indexOf('api\n      .get("/courses/")'), code.indexOf(".catch(() => {});"));
+  assert.match(effectBlock, /program_group === "CEE-UG" && c\.prefix === "MBBS"/);
+  // Falls back to the old "first available" behavior only if that exact course is missing.
+  assert.match(effectBlock, /\|\| data\[0\]/);
+});
+
 test("Continue always works regardless of verification state — no verification gate before router.push", () => {
   const successBlock = code.slice(code.indexOf("if (registered)"), code.indexOf("if (registered)") + 4000);
   const continueButtonBlock = successBlock.slice(successBlock.indexOf("Continue to Dr. Gutka") - 300, successBlock.indexOf("Continue to Dr. Gutka"));

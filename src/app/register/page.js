@@ -49,9 +49,17 @@ export default function RegisterPage() {
       .get("/courses/")
       .then((data) => {
         setCourses(data);
-        const firstProgram = data[0]?.program_group || "";
-        const firstCourse = data.find((c) => c.program_group === firstProgram);
-        setForm((f) => ({ ...f, program: firstProgram, course: firstCourse?.prefix || "" }));
+        // Default to CEE-UG / MBBS specifically, not "whichever course
+        // happens to come first from the API" (which could just as easily
+        // land on a PG program). The vast majority of registrants are
+        // undergraduate students who have never heard of the PG programs —
+        // defaulting them into one is confusing at best. Falls back to the
+        // old "first available" behavior only if CEE-UG/MBBS isn't in the
+        // list at all (e.g. Course Management renamed/removed it).
+        const defaultCourse =
+          data.find((c) => c.program_group === "CEE-UG" && c.prefix === "MBBS") || data[0];
+        const defaultProgram = defaultCourse?.program_group || "";
+        setForm((f) => ({ ...f, program: defaultProgram, course: defaultCourse?.prefix || "" }));
       })
       .catch(() => {});
   }, []);

@@ -517,7 +517,13 @@ export default function QuestionSolver({
       </div>
 
       <div className="border-t border-[var(--color-border)] bg-white px-4 py-3">
-        <div className="mx-auto flex max-w-[44rem] items-center gap-3">
+        {/* Desktop audit (2026-09-28): kept in sync with .hm-page-narrow's
+            own breakpoints/values (globals.css) by hand, not by reusing the
+            class here, since this is a plain flex bar, not the scrollable
+            .hm-page-narrow region above it — without this the question/
+            options content grows wider on desktop while this action bar
+            stayed frozen at 44rem, visibly misaligned underneath it. */}
+        <div className="mx-auto flex max-w-[44rem] items-center gap-3 xl:max-w-[62rem] 2xl:max-w-[70rem]">
           <button
             type="button"
             onClick={goPrevious}

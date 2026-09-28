@@ -159,7 +159,10 @@ export default function PublicMcqQuiz({ questions, coursePrefix, onFinish, finis
       </div>
 
       <div className="border-t border-[var(--color-border)] bg-white px-4 py-3">
-        <div className="mx-auto flex max-w-[44rem] items-center gap-3">
+        {/* Desktop audit (2026-09-28): kept in sync with .hm-page-narrow's
+            own breakpoints/values (globals.css) by hand — see the
+            identical note in QuestionSolver.js's own action bar. */}
+        <div className="mx-auto flex max-w-[44rem] items-center gap-3 xl:max-w-[62rem] 2xl:max-w-[70rem]">
           <button
             type="button"
             onClick={() => setIndex((i) => i - 1)}
@@ -177,7 +180,7 @@ export default function PublicMcqQuiz({ questions, coursePrefix, onFinish, finis
             Next <span aria-hidden="true">→</span>
           </button>
         </div>
-        <div className="mx-auto mt-2 max-w-[44rem]">
+        <div className="mx-auto mt-2 max-w-[44rem] xl:max-w-[62rem] 2xl:max-w-[70rem]">
           <button
             type="button"
             onClick={attemptSubmit}

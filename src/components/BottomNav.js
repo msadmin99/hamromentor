@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { hasAuthenticatedBefore } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 import { isMoreActive, isTabActive, PRIMARY_TABS } from "@/lib/bottomNav";
-import { ChartIcon, HomeIcon, QBankIcon, TestsIcon, UserIcon } from "./icons";
+import { ChartIcon, HomeIcon, QBankIcon, TestsIcon, UserIcon, VideosIcon } from "./icons";
 import MoreMenu from "./MoreMenu";
 
 // Icon per tab href — kept here (not in lib/bottomNav.js) so that module
@@ -20,6 +22,7 @@ const ICONS = {
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const { user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const moreActive = menuOpen || isMoreActive(pathname);
 
@@ -34,39 +37,83 @@ export default function BottomNav() {
           bar needs. Removed from flow entirely — AppShell reserves matching
           bottom clearance on the scrollable content instead. */}
       <nav aria-label="Primary navigation" className="fixed inset-x-0 bottom-0 z-20 flex border-t border-[var(--color-border)] bg-white/95 backdrop-blur pb-[env(safe-area-inset-bottom)] md:hidden">
-        {PRIMARY_TABS.map((tab) => {
-          const Icon = ICONS[tab.href];
-          const active = isTabActive(tab, pathname);
-          return (
-            <Link
-              key={tab.href}
-              href={tab.href}
-              aria-current={active ? "page" : undefined}
+        {/* Desktop audit (2026-09-28): PRIMARY_TABS and the More menu
+            (bookmarks, subscriptions, profile, Log out) all assume an
+            authenticated student. Every other page reaching BottomNav is
+            still behind RequireAuth, so `user` is already guaranteed there
+            and this is a no-op for them; only /mcq-of-the-day (now public)
+            can actually render this component while anonymous. The
+            desktop nav rail's own header component got the equivalent
+            fix for the same reason — kept as two independent branches
+            here, not shared, to respect this file's own zero-coupling
+            rule (see lib/bottomNav.test.mjs). */}
+        {user ? (
+          <>
+            {PRIMARY_TABS.map((tab) => {
+              const Icon = ICONS[tab.href];
+              const active = isTabActive(tab, pathname);
+              return (
+                <Link
+                  key={tab.href}
+                  href={tab.href}
+                  aria-current={active ? "page" : undefined}
+                  className="flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-medium"
+                >
+                  <span className={active ? "text-brand-blue" : "text-[var(--color-text-muted)]"}>
+                    <Icon active={active} />
+                  </span>
+                  <span className={active ? "text-brand-blue" : "text-[var(--color-text-muted)]"}>{tab.label}</span>
+                </Link>
+              );
+            })}
+
+            <button
+              type="button"
+              onClick={() => setMenuOpen(true)}
+              aria-haspopup="dialog"
+              aria-expanded={menuOpen}
               className="flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-medium"
             >
-              <span className={active ? "text-brand-blue" : "text-[var(--color-text-muted)]"}>
-                <Icon active={active} />
+              <span className={moreActive ? "text-brand-blue" : "text-[var(--color-text-muted)]"}>
+                <UserIcon active={moreActive} />
               </span>
-              <span className={active ? "text-brand-blue" : "text-[var(--color-text-muted)]"}>{tab.label}</span>
+              <span className={moreActive ? "text-brand-blue" : "text-[var(--color-text-muted)]"}>More</span>
+            </button>
+          </>
+        ) : (
+          <>
+            <Link
+              href="/mcq-of-the-day"
+              aria-current={pathname === "/mcq-of-the-day" ? "page" : undefined}
+              className="flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-medium"
+            >
+              <span className={pathname === "/mcq-of-the-day" ? "text-brand-blue" : "text-[var(--color-text-muted)]"}>
+                <QBankIcon active={pathname === "/mcq-of-the-day"} />
+              </span>
+              <span className={pathname === "/mcq-of-the-day" ? "text-brand-blue" : "text-[var(--color-text-muted)]"}>
+                MCQ of the Day
+              </span>
             </Link>
-          );
-        })}
-
-        <button
-          type="button"
-          onClick={() => setMenuOpen(true)}
-          aria-haspopup="dialog"
-          aria-expanded={menuOpen}
-          className="flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-medium"
-        >
-          <span className={moreActive ? "text-brand-blue" : "text-[var(--color-text-muted)]"}>
-            <UserIcon active={moreActive} />
-          </span>
-          <span className={moreActive ? "text-brand-blue" : "text-[var(--color-text-muted)]"}>More</span>
-        </button>
+            <Link href="/courses" className="flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-medium">
+              <span className="text-[var(--color-text-muted)]">
+                <VideosIcon active={false} />
+              </span>
+              <span className="text-[var(--color-text-muted)]">Courses</span>
+            </Link>
+            <Link
+              href={hasAuthenticatedBefore() ? "/login" : "/register"}
+              className="flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-medium"
+            >
+              <span className="text-[var(--color-text-muted)]">
+                <UserIcon active={false} />
+              </span>
+              <span className="text-[var(--color-text-muted)]">{hasAuthenticatedBefore() ? "Log in" : "Sign up"}</span>
+            </Link>
+          </>
+        )}
       </nav>
 
-      {menuOpen && <MoreMenu onClose={() => setMenuOpen(false)} />}
+      {user && menuOpen && <MoreMenu onClose={() => setMenuOpen(false)} />}
     </>
   );
 }

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { hasAuthenticatedBefore } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import {
   ArchiveIcon,
@@ -96,49 +97,96 @@ export default function Sidebar() {
           <Logo size={30} />
         </div>
 
-        <nav className="hm-scrollbar-none flex flex-1 flex-col gap-1 overflow-y-auto px-3">
-          {NAV.map(({ href, label, Icon }) => {
-            const active = pathname === href || pathname.startsWith(`${href}/`);
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
-                  active
+        {/* Desktop audit (2026-09-28): the private NAV list + Profile/Log
+            out footer below both assume an authenticated student — every
+            href in NAV requires login, and "Log out" on an anonymous
+            visitor was previously shown as if they were signed in (it
+            isn't gated on `user` at all). This only matters now that
+            /mcq-of-the-day is a genuinely public, no-login page rendered
+            through this same AppShell/Sidebar — every other page that
+            reaches Sidebar is still behind RequireAuth, so `user` is
+            already guaranteed there and this branch is a no-op for them.
+            Anonymous visitors get a small, honest public-safe nav instead:
+            no dashboard/subscription/private-QBank links, and a real
+            Log in/Create account action in place of a Log out button that
+            would do nothing useful for them. */}
+        {user ? (
+          <>
+            <nav className="hm-scrollbar-none flex flex-1 flex-col gap-1 overflow-y-auto px-3">
+              {NAV.map(({ href, label, Icon }) => {
+                const active = pathname === href || pathname.startsWith(`${href}/`);
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
+                      active
+                        ? "bg-brand-blue/10 text-brand-blue"
+                        : "text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text)]"
+                    }`}
+                  >
+                    <Icon active={active} />
+                    {label}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            <div className="relative border-t border-[var(--color-border)] px-3 py-4">
+              {menuOpen && <ProfileMenu user={user} onClose={() => setMenuOpen(false)} />}
+              <button
+                onClick={() => setMenuOpen((o) => !o)}
+                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
+                  menuOpen || pathname === "/profile"
                     ? "bg-brand-blue/10 text-brand-blue"
                     : "text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text)]"
                 }`}
               >
-                <Icon active={active} />
-                {label}
-              </Link>
-            );
-          })}
-        </nav>
+                <UserIcon active={menuOpen || pathname === "/profile"} />
+                {user?.first_name || "Profile"}
+              </button>
+              <button
+                onClick={() => {
+                  logout();
+                  router.push("/login");
+                }}
+                className="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-brand-red hover:bg-brand-red-light"
+              >
+                Log out
+              </button>
+            </div>
+          </>
+        ) : (
+          <nav className="hm-scrollbar-none flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-2">
+            <Link
+              href="/mcq-of-the-day"
+              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
+                pathname === "/mcq-of-the-day"
+                  ? "bg-brand-blue/10 text-brand-blue"
+                  : "text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text)]"
+              }`}
+            >
+              <QBankIcon active={pathname === "/mcq-of-the-day"} />
+              MCQ of the Day
+            </Link>
+            <Link
+              href="/courses"
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--color-text-muted)] transition hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text)]"
+            >
+              <VideosIcon active={false} />
+              Courses
+            </Link>
 
-        <div className="relative border-t border-[var(--color-border)] px-3 py-4">
-          {menuOpen && <ProfileMenu user={user} onClose={() => setMenuOpen(false)} />}
-          <button
-            onClick={() => setMenuOpen((o) => !o)}
-            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
-              menuOpen || pathname === "/profile"
-                ? "bg-brand-blue/10 text-brand-blue"
-                : "text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text)]"
-            }`}
-          >
-            <UserIcon active={menuOpen || pathname === "/profile"} />
-            {user?.first_name || "Profile"}
-          </button>
-          <button
-            onClick={() => {
-              logout();
-              router.push("/login");
-            }}
-            className="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-brand-red hover:bg-brand-red-light"
-          >
-            Log out
-          </button>
-        </div>
+            <div className="mt-auto flex flex-col gap-2 border-t border-[var(--color-border)] pt-4">
+              <Link
+                href={hasAuthenticatedBefore() ? "/login" : "/register"}
+                className="rounded-lg bg-brand-blue px-3 py-2.5 text-center text-sm font-bold text-white transition hover:opacity-90"
+              >
+                {hasAuthenticatedBefore() ? "Log in" : "Create free account"}
+              </Link>
+            </div>
+          </nav>
+        )}
       </aside>
     </>
   );

@@ -213,7 +213,35 @@ body {
 }
 
 /* Narrower variant for reading-focused / form-like pages (quiz solving,
-   test taking, profile) where full desktop width would hurt readability. */
+   test taking, profile) where full desktop width would hurt readability.
+   Desktop audit (2026-09-28): this used to flatline at 44rem forever —
+   correct at mobile/tablet width (where 44rem never actually binds; the
+   page is just 100% wide minus padding either way), but on any real
+   desktop monitor it left QuestionSolver (QBank solve/bookmarks/
+   practice/question, Smart Practice, the public MCQ-of-the-Day quiz) and
+   the Test/Exam result page sitting in a ~700px column with large empty
+   side gutters — reading as a mobile layout that never left mobile.
+   Below 768px this is a no-op: width:100% is already narrower than
+   44rem, so nothing about mobile changes.
+
+   Values revised 2026-09-28 (follow-up pass) after real
+   getBoundingClientRect measurement showed the first version (52rem/
+   60rem) still rendered a 768px column at 1280–1440px — under the
+   ~900–1100px a 1440px monitor should get. .hm-page's own breakpoints
+   are generous on purpose (its cap rarely binds until a screen is
+   genuinely wide, since 1280px viewport minus padding is already under
+   82.5rem) — this variant needed the SAME idea applied more assertively,
+   since 1280 and 1440 share one breakpoint tier here (no tier of its own
+   between Tailwind's xl/2xl), so that tier has to already be wide enough
+   for both: 62rem (992px max-width → 928px measured rendered content
+   width once this class's own padding is subtracted, confirmed via
+   getBoundingClientRect to land the 1440px case inside the requested
+   900–1100px band, with margin) at 1280px, 70rem (1120px max-width →
+   1056px measured rendered content — noticeably wider, still a
+   deliberately capped, readable line length, nowhere near edge-to-edge)
+   at 1536px+. QuestionSolver.js's and PublicMcqQuiz.js's own action-bar
+   max-w-[44rem] must be changed to the same rem values by hand alongside
+   this class — see the identical note at each of those call sites. */
 .hm-page-narrow {
   width: 100%;
   max-width: 44rem;
@@ -224,6 +252,18 @@ body {
 @media (min-width: 768px) {
   .hm-page-narrow {
     padding: 1.5rem 2rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .hm-page-narrow {
+    max-width: 62rem;
+  }
+}
+
+@media (min-width: 1536px) {
+  .hm-page-narrow {
+    max-width: 70rem;
   }
 }
 

@@ -55,32 +55,47 @@ export default async function LandingPage() {
     <div className="min-h-screen bg-[var(--color-surface-muted)]">
       <MarketingNav links={content.nav_links} ctaText={s.nav_cta_text} appBadgeText={s.app_badge_text} />
 
-      {/* Hero */}
-      <section className="hm-hero-gradient px-4 pb-24 pt-14 text-center sm:px-6 sm:pt-20">
-        <div className="mx-auto flex max-w-3xl flex-col items-center">
-          <Image src="/central-logo.png" alt="Dr. Gutka" width={110} height={110} priority />
-          <h1 className="mt-6 whitespace-pre-line text-4xl font-extrabold leading-tight text-white sm:text-5xl">
-            {s.hero_headline}
-          </h1>
-          <p className="mt-4 max-w-xl text-sm text-white/85 sm:text-base">{s.hero_subtitle}</p>
-          <div className="mt-7 flex flex-col items-center gap-3">
-            <HeroPrimaryCta
-              text={s.hero_cta_primary_text}
-              className="rounded-xl bg-[var(--color-marketing-accent)] px-10 py-3.5 text-sm font-bold text-white shadow-lg"
-            />
-            <a href={s.hero_cta_secondary_link} className="text-sm font-bold text-[var(--color-exam-card-deep)]">
-              {s.hero_cta_secondary_text}
-            </a>
+      {/* Hero. Desktop audit (2026-09-28): below `lg` this section is
+          byte-for-byte the same structure/classes as before (mobile is the
+          protected baseline) — every `lg:` class here is additive and does
+          nothing below 1024px. At `lg` and up, the hero switches from a
+          single centered column (which on a real desktop monitor read as
+          mobile content with large empty side gutters — see the "Stats /
+          preview" section right below, which already solves this with
+          max-w-6xl + lg:grid-cols-2) to a two-column layout: headline/
+          subtitle/CTA on the left, the MCQ-of-the-day preview card on the
+          right — reusing the hero's own existing visual element instead of
+          duplicating the app-preview image already shown in Stats/preview
+          just below it. */}
+      <section className="hm-hero-gradient px-4 pb-24 pt-14 text-center sm:px-6 sm:pt-20 lg:px-8 lg:pb-28 lg:pt-24 lg:text-left">
+        <div className="mx-auto flex max-w-3xl flex-col items-center lg:max-w-6xl lg:flex-row lg:items-center lg:justify-between lg:gap-16">
+          <div className="flex flex-col items-center lg:items-start">
+            <Image src="/central-logo.png" alt="Dr. Gutka" width={110} height={110} priority />
+            <h1 className="mt-6 whitespace-pre-line text-4xl font-extrabold leading-tight text-white sm:text-5xl lg:max-w-xl">
+              {s.hero_headline}
+            </h1>
+            <p className="mt-4 max-w-xl text-sm text-white/85 sm:text-base">{s.hero_subtitle}</p>
+            <div className="mt-7 flex flex-col items-center gap-3 lg:items-start">
+              <HeroPrimaryCta
+                text={s.hero_cta_primary_text}
+                className="rounded-xl bg-[var(--color-marketing-accent)] px-10 py-3.5 text-sm font-bold text-white shadow-lg"
+              />
+              <a href={s.hero_cta_secondary_link} className="text-sm font-bold text-[var(--color-exam-card-deep)]">
+                {s.hero_cta_secondary_text}
+              </a>
+            </div>
           </div>
 
-          <HeroMcqBadge
-            icon={s.hero_badge_icon}
-            title={s.hero_badge_title}
-            tag={s.hero_badge_tag}
-            subtitle={s.hero_badge_subtitle}
-            ctaText={s.hero_badge_cta_text}
-            className="mt-10 flex w-full max-w-md items-center justify-between gap-4 overflow-hidden rounded-2xl bg-[#dcf3f7] px-5 py-4 text-left shadow-lg"
-          />
+          <div className="mt-10 w-full max-w-md lg:mt-0 lg:w-[26rem] lg:flex-none">
+            <HeroMcqBadge
+              icon={s.hero_badge_icon}
+              title={s.hero_badge_title}
+              tag={s.hero_badge_tag}
+              subtitle={s.hero_badge_subtitle}
+              ctaText={s.hero_badge_cta_text}
+              className="flex w-full items-center justify-between gap-4 overflow-hidden rounded-2xl bg-[#dcf3f7] px-5 py-4 text-left shadow-lg"
+            />
+          </div>
         </div>
       </section>
 

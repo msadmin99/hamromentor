@@ -13,6 +13,16 @@
  */
 import assert from "node:assert/strict";
 import { test } from "node:test";
+// Content-rendering fix (2026-09-28): production loads this side-effect
+// import once, in src/lib/richHtml.js, above its own `import katex` — see
+// that file's docstring for why. This test file re-implements the render
+// pipeline with its own local `katex` import instead of going through
+// richHtml.js (see this file's own docstring for why: richHtml.js imports
+// dompurify, which needs a browser), so it needs the identical import to
+// exercise the SAME real behavior production actually has — omitting it
+// here would silently test a different (mhchem-less) katex than the one
+// students actually see.
+import "katex/contrib/mhchem";
 import katex from "katex";
 
 import { decodeHtmlEntities, renderMathInHtml } from "../lib/mathDelimiters.js";
@@ -63,7 +73,7 @@ test("bug report cases render as KaTeX markup, not literal LaTeX text", async (t
   }
 });
 
-test("chemical formula H_2O renders 2 as a real subscript", () => {
+test("chemical formula H_2O renders 2 as a real subscript, with upright (non-italic) element symbols", () => {
   const out = renderLikeRichContent(String.raw`Chemical formula: \(H_2O\)`);
   assertNoLeakedDelimiters(out);
   // KaTeX emits two representations: an <msub> in the MathML tree (used by
@@ -76,6 +86,16 @@ test("chemical formula H_2O renders 2 as a real subscript", () => {
   assert.match(out, /class="[^"]*vlist[^"]*"/, "visible subscript vlist structure must be present");
   const visible = out.split('class="katex-html"')[1] ?? "";
   assert.doesNotMatch(visible, />H_2O</, "the visible rendering must not fall back to literal underscore text");
+  // Content-rendering fix (2026-09-28): a legacy chemical formula written
+  // as ordinary math must now route through mhchem (\ce{...} — see
+  // mathDelimiters.js's applyDelimiters), which sets element symbols
+  // upright (MathML mathvariant="normal") rather than KaTeX's default
+  // math-mode italics. No stray "\ce" error marker either — that would
+  // mean mhchem silently failed to load for this render call (see this
+  // file's own \ce/mhchem import note above).
+  assert.match(out, /mathvariant="normal">H</, "H must render upright, not as an italic math variable");
+  assert.match(out, /mathvariant="normal">O</, "O must render upright, not as an italic math variable");
+  assert.doesNotMatch(visibleBranch(out), /color:#cc0000/, "no KaTeX error-red '\\ce' marker should leak into the visible rendering (means mhchem failed to load)");
 });
 
 test("other required chemical formulas also produce subscript structure", () => {

@@ -21,6 +21,7 @@
  * actual KaTeX call is injected by the caller.
  */
 
+import { isLegacyChemicalFormula } from "./chemistryDetection.js";
 import { trivialMathToText } from "./trivialMath.js";
 
 /**
@@ -201,6 +202,31 @@ export function renderMathInHtml(html, render) {
       result = result.replace(re, (match, expr) => {
         const cleaned = unwrapRedundant(expr);
         if (!cleaned) return match;
+        // Content-rendering fix (2026-09-28): a legacy chemical formula
+        // authored as ordinary math ("H_2SO_4", "NO_2^+") gets rendered
+        // via mhchem (\ce{...}) instead of KaTeX's default math-mode
+        // italics — see chemistryDetection.js's own docstring for exactly
+        // why this check is this conservative and never fires on genuine
+        // math (K_a, E_k, 10^{-3}, ...). Checked BEFORE the plain-text
+        // demotion below: a chemistry formula is a positive, higher-
+        // confidence classification that should win outright, though in
+        // practice trivialMathToText already independently never demotes
+        // one either (see its own docstring).
+        if (isLegacyChemicalFormula(cleaned)) {
+          let chemRendered;
+          try {
+            chemRendered = render(`\\ce{${cleaned}}`, { displayMode: display });
+          } catch {
+            chemRendered = null;
+          }
+          if (typeof chemRendered === "string" && chemRendered) {
+            slots.push(chemRendered);
+            return openSlot(slots.length - 1);
+          }
+          // mhchem couldn't parse it for some reason — fall through to
+          // the normal math rendering path below rather than losing the
+          // content.
+        }
         // Plain numbers / quantities ("$20$", "\(800\ cc\)") wrapped in math
         // delimiters stay ordinary text — KaTeX would set them in the larger
         // serif math font. See trivialMath.js. Display math is always honoured.

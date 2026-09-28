@@ -98,8 +98,17 @@ test("renderMathInHtml — the 10 bug-report cases", async (t) => {
     assert.equal(renderMathInHtml(String.raw`\(FV\)`, fakeRender), "<KI>FV</KI>");
   });
 
-  await t.test("5. chemical formula H_2O reaches the renderer as-is (subscript is KaTeX's job)", () => {
-    assert.equal(renderMathInHtml(String.raw`\(H_2O\)`, fakeRender), "<KI>H_2O</KI>");
+  await t.test("5. chemical formula H_2O reaches the renderer wrapped for mhchem (content-rendering fix, 2026-09-28)", () => {
+    // Was "<KI>H_2O</KI>" (subscript left entirely to KaTeX's default math
+    // styling, which renders H and O as italic math variables). Now
+    // applyDelimiters recognises a standalone legacy chemical formula (see
+    // chemistryDetection.js) and wraps it for mhchem before handing it to
+    // the renderer, so real KaTeX sets the element symbols upright — see
+    // richContentMath.test.mjs's "upright (non-italic) element symbols"
+    // test for the real-KaTeX proof, and chemistryDetection.test.mjs for
+    // the detector's own false-positive/false-negative coverage (K_a, E_k,
+    // etc. must NOT be wrapped this way).
+    assert.equal(renderMathInHtml(String.raw`\(H_2O\)`, fakeRender), String.raw`<KI>\ce{H_2O}</KI>`);
   });
 
   await t.test("6. fraction", () => {

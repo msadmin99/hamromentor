@@ -1,5 +1,19 @@
+// Content-rendering fix (2026-09-28): registers \ce{...} (mhchem) as a
+// valid KaTeX command, globally, for every katex.renderToString call in
+// this bundle (this module's own renderInlineLatex below, RichContent.js's
+// separate direct call for the `latex` field, and mathDelimiters.js's
+// legacy-chemistry-formula rewrite, which emits \ce{...} for KaTeX to
+// render). A side-effect-only import — it mutates katex's shared macro
+// registry and exports nothing itself. Placed first, above every other
+// import, so it always runs before any katex.renderToString call anywhere
+// downstream of this module (ES module evaluation order guarantees an
+// imported module's top-level code runs before the importing module's
+// own code does).
+import "katex/contrib/mhchem";
+
 import katex from "katex";
 import { decodeHtmlEntities, renderMathInHtml } from "./mathDelimiters.js";
+import { renderTextFormattingCommands } from "./textFormatting.js";
 
 // Pure (DOM-free) part of <RichContent>'s pipeline, split out so it can be
 // unit-tested and DOM-verified under `node --test` (RichContent.js itself
@@ -66,7 +80,15 @@ export function renderInlineLatex(html) {
 }
 
 
-/** collapse double-encoded entities, then render math. Sanitizing is the caller's job. */
+/** collapse double-encoded entities, convert standalone \textbf{}/\textit{}
+ * prose commands to real <strong>/<em> tags, then render math. Text-
+ * formatting runs BEFORE math rendering, on the still-raw LaTeX source —
+ * see textFormatting.js's own docstring for why that ordering is what
+ * lets it safely leave a legitimate \textbf{}/\textit{} occurrence INSIDE
+ * a genuine math expression (e.g. \(\textbf{F} = m\vec{a}\)) completely
+ * untouched for KaTeX's own native support of those commands, rather than
+ * risking it splicing raw HTML into what's about to be handed to KaTeX as
+ * TeX source. Sanitizing the final result is still the caller's job. */
 export function renderRichHtml(html) {
-  return renderInlineLatex(collapseDoubleEncodedEntities(html));
+  return renderInlineLatex(renderTextFormattingCommands(collapseDoubleEncodedEntities(html)));
 }

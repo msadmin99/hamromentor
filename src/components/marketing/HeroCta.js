@@ -28,17 +28,16 @@ export function HeroPrimaryCta({ text, className }) {
   );
 }
 
-/** The "MCQ of the Day" hero badge — logged in -> the new choose-your-
- * program flow (5 auto-rotating, program-scoped MCQs; see
- * src/app/mcq-of-the-day/page.js), never straight to a single question.
- * Logged out -> the same login/register destination as the primary CTA
- * above (that flow requires an account, same as the rest of QBank). */
+/** The "MCQ of the Day" hero badge — always goes straight to the public
+ * choose-your-program flow (5 auto-rotating, program-scoped MCQs; see
+ * src/app/mcq-of-the-day/page.js), for every visitor, logged in or not.
+ * Product spec: "MCQ OF THE DAY is a FREE, PUBLIC practice feature. A
+ * visitor must NOT register or log in to use it" — unlike
+ * HeroPrimaryCta above (which fronts the private QBank/dashboard and so
+ * does need the login/register branch), this badge never has one. */
 export function HeroMcqBadge({ icon, title, tag, subtitle, ctaText, className }) {
-  const { user, loading } = useAuth();
-  const href = loading ? null : user ? "/mcq-of-the-day" : hasAuthenticatedBefore() ? "/login" : "/register";
-  if (!href) return null;
   return (
-    <Link href={href} className={className}>
+    <Link href="/mcq-of-the-day" className={className}>
       <span className="flex-1">
         <span className="flex items-center gap-2">
           <span className="text-sm font-bold text-[var(--color-marketing-navy)]">{title}</span>

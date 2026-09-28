@@ -25,17 +25,23 @@ test("primary CTA relabels itself when it points at the dashboard, never says 'G
   assert.match(fn, /href === "\/home" \? "Go to Dashboard" : text/);
 });
 
-test("MCQ badge goes to the new choose-a-program flow when logged in, not straight to a single question", () => {
+test("MCQ badge is a public feature: it always links straight to /mcq-of-the-day, no login/register gate", () => {
   const fn = code.slice(code.indexOf("export function HeroMcqBadge"));
-  assert.match(fn, /user \? "\/mcq-of-the-day"/);
+  assert.match(fn, /<Link href="\/mcq-of-the-day"/);
+  assert.doesNotMatch(fn, /\/login/);
+  assert.doesNotMatch(fn, /\/register/);
   assert.doesNotMatch(fn, /\/qbank\/question\//);
 });
 
-test("MCQ badge falls back to the same login/register logic as the primary CTA when logged out", () => {
+test("MCQ badge never reads auth state at all — it is not conditional on being logged in", () => {
   const fn = code.slice(code.indexOf("export function HeroMcqBadge"));
-  assert.match(fn, /hasAuthenticatedBefore\(\) \? "\/login" : "\/register"/);
+  assert.doesNotMatch(fn, /useAuth\(\)/);
+  assert.doesNotMatch(fn, /hasAuthenticatedBefore\(\)/);
 });
 
-test("neither CTA renders (and never guesses a destination) before auth state has resolved", () => {
-  assert.match(code, /if \(!href\) return null;/);
+test("neither CTA renders before auth state has resolved, except the always-public MCQ badge", () => {
+  // Only the primary (private-destination) CTA needs to wait on auth
+  // loading — the MCQ badge's destination never depends on it.
+  const primaryFn = code.slice(code.indexOf("export function HeroPrimaryCta"), code.indexOf("export function HeroMcqBadge"));
+  assert.match(primaryFn, /if \(!href\) return null;/);
 });

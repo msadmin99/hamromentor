@@ -150,7 +150,13 @@ function HomeContent() {
                 <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-[var(--color-text-muted)]">
                   <span className="h-2 w-2 rounded-full bg-brand-blue" /> {mcq.label} · {mcq.question.subject_name}
                 </p>
-                <Link href={`/qbank/question/${mcq.question.id}`} className="hm-card block p-4">
+                {/* Links into the "choose your program" flow (5 auto-rotating,
+                    program-scoped MCQs), not straight to this one preview
+                    question — see src/app/mcq-of-the-day/page.js. This card's
+                    own content is still whatever core.MCQOfTheDay is
+                    admin-curated for today; it's just a teaser now, not the
+                    only way to reach the daily set. */}
+                <Link href="/mcq-of-the-day" className="hm-card block p-4">
                   <p className="text-sm font-medium text-[var(--color-text)]">{mcq.question.text}</p>
                   <ul className="mt-3 flex flex-col gap-2">
                     {mcq.question.options?.map((opt, i) => (

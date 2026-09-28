@@ -3,6 +3,7 @@ import Link from "next/link";
 import MarketingFooter from "@/components/MarketingFooter";
 import MarketingNav from "@/components/MarketingNav";
 import CoursesSection from "@/components/marketing/CoursesSection";
+import { HeroMcqBadge, HeroPrimaryCta } from "@/components/marketing/HeroCta";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
 
@@ -63,37 +64,23 @@ export default async function LandingPage() {
           </h1>
           <p className="mt-4 max-w-xl text-sm text-white/85 sm:text-base">{s.hero_subtitle}</p>
           <div className="mt-7 flex flex-col items-center gap-3">
-            <Link
-              href={s.hero_cta_primary_link}
+            <HeroPrimaryCta
+              text={s.hero_cta_primary_text}
               className="rounded-xl bg-[var(--color-marketing-accent)] px-10 py-3.5 text-sm font-bold text-white shadow-lg"
-            >
-              {s.hero_cta_primary_text}
-            </Link>
+            />
             <a href={s.hero_cta_secondary_link} className="text-sm font-bold text-[var(--color-exam-card-deep)]">
               {s.hero_cta_secondary_text}
             </a>
           </div>
 
-          <Link
-            href={s.hero_badge_link}
+          <HeroMcqBadge
+            icon={s.hero_badge_icon}
+            title={s.hero_badge_title}
+            tag={s.hero_badge_tag}
+            subtitle={s.hero_badge_subtitle}
+            ctaText={s.hero_badge_cta_text}
             className="mt-10 flex w-full max-w-md items-center justify-between gap-4 overflow-hidden rounded-2xl bg-[#dcf3f7] px-5 py-4 text-left shadow-lg"
-          >
-            <span className="flex-1">
-              <span className="flex items-center gap-2">
-                <span className="text-sm font-bold text-[var(--color-marketing-navy)]">{s.hero_badge_title}</span>
-                {s.hero_badge_tag && (
-                  <span className="rounded bg-yellow-300 px-1.5 py-0.5 text-[10px] font-bold text-yellow-900">
-                    {s.hero_badge_tag}
-                  </span>
-                )}
-              </span>
-              <span className="mt-1 block text-xs text-[var(--color-text-muted)]">{s.hero_badge_subtitle}</span>
-              <span className="mt-2 block text-xs font-bold text-[var(--color-marketing-accent)]">{s.hero_badge_cta_text}</span>
-            </span>
-            <span className="flex h-12 w-12 flex-none items-center justify-center rounded-full bg-[var(--color-marketing-accent)] text-xl text-white shadow-inner">
-              {s.hero_badge_icon}
-            </span>
-          </Link>
+          />
         </div>
       </section>
 

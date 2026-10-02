@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { cardPresentation, isLocked, primaryHref, sourceLabel } from "@/lib/accessState";
+import { formatScheduleParts, resolveExamSchedule } from "@/lib/examSchedule";
 import { EXAM_TYPE_META } from "./testpage/examTypeMeta";
 
 // Phase 10: keyed by the backend's `access.state`, not by a locally
@@ -21,30 +22,6 @@ const DIFFICULTY_META = {
   medium: { label: "Medium", className: "bg-warning-soft text-amber-700" },
   hard: { label: "Hard", className: "bg-brand-red-light text-brand-red" },
 };
-
-// Grand Test / Daily Test card visual update: shows the exam's scheduled
-// date/time (ISO date + full weekday + 12h time, e.g. "2026-09-01
-// Wednesday  8:00 AM") directly on the card, above the Questions/Minutes
-// stats row — students no longer have to open Details to see when a
-// Grand Test opens or a Daily Test's window starts. `scheduled_start` is
-// already serialized on every Test by TestListSerializer
-// (tests_app/serializers.py) — no backend change needed, and Daily Test
-// listing already sorts by this same field (daily-test/page.js), so it's
-// the correct source for both exam types, not something new only Grand
-// Test happens to have. `en-CA` reliably formats as YYYY-MM-DD (a
-// well-known toLocaleDateString quirk); all three pieces read the
-// viewer's own local time, matching GrandTestStatusPanel's existing date
-// formatting approach elsewhere in the exam detail page.
-function formatScheduleParts(value) {
-  if (!value) return null;
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return null;
-  return {
-    isoDate: d.toLocaleDateString("en-CA"),
-    weekday: d.toLocaleDateString("en-US", { weekday: "long" }),
-    time: d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
-  };
-}
 
 function StatBlock({ icon, value, label }) {
   return (
@@ -72,7 +49,15 @@ export default function ExamCard({ test }) {
   // on the platform. It no longer infers anything.
   const presentation = cardPresentation(test);
   const locked = isLocked(test);
-  const schedule = ["grand", "daily"].includes(test.exam_type) ? formatScheduleParts(test.scheduled_start) : null;
+  // Grand Test schedule fix: prefer the backend's session-resolved
+  // grand_test_schedule (a real ExamSession's own dates when the exam
+  // has been scheduled via Reschedule) over the raw scheduled_start,
+  // which may be stale or never set at all once a session exists — see
+  // lib/examSchedule.js's own docstring for the full root-cause story.
+  // Daily Test has no ExamSession concept, so this still falls straight
+  // through to scheduled_start for it, unchanged.
+  const resolvedSchedule = ["grand", "daily"].includes(test.exam_type) ? resolveExamSchedule(test) : null;
+  const schedule = formatScheduleParts(resolvedSchedule?.start);
   const access = test.access || {};
   const attemptsLeft = access.attempts_left ?? Math.max(0, (test.max_attempts ?? 1) - (test.attempts_used ?? 0));
   const href = `/tests/${test.id}`;

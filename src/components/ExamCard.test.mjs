@@ -1,12 +1,19 @@
 /**
  * Grand Test card visual update — adds the exam's scheduled date/time
  * (ISO date + full weekday + 12h time) above the Questions/Minutes stats
- * row, matching the target design. Reuses `test.scheduled_start`, already
- * serialized by TestListSerializer (tests_app/serializers.py) — no
- * backend change involved. Extended to Daily Test cards with the exact
- * same implementation (same field, same formatting, same placement) —
- * Daily Test listing already sorts by scheduled_start, so it's the
- * correct source there too, not a new concept borrowed from Grand Test.
+ * row, matching the target design.
+ *
+ * Grand Test schedule display/timezone fix: the card now resolves its
+ * schedule via lib/examSchedule.js's `resolveExamSchedule`, which prefers
+ * the backend's session-resolved `grand_test_schedule` (a real
+ * ExamSession's own dates, now also exposed on the LIST endpoint, not
+ * just detail — see tests_app/serializers.py) over the raw
+ * `scheduled_start`, which could be stale or disconnected from the real
+ * schedule once a Grand Test had actually been rescheduled. Formatting
+ * itself also moved into that shared module, explicitly rendered in
+ * Asia/Kathmandu rather than the viewer's browser-local zone. Daily Test
+ * (no ExamSession concept) still falls straight through to
+ * scheduled_start, byte-for-byte the same behavior as before this fix.
  *
  * No DOM/rendering test infra in this repo (see other *.test.mjs files
  * for the same convention) — these are source assertions confirming the
@@ -23,34 +30,27 @@ const src = readFileSync(join(here, "ExamCard.js"), "utf8");
 
 test("the scheduled date/time row is added only for Grand Test and Daily Test cards", async (t) => {
   await t.test("gated on exam_type being 'grand' or 'daily', not shown for other exam types", () => {
-    assert.match(src, /const schedule = \["grand", "daily"\]\.includes\(test\.exam_type\) \? formatScheduleParts\(test\.scheduled_start\) : null;/);
+    assert.match(src, /const resolvedSchedule = \["grand", "daily"\]\.includes\(test\.exam_type\) \? resolveExamSchedule\(test\) : null;/);
   });
 
   await t.test("mock/pyq/qbank exam types are excluded (the allowlist is exactly grand+daily, not everything but those)", () => {
     assert.doesNotMatch(src, /"mock", "grand", "daily"|"grand", "daily", "mock"|"pyq".*schedule/);
   });
 
-  await t.test("renders nothing when there is no scheduled_start (formatScheduleParts returns null)", () => {
-    assert.match(src, /function formatScheduleParts\(value\) \{\s*if \(!value\) return null;/);
+  await t.test("renders nothing when there is no resolved schedule (resolveExamSchedule/formatScheduleParts return null/undefined)", () => {
+    assert.match(src, /const schedule = formatScheduleParts\(resolvedSchedule\?\.start\);/);
     assert.match(src, /\{schedule && \(/);
   });
 
-  await t.test("an invalid date value is handled without throwing (NaN guard)", () => {
-    assert.match(src, /if \(Number\.isNaN\(d\.getTime\(\)\)\) return null;/);
+  await t.test("Grand Test schedule resolution prefers the backend's session-resolved field over the raw one — the actual root-cause fix", () => {
+    assert.match(src, /import \{ formatScheduleParts, resolveExamSchedule \} from "@\/lib\/examSchedule";/);
+    assert.doesNotMatch(src, /formatScheduleParts\(test\.scheduled_start\)/);
   });
 });
 
 test("the schedule row shows ISO date + full weekday + 12h time, matching the target design", async (t) => {
-  await t.test("date formatted as YYYY-MM-DD (en-CA locale trick)", () => {
-    assert.match(src, /isoDate: d\.toLocaleDateString\("en-CA"\)/);
-  });
-
-  await t.test("weekday spelled out in full, not abbreviated", () => {
-    assert.match(src, /weekday: d\.toLocaleDateString\("en-US", \{ weekday: "long" \}\)/);
-  });
-
-  await t.test("time in 12h format with AM/PM", () => {
-    assert.match(src, /time: d\.toLocaleTimeString\("en-US", \{ hour: "numeric", minute: "2-digit" \}\)/);
+  await t.test("formatting is delegated to the shared, Asia/Kathmandu-explicit lib/examSchedule.js — not a local ad-hoc copy", () => {
+    assert.doesNotMatch(src, /function formatScheduleParts/);
   });
 
   await t.test("all three pieces render with the calendar icon, in order", () => {

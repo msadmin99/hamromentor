@@ -14,9 +14,11 @@ test("UpcomingTestRow never renders a Start/Play/Attempt action", async (t) => {
     assert.doesNotMatch(src, /<button/i);
   });
 
-  await t.test("shows the scheduled date and opening time only", () => {
-    assert.match(src, /formatDay\(test\.scheduled_start\)/);
-    assert.match(src, /Opens \{formatTime\(test\.scheduled_start\)\}/);
+  await t.test("resolves the authoritative schedule and renders the full date/weekday/time box via the shared formatter", () => {
+    assert.match(src, /import \{ formatScheduleDay, formatScheduleParts, resolveExamSchedule \} from "@\/lib\/examSchedule";/);
+    assert.match(src, /const resolvedSchedule = resolveExamSchedule\(test\);/);
+    assert.match(src, /formatScheduleDay\(resolvedSchedule\?\.start\)/);
+    assert.match(src, /formatScheduleParts\(resolvedSchedule\?\.start\)/);
   });
 
   await t.test("shows title and question count/duration, matching PastTestRow's list treatment", () => {

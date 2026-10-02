@@ -16,6 +16,7 @@ import { TEST_GUIDELINES } from "@/components/testpage/examTypeMeta";
 import GrandTestStatusPanel from "@/components/testpage/GrandTestStatusPanel";
 import { accessOf, denialFor, isLocked, sourceLabel } from "@/lib/accessState";
 import { api } from "@/lib/api";
+import { EXAM_TIMEZONE } from "@/lib/examSchedule";
 
 // Phase D, Area 5: exam_type -> {label, Icon} for the type badge. A local,
 // small map rather than reusing testpage/examTypeMeta's EXAM_TYPE_META —
@@ -30,13 +31,18 @@ const TYPE_META = {
   pyq: { label: "Past Year Questions", Icon: ArchiveIcon },
 };
 
+// Grand Test schedule display/timezone fix: explicit Asia/Kathmandu
+// (imported, not a second hardcoded zone string) rather than the
+// viewer's own browser-local zone — these two short-form formatters stay
+// local (a different, more compact format than lib/examSchedule.js's own
+// formatScheduleDate/DateTime) but now share that one timezone constant.
 function formatDate(value) {
   if (!value) return null;
-  return new Date(value).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
+  return new Date(value).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric", timeZone: EXAM_TIMEZONE });
 }
 function formatDateTime(value) {
   if (!value) return null;
-  return new Date(value).toLocaleString("en-US", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  return new Date(value).toLocaleString("en-US", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: EXAM_TIMEZONE });
 }
 
 function StatCard({ value, label }) {

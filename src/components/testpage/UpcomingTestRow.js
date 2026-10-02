@@ -1,34 +1,24 @@
 "use client";
 
-function formatDay(value) {
-  if (!value) return { day: "--", month: "" };
-  const d = new Date(value);
-  return { day: d.getDate(), month: d.toLocaleDateString("en-US", { month: "short" }) };
-}
-
-// Matches ExamCard.js's formatScheduleParts exactly, so an Upcoming Daily
-// Test row shows the identical "📅 2026-09-19  Saturday  1:45 PM" box as
-// Grand Test cards and today's Daily Test cards — not a shortened variant.
-function formatScheduleParts(value) {
-  if (!value) return null;
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return null;
-  return {
-    isoDate: d.toLocaleDateString("en-CA"),
-    weekday: d.toLocaleDateString("en-US", { weekday: "long" }),
-    time: d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
-  };
-}
+import { formatScheduleDay, formatScheduleParts, resolveExamSchedule } from "@/lib/examSchedule";
 
 /** Compact, view-only list row for a Daily Test scheduled on a future
  * calendar day — matches PastTestRow's list-style treatment, but
  * deliberately has NO Start/Play/Attempt action of any kind: a
  * future-dated Daily Test cannot be started until its scheduled_start
  * (server-enforced — see tests_app/views.py: _start_attempt), so
- * offering one here would just be a button that fails. */
+ * offering one here would just be a button that fails.
+ *
+ * Grand Test schedule display/timezone fix: date tile and schedule box
+ * now go through lib/examSchedule.js's shared, Asia/Kathmandu-explicit
+ * helpers instead of local copies, and resolve the authoritative
+ * schedule via resolveExamSchedule (matters for Grand Test's own
+ * upcoming listing; Daily Test, which never has an ExamSession, falls
+ * straight through to scheduled_start unchanged). */
 export default function UpcomingTestRow({ test }) {
-  const { day, month } = formatDay(test.scheduled_start);
-  const schedule = formatScheduleParts(test.scheduled_start);
+  const resolvedSchedule = resolveExamSchedule(test);
+  const { day, month } = formatScheduleDay(resolvedSchedule?.start);
+  const schedule = formatScheduleParts(resolvedSchedule?.start);
 
   return (
     <div className="flex flex-col gap-3 border-b border-[var(--color-border)] py-3 last:border-0">

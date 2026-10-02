@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { CalendarIcon, CheckCircleIcon, ClockIcon, WarningTriangleIcon } from "@/components/icons";
+import { formatScheduleDateTime } from "@/lib/examSchedule";
 
 /**
  * Grand Test 3.0 — Release Candidate integration.
@@ -21,17 +22,11 @@ import { CalendarIcon, CheckCircleIcon, ClockIcon, WarningTriangleIcon } from "@
  * missing status — so the caller can render it unconditionally.
  */
 
-function fmt(value) {
-  if (!value) return null;
-  return new Date(value).toLocaleString("en-US", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+// Grand Test schedule display/timezone fix: was the viewer's own
+// browser-local zone (no `timeZone` option at all) — now explicitly
+// Asia/Kathmandu, via the shared lib/examSchedule.js formatter every
+// other exam-schedule display point also uses.
+const fmt = formatScheduleDateTime;
 
 function Shell({ tone, icon, title, children }) {
   const toneClass =

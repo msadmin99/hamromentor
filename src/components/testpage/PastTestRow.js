@@ -1,38 +1,27 @@
 "use client";
 
 import Link from "next/link";
+import { formatScheduleDay, formatScheduleParts, resolveExamSchedule } from "@/lib/examSchedule";
 
 const STATUS_META = {
   completed: { label: "Completed", className: "text-brand-green" },
   missed: { label: "Missed", className: "text-brand-red" },
 };
 
-function formatDay(value) {
-  if (!value) return { day: "--", month: "" };
-  const d = new Date(value);
-  return { day: d.getDate(), month: d.toLocaleDateString("en-US", { month: "short" }) };
-}
-
-// Matches ExamCard.js's formatScheduleParts exactly, so a Past Daily Test
-// row shows the identical "📅 2026-09-19  Saturday  1:45 PM" box as
-// Grand Test cards and today's Daily Test cards — not a shortened variant.
-function formatScheduleParts(value) {
-  if (!value) return null;
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return null;
-  return {
-    isoDate: d.toLocaleDateString("en-CA"),
-    weekday: d.toLocaleDateString("en-US", { weekday: "long" }),
-    time: d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
-  };
-}
-
 /** Compact list row for past/completed daily tests — distinct from the
  * card grid used for today's available tests, matching the reference's
- * list-style treatment for history items. */
+ * list-style treatment for history items.
+ *
+ * Grand Test schedule display/timezone fix: date tile and schedule box
+ * now go through lib/examSchedule.js's shared, Asia/Kathmandu-explicit
+ * helpers and resolve the authoritative schedule (the session-resolved
+ * one for a Grand Test, when one exists) instead of the raw field — same
+ * fix as ExamCard.js/UpcomingTestRow.js. `|| test.created_at` is
+ * preserved exactly as before for a test with no real schedule at all. */
 export default function PastTestRow({ test }) {
-  const scheduleSource = test.scheduled_start || test.created_at;
-  const { day, month } = formatDay(scheduleSource);
+  const resolvedSchedule = resolveExamSchedule(test);
+  const scheduleSource = resolvedSchedule?.start || test.created_at;
+  const { day, month } = formatScheduleDay(scheduleSource);
   const schedule = formatScheduleParts(scheduleSource);
   const meta = STATUS_META[test.card_status] || STATUS_META.completed;
   const isMissed = test.card_status === "missed";

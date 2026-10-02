@@ -35,11 +35,17 @@ test("a non-missed row (completed) still links to Review Test, unchanged", async
   });
 });
 
-test("Regression safety: the day/month formatting and status meta are untouched", async (t) => {
-  await t.test("formatDay and STATUS_META are unchanged", () => {
-    assert.match(src, /function formatDay\(value\) \{/);
+test("Regression safety: the status meta is untouched, and day/month formatting is delegated to the shared helper", async (t) => {
+  await t.test("STATUS_META is unchanged", () => {
     assert.match(src, /const STATUS_META = \{/);
     assert.match(src, /completed: \{ label: "Completed", className: "text-brand-green" \}/);
     assert.match(src, /missed: \{ label: "Missed", className: "text-brand-red" \}/);
+  });
+
+  await t.test("Grand Test schedule fix: resolves the authoritative schedule via the shared lib, falling back to created_at exactly as before", () => {
+    assert.match(src, /import \{ formatScheduleDay, formatScheduleParts, resolveExamSchedule \} from "@\/lib\/examSchedule";/);
+    assert.match(src, /const resolvedSchedule = resolveExamSchedule\(test\);/);
+    assert.match(src, /const scheduleSource = resolvedSchedule\?\.start \|\| test\.created_at;/);
+    assert.doesNotMatch(src, /function formatDay/);
   });
 });

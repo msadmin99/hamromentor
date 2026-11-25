@@ -26,6 +26,7 @@ function AttemptContent() {
   const [remaining, setRemaining] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [submitErrorCode, setSubmitErrorCode] = useState("");
   const [navigatorOpen, setNavigatorOpen] = useState(false); // mobile drawer
   const [navigatorCollapsed, setNavigatorCollapsed] = useState(false); // desktop rail
   const [reviewOpen, setReviewOpen] = useState(false);
@@ -113,6 +114,7 @@ function AttemptContent() {
     submittedRef.current = true;
     setSubmitting(true);
     setSubmitError("");
+    setSubmitErrorCode("");
     try {
       await api.post(`/attempts/${attemptId}/submit/`);
       router.push(`/tests/result/${attemptId}`);
@@ -130,6 +132,7 @@ function AttemptContent() {
       submittedRef.current = false;
       setSubmitting(false);
       setSubmitError(err.message || "Could not submit your test. Please try again.");
+      setSubmitErrorCode(err.data?.code || "");
     }
   }, [attemptId, router]);
 
@@ -412,6 +415,7 @@ function AttemptContent() {
         onClose={() => {
           setReviewOpen(false);
           setSubmitError("");
+          setSubmitErrorCode("");
         }}
         questions={attempt.questions}
         answers={answers}
@@ -420,6 +424,7 @@ function AttemptContent() {
         onConfirmSubmit={submitTest}
         submitting={submitting}
         error={submitError}
+        errorCode={submitErrorCode}
       />
 
       <NotesPopover

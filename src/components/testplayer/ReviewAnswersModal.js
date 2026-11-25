@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import Drawer from "@/components/Drawer";
 
 const STATE_META = {
@@ -17,7 +18,7 @@ function stateFor(q, answers, marked) {
 /** Pre-submit summary — real counts/status from the same answers/marked
  * state the navigator uses, with per-item jump-back. Replaces the old
  * direct, unconfirmed submit-on-click. */
-export default function ReviewAnswersModal({ open, onClose, questions, answers, marked, onJump, onConfirmSubmit, submitting, error }) {
+export default function ReviewAnswersModal({ open, onClose, questions, answers, marked, onJump, onConfirmSubmit, submitting, error, errorCode }) {
   const answeredCount = questions.filter((q) => answers[q.id] != null).length;
   const reviewCount = questions.filter((q) => marked[q.id]).length;
   const unansweredCount = questions.length - answeredCount;
@@ -61,7 +62,17 @@ export default function ReviewAnswersModal({ open, onClose, questions, answers, 
       {/* Production incident fix: this used to have nowhere to appear at
           all — a failed submit reset the button with zero explanation
           (see AttemptContent.submitTest's comment for the full incident). */}
-      {error && (
+      {error && errorCode === "purchase_required" && (
+        <Link
+          href="/plans"
+          onClick={onClose}
+          className="mb-3 block rounded-lg bg-brand-red-light px-3 py-2 text-xs font-medium text-brand-red underline underline-offset-2"
+          role="alert"
+        >
+          {error}
+        </Link>
+      )}
+      {error && errorCode !== "purchase_required" && (
         <p className="mb-3 rounded-lg bg-brand-red-light px-3 py-2 text-xs font-medium text-brand-red" role="alert">
           {error}
         </p>

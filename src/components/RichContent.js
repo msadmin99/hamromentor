@@ -94,7 +94,13 @@ export default function RichContent({ html, latex, image, imageData, video, clas
       // isn't populated by the bulk-import pipeline today so it's lower
       // risk, but a hand-typed or copy-pasted value could still carry an
       // escaped "&lt;"/"&gt;", and decoding it here costs nothing.
-      return sanitizeRichHtml(katex.renderToString(decodeHtmlEntities(expr), { throwOnError: false, displayMode: display }));
+      // Same inline-sizing fix as richHtml.js's renderInlineLatex: force
+      // TeX's compact "textstyle" for anything not in display mode, so an
+      // embedded \displaystyle in the source can't blow a fraction/sum up
+      // to full size mid-sentence.
+      const decoded = decodeHtmlEntities(expr);
+      const forInline = display ? decoded : `{\\textstyle ${decoded}}`;
+      return sanitizeRichHtml(katex.renderToString(forInline, { throwOnError: false, displayMode: display }));
     } catch {
       return "";
     }

@@ -443,6 +443,14 @@ body {
   max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
+  /* Shrinks a fraction/summation/integral slightly when it sits mid-
+     sentence so it blends into the surrounding prose line instead of
+     towering over it (paired with the {\textstyle ...} fix in
+     richHtml.js/RichContent.js, which keeps its layout compact; this is
+     the matching visual-size half of that fix). Reset back to 1em for a
+     real $$...$$/\[...\] display-mode equation below — that one already
+     has its own full-width line and should render at its natural size. */
+  font-size: 0.92em;
 }
 /* Pre-commit visual verification (real Playwright screenshots, real long
    equations) caught a genuine regression the rule above introduced: KaTeX's
@@ -478,6 +486,10 @@ body {
   max-width: none;
   overflow-x: visible;
   overflow-y: visible;
+  /* Undoes the inline-only 0.92em shrink above for a real display-mode
+     equation — it's already on its own centered line, so it should render
+     at its natural full size, not the mid-sentence-blending size. */
+  font-size: 1em;
 }
 
 .hm-richtext-content img {

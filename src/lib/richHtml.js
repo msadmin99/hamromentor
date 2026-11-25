@@ -71,8 +71,20 @@ export function renderInlineLatex(html) {
     // character it represents, not as unrendered entity text).
     const cleaned = stripEmbeddedTags(decodeHtmlEntities(expr)).trim();
     if (!cleaned) return null;
+    // Inline-only: force TeX's own compact "textstyle" sizing regardless of
+    // what the source contains. A $...$/\(...\) span a content author typed
+    // to sit mid-sentence sometimes carries an embedded \displaystyle anyway
+    // (common from Word/Excel equation editors, which often default to
+    // "professional"/display formatting even for an inline snippet) — left
+    // alone, that forces a fraction to full size and a sum/integral's limits
+    // to stack above/below instead of sitting beside it, towering over the
+    // surrounding prose line it's embedded in. Grouping in {\textstyle ...}
+    // is the standard TeX idiom for scoping a style switch to one
+    // expression; it never touches a genuine $$...$$/\[...\] display-mode
+    // equation, which keeps rendering exactly as it always has.
+    const forInline = displayMode ? cleaned : `{\\textstyle ${cleaned}}`;
     try {
-      return katex.renderToString(cleaned, { throwOnError: false, displayMode });
+      return katex.renderToString(forInline, { throwOnError: false, displayMode });
     } catch {
       return null;
     }

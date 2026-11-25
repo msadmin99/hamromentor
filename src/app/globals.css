@@ -443,13 +443,21 @@ body {
   max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
-  /* Shrinks a fraction/summation/integral slightly when it sits mid-
-     sentence so it blends into the surrounding prose line instead of
-     towering over it (paired with the {\textstyle ...} fix in
-     richHtml.js/RichContent.js, which keeps its layout compact; this is
-     the matching visual-size half of that fix). Reset back to 1em for a
-     real $$...$$/\[...\] display-mode equation below — that one already
-     has its own full-width line and should render at its natural size. */
+}
+/* Shrinks ONLY a genuinely tall inline expression (a fraction, a
+   summation/integral with limits, ...) — richHtml.js/RichContent.js tag
+   exactly these with the .hm-tall-inline-math wrapper (see
+   STACKING_COMMANDS_RE's docstring there) before this CSS ever sees
+   them. A short, simple expression (a bare variable, a number) is left
+   completely alone at its natural size: an earlier version of this rule
+   shrank every inline equation uniformly, which made short spans like a
+   standalone "k" or "1215 Å" look tiny and oddly raised next to the
+   surrounding prose — confirmed against a real screenshot of exactly
+   that. Paired with the {\textstyle ...} fix in richHtml.js/
+   RichContent.js, which keeps a tall expression's internal layout
+   compact to begin with; this is the matching visual-size half of that
+   fix, scoped to the same tall-only case. */
+.hm-tall-inline-math .katex {
   font-size: 0.82em;
 }
 /* Pre-commit visual verification (real Playwright screenshots, real long
@@ -486,10 +494,6 @@ body {
   max-width: none;
   overflow-x: visible;
   overflow-y: visible;
-  /* Undoes the inline-only 0.92em shrink above for a real display-mode
-     equation — it's already on its own centered line, so it should render
-     at its natural full size, not the mid-sentence-blending size. */
-  font-size: 1em;
 }
 
 .hm-richtext-content img {

@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import DOMPurify from "dompurify";
 import katex from "katex";
 import { classifyStandaloneLatex, decodeHtmlEntities } from "@/lib/mathDelimiters";
-import { renderRichHtml } from "@/lib/richHtml";
+import { renderRichHtml, STACKING_COMMANDS_RE } from "@/lib/richHtml";
 
 /** GT3-7 §37 — question/option/explanation HTML comes from the admin
  * rich-text editor and the bulk-import pipeline (which can include
@@ -100,7 +100,13 @@ export default function RichContent({ html, latex, image, imageData, video, clas
       // to full size mid-sentence.
       const decoded = decodeHtmlEntities(expr);
       const forInline = display ? decoded : `{\\textstyle ${decoded}}`;
-      return sanitizeRichHtml(katex.renderToString(forInline, { throwOnError: false, displayMode: display }));
+      const out = katex.renderToString(forInline, { throwOnError: false, displayMode: display });
+      // Only a genuinely tall expression gets wrapped for the shrink CSS —
+      // see STACKING_COMMANDS_RE's docstring in richHtml.js.
+      if (!display && STACKING_COMMANDS_RE.test(decoded)) {
+        return sanitizeRichHtml(`<span class="hm-tall-inline-math">${out}</span>`);
+      }
+      return sanitizeRichHtml(out);
     } catch {
       return "";
     }

@@ -15,6 +15,21 @@ import katex from "katex";
 import { decodeHtmlEntities, renderMathInHtml } from "./mathDelimiters.js";
 import { renderTextFormattingCommands } from "./textFormatting.js";
 
+// Commands that produce visually "tall" stacked notation — a fraction's
+// bar + numerator/denominator, a summation/integral/product with limits,
+// a binomial, an over/underset — the ones that genuinely tower over a
+// line of prose when they land inline instead of on their own centered
+// display-mode line. Only these get the inline-shrink CSS (.hm-tall-
+// inline-math, see globals.css). A short, single-token expression (a
+// bare variable like "k", a number KaTeX doesn't recognise as plain
+// text) already renders at essentially the same height as surrounding
+// prose — shrinking it too (a prior version of this fix did, uniformly)
+// made it look tiny and oddly raised instead, confirmed against a real
+// screenshot where standalone "k" and "1215 Å" both read as stray
+// superscripts.
+export const STACKING_COMMANDS_RE =
+  /\\(?:d?frac|tfrac|cfrac|sum|prod|int|oint|iint|iiint|lim|binom|dbinom|overset|underset|stackrel|substack)\b/;
+
 // Pure (DOM-free) part of <RichContent>'s pipeline, split out so it can be
 // unit-tested and DOM-verified under `node --test` (RichContent.js itself
 // imports dompurify and JSX). RichContent calls renderRichHtml() and then
@@ -84,7 +99,13 @@ export function renderInlineLatex(html) {
     // equation, which keeps rendering exactly as it always has.
     const forInline = displayMode ? cleaned : `{\\textstyle ${cleaned}}`;
     try {
-      return katex.renderToString(forInline, { throwOnError: false, displayMode });
+      const out = katex.renderToString(forInline, { throwOnError: false, displayMode });
+      // Only a genuinely tall inline expression gets wrapped for the
+      // shrink CSS — see STACKING_COMMANDS_RE's docstring above.
+      if (!displayMode && STACKING_COMMANDS_RE.test(cleaned)) {
+        return `<span class="hm-tall-inline-math">${out}</span>`;
+      }
+      return out;
     } catch {
       return null;
     }

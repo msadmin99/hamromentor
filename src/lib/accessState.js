@@ -54,7 +54,7 @@ const PRESENTATION = {
   // Grand Test 3.0 — the student was entitled but the scheduled window
   // passed without them starting. Distinct from `closed` so the card
   // can carry the approved "Missed" wording, and never "failed"/zero.
-  missed: { label: "Missed", cta: "Exam window closed", icon: "⌛", tone: "closed", disabled: true },
+  missed: { label: "Missed", cta: "Exam Ended", icon: "⌛", tone: "closed", disabled: true },
   attempts_exhausted: { label: "No attempts left", cta: "No attempts left", icon: "🚫", tone: "closed", disabled: true },
   locked: { label: "Locked", cta: "Unlock Test", icon: "🔒", tone: "locked" },
 };

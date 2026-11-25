@@ -293,7 +293,7 @@ export default function QuestionSolver({
                   key={opt.id}
                   onClick={() => selectOption(opt)}
                   disabled={submitting}
-                  className={`flex items-center gap-3 rounded-xl border px-4 py-3.5 text-left text-sm transition disabled:opacity-70 ${stateClasses}`}
+                  className={`flex items-center gap-3 rounded-xl border px-4 py-3.5 text-left text-base transition disabled:opacity-70 ${stateClasses}`}
                 >
                   {/* Phase 2A: circular letter badge, filled once selected —
                       matches Qbank12.png's option treatment. */}
@@ -314,7 +314,7 @@ export default function QuestionSolver({
             }
 
             return (
-              <div key={opt.id} className={`rounded-xl border px-4 py-3.5 text-sm transition ${stateClasses}`}>
+              <div key={opt.id} className={`rounded-xl border px-4 py-3.5 text-base transition ${stateClasses}`}>
                 <OptionResultBar
                   letter={letterFor(i)}
                   option={opt}

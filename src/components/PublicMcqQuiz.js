@@ -126,7 +126,7 @@ export default function PublicMcqQuiz({ questions, coursePrefix, onFinish, finis
                 type="button"
                 onClick={() => selectOption(question, opt.id)}
                 aria-pressed={isSelected}
-                className={`flex items-center gap-3 rounded-xl border px-4 py-3.5 text-left text-sm transition ${
+                className={`flex items-center gap-3 rounded-xl border px-4 py-3.5 text-left text-base transition ${
                   isSelected ? "border-brand-blue bg-brand-blue/5" : "border-[var(--color-border)]"
                 }`}
               >
@@ -277,7 +277,7 @@ function PublicMcqResults({ result, onFinish, finishLabel }) {
                         ? "border-brand-red bg-brand-red-light"
                         : "border-[var(--color-border)]";
                   return (
-                    <div key={opt.id} className={`rounded-xl border px-3.5 py-2.5 text-sm ${stateClasses}`}>
+                    <div key={opt.id} className={`rounded-xl border px-3.5 py-2.5 text-base ${stateClasses}`}>
                       <OptionResultBar letter={letterFor(oi)} option={opt} state={state} showStats={false} />
                     </div>
                   );

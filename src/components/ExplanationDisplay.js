@@ -142,7 +142,7 @@ export default function ExplanationDisplay({
                   <span className="flex h-5 w-5 flex-none items-center justify-center rounded-full bg-[var(--color-surface-muted)] text-[11px] font-bold text-[var(--color-text-muted)]">
                     {option.letter}
                   </span>
-                  <RichContent html={option.text} latex={option.latex} className="text-sm font-semibold text-[var(--color-text)]" />
+                  <RichContent html={option.text} latex={option.latex} className="text-base font-semibold text-[var(--color-text)]" />
                 </div>
                 {status && <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-red">{status}</p>}
                 <RichContent html={explanationHtml} className="hm-explanation-copy pl-7 text-[var(--color-text-muted)]" />

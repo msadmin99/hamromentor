@@ -384,7 +384,7 @@ function ResultContent() {
                   if (!q.solutions_locked && opt.is_correct) classes = "border-brand-green bg-brand-green-light";
                   else if (isSelected) classes = q.solutions_locked ? "border-brand-blue bg-brand-blue/5" : "border-brand-red bg-brand-red-light";
                   return (
-                    <div key={opt.id} className={`rounded-lg border px-3 py-2 text-xs ${classes}`}>
+                    <div key={opt.id} className={`rounded-lg border px-3 py-2 text-base ${classes}`}>
                       {isSelected && <span className="mb-1 block font-semibold text-[var(--color-text)]">(your answer)</span>}
                       <OptionResultBar
                         letter={String.fromCharCode(65 + oi)}

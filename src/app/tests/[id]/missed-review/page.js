@@ -49,7 +49,7 @@ function MissedQuestion({ q, index }) {
         {(q.options || []).map((opt, oi) => (
           <div
             key={opt.id}
-            className={`rounded-lg border px-3 py-2 text-xs ${
+            className={`rounded-lg border px-3 py-2 text-base ${
               opt.is_correct ? "border-brand-green bg-brand-green-light" : "border-[var(--color-border)]"
             }`}
           >

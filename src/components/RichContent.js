@@ -115,7 +115,7 @@ export default function RichContent({ html, latex, image, imageData, video, clas
     <div className={className}>
       {renderedHtml && <div className="hm-richtext-content" dangerouslySetInnerHTML={{ __html: renderedHtml }} />}
       {latexHtml && (
-        <div className="mt-1.5 overflow-x-auto" dangerouslySetInnerHTML={{ __html: latexHtml }} />
+        <div className="hm-richtext-content mt-1.5 overflow-x-auto" dangerouslySetInnerHTML={{ __html: latexHtml }} />
       )}
       {responsive ? (
         <picture>

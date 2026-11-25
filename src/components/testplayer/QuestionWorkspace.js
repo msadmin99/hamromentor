@@ -108,7 +108,7 @@ export default function QuestionWorkspace({
               />
               <label
                 htmlFor={inputId}
-                className={`block cursor-pointer rounded-xl border px-4 py-3 text-left text-sm transition peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand-blue ${
+                className={`block cursor-pointer rounded-xl border px-4 py-3 text-left text-base transition peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand-blue ${
                   selected ? "border-brand-blue bg-brand-blue/10 ring-1 ring-brand-blue" : "border-[var(--color-border)] hover:border-brand-blue/40"
                 }`}
               >

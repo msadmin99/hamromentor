@@ -77,7 +77,7 @@ export default function GrandTestStatusPanel({ test }) {
 
   if (status === "upcoming") {
     return (
-      <Shell tone="info" icon={<CalendarIcon className="h-5 w-5" />} title="Scheduled Grand Test — not open yet">
+      <Shell tone="info" icon={<CalendarIcon className="h-5 w-5" />} title="Scheduled Grand Test — starts on schedule">
         <p>This Grand Test can only be started during its official scheduled window.</p>
         <ScheduleLine schedule={schedule} />
         <p className="mt-2">The Start button will become available when the exam opens.</p>

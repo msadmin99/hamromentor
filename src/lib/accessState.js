@@ -49,7 +49,7 @@ const PRESENTATION = {
   continue: { label: "In Progress", cta: "Continue Test", icon: "▶️", tone: "progress" },
   review: { label: "Completed", cta: "Review Test", icon: "📖", tone: "done" },
   start: { label: "Available", cta: "Start Test", icon: "🎯", tone: "ready" },
-  upcoming: { label: "Upcoming", cta: "Not open yet", icon: "🕒", tone: "waiting", disabled: true },
+  upcoming: { label: "Upcoming", cta: "Starts on Schedule", icon: "🕒", tone: "waiting", disabled: true },
   closed: { label: "Closed", cta: "Closed", icon: "🔔", tone: "closed", disabled: true },
   // Grand Test 3.0 — the student was entitled but the scheduled window
   // passed without them starting. Distinct from `closed` so the card

@@ -39,7 +39,7 @@ function PaymentActions({ purchase, emailingId, emailedId, onEmail }) {
             disabled={emailingId === purchase.id}
             className="text-xs font-bold text-brand-blue disabled:opacity-60"
           >
-            {emailingId === purchase.id ? "Sending…" : emailedId === purchase.id ? "Sent ✓" : "Email"}
+            {emailingId === purchase.id ? "Sending…" : emailedId === purchase.id ? "Sent" : "Email"}
           </button>
         )}
       </div>

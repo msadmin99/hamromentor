@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
+import { ChartIcon, EditIcon, TargetIcon } from "@/components/icons";
 import RadialProgress from "./RadialProgress";
 
 const WEEKDAY = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -60,21 +61,21 @@ export default function PerformanceSnapshot({ kpis, trend }) {
 
         <div className="flex flex-col gap-4 sm:flex-row lg:flex-col">
           <div className="flex items-center gap-2">
-            <span aria-hidden="true">📝</span>
+            <EditIcon className="h-4 w-4 flex-none text-[var(--color-text-muted)]" aria-hidden="true" />
             <div className="leading-tight">
               <p className="text-sm font-extrabold text-[var(--color-text)]">{kpis.questions_attempted}</p>
               <p className="text-[10px] text-[var(--color-text-muted)]">Questions Attempted</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span aria-hidden="true">🎯</span>
+            <TargetIcon className="h-4 w-4 flex-none text-[var(--color-text-muted)]" aria-hidden="true" />
             <div className="leading-tight">
               <p className="text-sm font-extrabold text-[var(--color-text)]">{kpis.overall_accuracy}%</p>
               <p className="text-[10px] text-[var(--color-text-muted)]">Accuracy</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span aria-hidden="true">📊</span>
+            <ChartIcon className="h-4 w-4 flex-none text-[var(--color-text-muted)]" aria-hidden="true" />
             <div className="leading-tight">
               <p className="text-sm font-extrabold text-[var(--color-text)]">{kpis.total_attempts}</p>
               <p className="text-[10px] text-[var(--color-text-muted)]">Tests Completed</p>

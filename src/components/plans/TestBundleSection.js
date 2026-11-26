@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import CheckoutModal from "@/components/CheckoutModal";
+import { CheckCircleIcon } from "@/components/icons";
 import { api } from "@/lib/api";
 import { ErrorCard } from "@/components/subscription/billingShared";
 
@@ -124,7 +125,7 @@ export default function TestBundleSection({ productType, heading, subtitle, cour
                     drift from what a plan actually granted. */}
                 {(plan.display_features || []).map((f) => (
                   <li key={f} className="flex items-start gap-1.5 text-xs text-[var(--color-text)]">
-                    <span className="mt-0.5 flex-none font-bold text-brand-green" aria-hidden="true">✓</span>
+                    <CheckCircleIcon className="mt-0.5 h-3.5 w-3.5 flex-none text-brand-green" aria-hidden="true" />
                     {f}
                   </li>
                 ))}

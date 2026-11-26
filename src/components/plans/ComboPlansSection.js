@@ -124,7 +124,7 @@ export default function ComboPlansSection({ courseId }) {
               <ul className="mt-4 flex flex-1 flex-col gap-1.5">
                 {(combo.plan_details || []).map((p) => (
                   <li key={p.id} className="flex items-start gap-1.5 text-xs text-[var(--color-text)]">
-                    <span className="mt-0.5 flex-none font-bold text-brand-green" aria-hidden="true">✓</span>
+                    <CheckCircleIcon className="mt-0.5 h-3.5 w-3.5 flex-none text-brand-green" aria-hidden="true" />
                     {p.name}
                   </li>
                 ))}

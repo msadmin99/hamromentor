@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { WarningTriangleIcon } from "@/components/icons";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
@@ -40,7 +41,7 @@ export default function EmailVerificationBanner({ className = "" }) {
       className={`flex flex-wrap items-center justify-between gap-2 rounded-xl border border-yellow-200 bg-yellow-50 px-3.5 py-2.5 text-xs text-yellow-900 ${className}`}
     >
       <span className="flex items-center gap-1.5">
-        <span aria-hidden="true">⚠</span>
+        <WarningTriangleIcon className="h-3.5 w-3.5 flex-none" aria-hidden="true" />
         {state === "sent" ? message : `Please verify ${user.email} so we can send you email notifications.`}
       </span>
       {state !== "sent" && (

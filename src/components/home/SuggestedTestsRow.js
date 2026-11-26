@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArchiveIcon, DailyTestIcon, GrandTestIcon, MockTestIcon, QBankIcon } from "@/components/icons";
+import { ArchiveIcon, DailyTestIcon, GrandTestIcon, MockTestIcon, QBankIcon, SparkleIcon } from "@/components/icons";
 
 const EXAM_TYPE_META = {
   qbank: { Icon: QBankIcon, bg: "bg-brand-blue/10", fg: "text-brand-blue" },
@@ -24,7 +24,7 @@ export default function SuggestedTestsRow({ tests }) {
     <section>
       <div className="mb-2 flex items-center justify-between">
         <p className="flex items-center gap-1.5 text-sm font-bold text-[var(--color-text)]">
-          <span aria-hidden="true">✨</span> Suggested Tests of the Day
+          <SparkleIcon className="h-3.5 w-3.5 text-brand-blue" aria-hidden="true" /> Suggested Tests of the Day
         </p>
         <Link href="/mock-test" className="text-xs font-bold text-brand-blue">
           View All

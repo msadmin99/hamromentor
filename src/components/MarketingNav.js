@@ -11,7 +11,7 @@ const FALLBACK_LINKS = [
   { label: "Plans", url: "/plans" },
 ];
 
-export default function MarketingNav({ links, ctaText = "Login/Signup", appBadgeText = "📱 App coming soon" }) {
+export default function MarketingNav({ links, ctaText = "Login/Signup", appBadgeText = "App coming soon" }) {
   const { user, loading } = useAuth();
   const [open, setOpen] = useState(false);
   const navLinks = links && links.length > 0 ? links : FALLBACK_LINKS;

@@ -15,9 +15,7 @@ const TYPES = [
 export default function ExploreTestTypes() {
   return (
     <section>
-      <p className="mb-2 flex items-center gap-1.5 text-sm font-bold text-[var(--color-text)]">
-        <span aria-hidden="true">🗓️</span> Explore by Test Type
-      </p>
+      <p className="mb-2 text-sm font-bold text-[var(--color-text)]">Explore by Test Type</p>
       <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-6">
         {TYPES.map(({ href, label, Icon }) => (
           <Link

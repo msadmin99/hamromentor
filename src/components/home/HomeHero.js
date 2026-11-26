@@ -12,7 +12,7 @@ export default function HomeHero({ name, onStartTest }) {
       />
       <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-[var(--color-text)]">Welcome back, {name} 👋</p>
+          <p className="text-sm font-semibold text-[var(--color-text)]">Welcome back, {name}</p>
           {/* Header.js already renders the page's <h1> — this is a section heading. */}
           <h2 className="mt-1 text-2xl font-extrabold leading-tight text-[var(--color-text)] sm:text-3xl">
             Let&apos;s crack your <span className="text-brand-blue">next exam!</span>

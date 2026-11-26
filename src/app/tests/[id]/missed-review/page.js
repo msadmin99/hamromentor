@@ -8,7 +8,7 @@ import ExplanationDisplay from "@/components/ExplanationDisplay";
 import Header from "@/components/Header";
 import RequireAuth from "@/components/RequireAuth";
 import RichContent from "@/components/RichContent";
-import { WarningTriangleIcon } from "@/components/icons";
+import { CheckCircleIcon, WarningTriangleIcon } from "@/components/icons";
 import { ErrorCard } from "@/components/subscription/billingShared";
 import { api } from "@/lib/api";
 
@@ -55,7 +55,11 @@ function MissedQuestion({ q, index }) {
           >
             <span className="font-semibold text-[var(--color-text)]">{String.fromCharCode(65 + oi)}. </span>
             <RichContent html={opt.text} latex={opt.latex} image={opt.image} imageData={opt.image_data} className="inline" />
-            {opt.is_correct && <span className="ml-1 font-bold text-brand-green">✓ Correct answer</span>}
+            {opt.is_correct && (
+              <span className="ml-1 inline-flex items-center gap-1 font-bold text-brand-green">
+                <CheckCircleIcon className="h-3.5 w-3.5" aria-hidden="true" /> Correct answer
+              </span>
+            )}
           </div>
         ))}
       </div>

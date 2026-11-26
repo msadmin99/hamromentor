@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
 import Header from "@/components/Header";
 import QuestionSolver from "@/components/QuestionSolver";
+import { CheckCircleIcon } from "@/components/icons";
 import RequireAuth from "@/components/RequireAuth";
 import { api } from "@/lib/api";
 
@@ -55,7 +56,7 @@ function SmartPracticeSessionContent() {
 
         {completed && (
           <div className="hm-card flex flex-col items-center gap-2 p-6 text-center">
-            <p className="text-2xl">✓</p>
+            <CheckCircleIcon className="h-8 w-8 text-brand-green" aria-hidden="true" />
             <p className="text-base font-bold text-[var(--color-text)]">Practice session complete</p>
             {completed.accuracy != null && (
               <p className="text-sm text-[var(--color-text-muted)]">

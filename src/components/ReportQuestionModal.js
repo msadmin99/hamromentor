@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { useDialogA11y } from "@/lib/useDialogA11y";
-import { FlagIcon, WarningTriangleIcon } from "./icons";
+import { CheckCircleIcon, FlagIcon, WarningTriangleIcon } from "./icons";
 
 const REASONS = [
   { key: "incorrect_answer", label: "Incorrect answer" },
@@ -51,7 +51,7 @@ function ReportQuestionModal({ questionId, onClose }) {
       >
         {done ? (
           <div className="flex flex-col items-center gap-2 py-4 text-center">
-            <p className="text-2xl">✓</p>
+            <CheckCircleIcon className="h-8 w-8 text-brand-green" aria-hidden="true" />
             <p className="text-sm font-bold text-[var(--color-text)]">Thanks for the report</p>
             <p className="text-xs text-[var(--color-text-muted)]">Our team will review this question.</p>
             <button onClick={onClose} className="mt-3 w-full rounded-xl bg-brand-blue py-2.5 text-sm font-bold text-white">

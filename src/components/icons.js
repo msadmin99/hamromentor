@@ -594,3 +594,14 @@ export function BroadcastIcon(props) {
     </svg>
   );
 }
+
+/** External link / URL reference. */
+export function LinkIcon(props) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+      <path d="M9.5 14.5 14.5 9.5" strokeLinecap="round" />
+      <path d="M11 7.5l1.5-1.5a3.5 3.5 0 0 1 5 5L16 12.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M13 16.5 11.5 18a3.5 3.5 0 0 1-5-5L8 11.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}

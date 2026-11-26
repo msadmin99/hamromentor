@@ -2,17 +2,23 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { BookmarkIcon, BrainIcon, CalendarIcon, RefreshIcon, ShuffleIcon, SparkleIcon, TargetIcon } from "@/components/icons";
 import { api } from "@/lib/api";
 
 const MODE_ICON = {
-  retry_mistakes: "🔄",
-  source_weak_areas: "🎯",
-  concept_reinforcement: "🧠",
-  due_review: "📅",
-  new_questions: "🆕",
-  bookmarked: "⭐",
-  ai_mixed: "🎲",
+  retry_mistakes: RefreshIcon,
+  source_weak_areas: TargetIcon,
+  concept_reinforcement: BrainIcon,
+  due_review: CalendarIcon,
+  new_questions: SparkleIcon,
+  bookmarked: BookmarkIcon,
+  ai_mixed: ShuffleIcon,
 };
+
+function ModeIcon({ mode, className }) {
+  const Icon = MODE_ICON[mode] || TargetIcon;
+  return <Icon className={className} aria-hidden="true" />;
+}
 
 /** The "Intelligent QBank Engine" surface on a Daily/Mock/PYQ/Exam result
  * page — an AI Recommendation card (the single best next step) plus the
@@ -65,16 +71,20 @@ export default function SmartPracticeCard({ sourceTestId }) {
   return (
     <div className="hm-page-narrow flex flex-col gap-3">
       <div>
-        <p className="text-sm font-bold text-[var(--color-text)]">🧠 Smart Practice</p>
+        <p className="flex items-center gap-1.5 text-sm font-bold text-[var(--color-text)]">
+          <BrainIcon className="h-4 w-4" aria-hidden="true" /> Smart Practice
+        </p>
         <p className="text-xs text-[var(--color-text-muted)]">
           Practice what matters most · Based on your performance in {recommendations.source.title}
         </p>
       </div>
 
       <div className="rounded-xl border border-info/20 bg-info-soft p-4">
-        <p className="text-[10px] font-bold uppercase tracking-wide text-info">🎯 AI Recommendation</p>
-        <p className="mt-1 text-sm font-bold text-[var(--color-text)]">
-          <span aria-hidden="true">{MODE_ICON[primary.mode]}</span> {primary.label}
+        <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-info">
+          <TargetIcon className="h-3 w-3" aria-hidden="true" /> AI Recommendation
+        </p>
+        <p className="mt-1 flex items-center gap-1.5 text-sm font-bold text-[var(--color-text)]">
+          <ModeIcon mode={primary.mode} className="h-4 w-4 flex-none" /> {primary.label}
         </p>
         <p className="mt-1 text-xs leading-relaxed text-[var(--color-text-muted)]">{primary.message}</p>
         <button
@@ -101,11 +111,8 @@ export default function SmartPracticeCard({ sourceTestId }) {
                 disabled={!!starting}
                 className="hm-card flex items-center gap-2.5 p-3 text-left transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60"
               >
-                <span
-                  className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-[var(--color-surface-muted)] text-base"
-                  aria-hidden="true"
-                >
-                  {MODE_ICON[m.mode]}
+                <span className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-[var(--color-surface-muted)] text-[var(--color-text-muted)]">
+                  <ModeIcon mode={m.mode} className="h-4 w-4" />
                 </span>
                 <div className="min-w-0">
                   <p className="text-xs font-bold leading-tight text-[var(--color-text)]">{m.label}</p>

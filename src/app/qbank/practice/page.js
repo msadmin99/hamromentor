@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
@@ -65,6 +66,11 @@ function PracticeContent() {
   const [questions, setQuestions] = useState(null);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState("");
+  // QBank access audit fix: distinguishes "this subject needs a
+  // subscription" (backend now returns 402 purchase_required for an
+  // explicitly-chosen locked subject) from a real failure, same pattern as
+  // QuestionSolver.js and the Tests submit flow.
+  const [errorCode, setErrorCode] = useState("");
   // Auto-start (Smart Practice one-tap buttons) skips the form initially, but
   // a zero-result or failed session falls back to it so the student isn't
   // stuck on a dead end with no way to broaden their filters.
@@ -97,6 +103,7 @@ function PracticeContent() {
     e?.preventDefault();
     setStarting(true);
     setError("");
+    setErrorCode("");
     try {
       const payload = {
         count: customCount ? Number(customCount) : count,
@@ -111,8 +118,9 @@ function PracticeContent() {
       const data = await api.post("/questions/practice-session/", payload);
       setQuestions(data);
       if (data.length === 0) setShowForm(true);
-    } catch {
-      setError("Couldn't start this practice session. Please try again.");
+    } catch (err) {
+      setError(err?.message || "Couldn't start this practice session. Please try again.");
+      setErrorCode(err?.data?.code || "");
       setShowForm(true);
     } finally {
       setStarting(false);
@@ -146,7 +154,16 @@ function PracticeContent() {
           <p className="text-sm text-[var(--color-text-muted)]">Building your practice session…</p>
         )}
 
-        {error && (
+        {error && errorCode === "purchase_required" && (
+          <div className="hm-card p-4">
+            <p className="text-sm text-brand-red">{error}</p>
+            <Link href="/plans" className="mt-2 inline-block text-xs font-bold text-brand-blue underline underline-offset-2">
+              Upgrade to practice this subject
+            </Link>
+          </div>
+        )}
+
+        {error && errorCode !== "purchase_required" && (
           <div className="hm-card p-4">
             <p className="text-sm text-brand-red">{error}</p>
             <button type="button" onClick={startPractice} className="mt-2 text-xs font-bold text-brand-blue">
@@ -174,7 +191,10 @@ function PracticeContent() {
                   <select value={subject} onChange={(e) => setSubject(e.target.value)} className="hm-input">
                     <option value="">All Subjects</option>
                     {subjects.map((s) => (
-                      <option key={s.id} value={s.slug}>{s.name}</option>
+                      <option key={s.id} value={s.slug}>
+                        {s.name}
+                        {s.has_access === false ? " 🔒 Pro" : ""}
+                      </option>
                     ))}
                   </select>
                 </div>

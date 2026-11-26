@@ -97,6 +97,13 @@ export default function QuestionSolver({
   // action, and the selection itself is never cleared, so retrying
   // resubmits the same option instead of making the student re-pick.
   const [submitError, setSubmitError] = useState(false);
+  // QBank access audit fix: a free-limit denial (402 purchase_required, the
+  // same code Tests' submit flow already handles via ReviewAnswersModal.js)
+  // used to fall into the same bare catch as a real network failure, so a
+  // student who ran out of free practice questions saw "check your
+  // connection and try again" with a Retry button that would just 402 again.
+  const [submitErrorCode, setSubmitErrorCode] = useState("");
+  const [submitErrorMessage, setSubmitErrorMessage] = useState("");
   const [bookmarked, setBookmarked] = useState(false);
   const [bookmarking, setBookmarking] = useState(false);
   const [confidence, setConfidence] = useState(null);
@@ -166,16 +173,21 @@ export default function QuestionSolver({
     if (result) return;
     setSelectedId(option.id);
     setSubmitError(false);
+    setSubmitErrorCode("");
     setSubmitting(true);
     try {
       const time_taken_seconds = Math.round((Date.now() - questionShownAtRef.current) / 1000);
       const res = await api.post(answerUrl(question.id), { option_id: option.id, time_taken_seconds });
       setResult(res);
       setAnswers((prev) => ({ ...prev, [question.id]: { selectedId: option.id, result: res, confidence: null } }));
-    } catch {
+    } catch (err) {
       // Keep selectedId as-is — the student's choice stays visible and
-      // Retry resubmits it without asking them to pick again.
+      // Retry resubmits it without asking them to pick again (for a real
+      // network failure; a purchase_required denial shows an upgrade link
+      // instead of Retry below, since retrying would just 402 again).
       setSubmitError(true);
+      setSubmitErrorCode(err?.data?.code || "");
+      setSubmitErrorMessage(err?.message || "");
     } finally {
       setSubmitting(false);
     }
@@ -327,7 +339,16 @@ export default function QuestionSolver({
           })}
         </div>
 
-        {submitError && !result && (
+        {submitError && !result && submitErrorCode === "purchase_required" && (
+          <Link
+            href="/plans"
+            className="mt-3 block rounded-xl border border-brand-red bg-brand-red-light px-4 py-3 text-sm font-semibold text-brand-red underline underline-offset-2"
+          >
+            {submitErrorMessage || "Free practice limit reached. Upgrade to keep practicing."}
+          </Link>
+        )}
+
+        {submitError && !result && submitErrorCode !== "purchase_required" && (
           <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-brand-red bg-brand-red-light px-4 py-3">
             <p className="text-sm font-semibold text-brand-red">Your answer wasn&apos;t saved. Check your connection and try again.</p>
             <button

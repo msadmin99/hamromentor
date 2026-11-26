@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ChartIcon } from "@/components/icons";
 import { api } from "@/lib/api";
 import { useCourse } from "@/lib/course-context";
 import AccuracyRing from "@/components/qbank/AccuracyRing";
@@ -43,7 +44,7 @@ export default function UserTestStats({ examType, headerExtra }) {
     <div className="hm-card p-4">
       <div className="flex items-center justify-between gap-2">
         <p className="flex items-center gap-1.5 text-sm font-bold text-[var(--color-text)]">
-          <span aria-hidden="true">📈</span> Your {meta.shortLabel || "Test"} Stats
+          <ChartIcon className="h-3.5 w-3.5" aria-hidden="true" /> Your {meta.shortLabel || "Test"} Stats
         </p>
         {headerExtra}
       </div>

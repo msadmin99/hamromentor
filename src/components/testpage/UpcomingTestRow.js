@@ -1,5 +1,6 @@
 "use client";
 
+import { CalendarIcon } from "@/components/icons";
 import { formatScheduleDay, formatScheduleParts, resolveExamSchedule } from "@/lib/examSchedule";
 
 /** Compact, view-only list row for a Daily Test scheduled on a future
@@ -37,7 +38,7 @@ export default function UpcomingTestRow({ test }) {
 
       {schedule && (
         <div className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-2 text-xs font-bold text-[var(--color-navy)]">
-          <span aria-hidden>📅</span>
+          <CalendarIcon className="h-3.5 w-3.5 flex-none" aria-hidden="true" />
           <span>{schedule.isoDate}</span>
           <span>{schedule.weekday}</span>
           <span>{schedule.time}</span>

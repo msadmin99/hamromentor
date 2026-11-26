@@ -1,9 +1,13 @@
 "use client";
 
-function StatItem({ icon, value, label, tint }) {
+import { BookOpenIcon, CalendarIcon, CheckCircleIcon, DocumentIcon } from "@/components/icons";
+
+function StatItem({ Icon, value, label, tint }) {
   return (
     <div className="flex flex-1 items-center gap-2.5">
-      <span className={`flex h-10 w-10 flex-none items-center justify-center rounded-full text-base ${tint}`}>{icon}</span>
+      <span className={`flex h-10 w-10 flex-none items-center justify-center rounded-full ${tint}`}>
+        <Icon className="h-5 w-5" />
+      </span>
       <div className="min-w-0 leading-tight">
         <p className="truncate text-lg font-extrabold text-[var(--color-text)]">{value}</p>
         <p className="truncate text-[11px] text-[var(--color-text-muted)]">{label}</p>
@@ -32,13 +36,13 @@ export default function PlatformStats({ typeLabel, stats, loading }) {
 
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl border border-[var(--color-border)] bg-white px-4 py-3.5 sm:gap-x-6">
-      <StatItem icon="📄" value={stats.available} label={`${typeLabel} Available`} tint="bg-[var(--color-surface-muted)]" />
+      <StatItem Icon={DocumentIcon} value={stats.available} label={`${typeLabel} Available`} tint="bg-[var(--color-surface-muted)] text-[var(--color-text-muted)]" />
       <span className="hidden h-9 w-px flex-none bg-[var(--color-border)] sm:block" />
-      <StatItem icon="✅" value={stats.attempted} label="Tests Attempted" tint="bg-brand-green-light text-brand-green" />
+      <StatItem Icon={CheckCircleIcon} value={stats.attempted} label="Tests Attempted" tint="bg-brand-green-light text-brand-green" />
       <span className="hidden h-9 w-px flex-none bg-[var(--color-border)] sm:block" />
-      <StatItem icon="🗓️" value={stats.upcoming} label="Upcoming (Scheduled)" tint="bg-amber-100 text-amber-700" />
+      <StatItem Icon={CalendarIcon} value={stats.upcoming} label="Upcoming (Scheduled)" tint="bg-amber-100 text-amber-700" />
       <span className="hidden h-9 w-px flex-none bg-[var(--color-border)] sm:block" />
-      <StatItem icon="📖" value={stats.reviewed} label="Test Reviewed" tint="bg-brand-blue/10 text-brand-blue" />
+      <StatItem Icon={BookOpenIcon} value={stats.reviewed} label="Test Reviewed" tint="bg-brand-blue/10 text-brand-blue" />
     </div>
   );
 }

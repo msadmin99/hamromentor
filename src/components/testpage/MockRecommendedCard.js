@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { TargetIcon } from "@/components/icons";
 import { api } from "@/lib/api";
 import { useCourse } from "@/lib/course-context";
 
@@ -53,7 +54,7 @@ export default function MockRecommendedCard() {
     <div className="hm-card flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
       <div className="min-w-0">
         <p className="mb-1.5 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-brand-blue">
-          <span aria-hidden="true">🎯</span> Real Exam Simulation
+          <TargetIcon className="h-3.5 w-3.5" aria-hidden="true" /> Real Exam Simulation
         </p>
         <h3 className="text-xl font-extrabold text-[var(--color-text)]">{test.title}</h3>
         <p className="mt-1 max-w-md text-sm text-[var(--color-text-muted)]">

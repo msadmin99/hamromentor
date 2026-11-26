@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import CheckoutModal from "@/components/CheckoutModal";
-import { LockIcon } from "@/components/icons";
+import { CheckCircleIcon, GrandTestIcon, LockIcon } from "@/components/icons";
 import { api } from "@/lib/api";
 import { useCourse } from "@/lib/course-context";
 
@@ -64,7 +64,7 @@ export default function GrandTestHero({ onPurchased }) {
     >
       <div className="min-w-0">
         <div className="flex items-center gap-3">
-          <span className="text-3xl" aria-hidden="true">🏆</span>
+          <GrandTestIcon className="h-8 w-8 flex-none" aria-hidden="true" />
           <h2 className="text-2xl font-extrabold">Compete at the Highest Level</h2>
         </div>
         <p className="mt-2 max-w-lg text-sm text-white/80">
@@ -73,7 +73,7 @@ export default function GrandTestHero({ onPurchased }) {
         <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5">
           {FEATURES.map((f) => (
             <li key={f} className="flex items-center gap-1.5 text-xs font-semibold text-white/85">
-              <span aria-hidden="true">✔</span> {f}
+              <CheckCircleIcon className="h-3.5 w-3.5 flex-none" aria-hidden="true" /> {f}
             </li>
           ))}
         </ul>

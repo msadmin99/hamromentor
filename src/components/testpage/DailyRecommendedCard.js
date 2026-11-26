@@ -42,7 +42,7 @@ export default function DailyRecommendedCard() {
   if (!rec?.test_id || !test) {
     return (
       <div className="hm-card p-5 text-center">
-        <p className="text-base font-extrabold text-[var(--color-text)]">You&apos;re all caught up 🎉</p>
+        <p className="text-base font-extrabold text-[var(--color-text)]">You&apos;re all caught up</p>
         <p className="mt-1 text-sm text-[var(--color-text-muted)]">
           No daily test is waiting for you right now — check back soon for a fresh one.
         </p>

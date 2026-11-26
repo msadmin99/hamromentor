@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { CrownIcon } from "@/components/icons";
 
 export default function UpgradeBanner() {
   return (
@@ -9,8 +10,8 @@ export default function UpgradeBanner() {
       style={{ background: "linear-gradient(120deg, rgba(87,180,206,0.08) 0%, rgba(34,76,90,0.08) 100%)" }}
     >
       <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-[var(--color-marketing-bar)]/15 text-lg">
-          ⭐
+        <span className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-[var(--color-marketing-bar)]/15 text-[var(--color-marketing-bar)]">
+          <CrownIcon className="h-5 w-5" />
         </span>
         <div>
           <p className="text-sm font-bold text-[var(--color-text)]">Want Unlimited Access?</p>
@@ -24,7 +25,7 @@ export default function UpgradeBanner() {
         className="flex-none rounded-xl px-5 py-2.5 text-sm font-bold text-white shadow-md"
         style={{ background: "linear-gradient(120deg, var(--color-marketing-bar) 0%, var(--color-exam-card) 100%)" }}
       >
-        👑 Upgrade Now
+        <CrownIcon className="inline h-4 w-4 align-text-bottom" aria-hidden="true" /> Upgrade Now
       </Link>
     </div>
   );

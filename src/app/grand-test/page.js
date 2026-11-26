@@ -6,6 +6,7 @@ import AppShell from "@/components/AppShell";
 import CourseSwitcher from "@/components/CourseSwitcher";
 import ExamCard from "@/components/ExamCard";
 import Header from "@/components/Header";
+import { ChartIcon } from "@/components/icons";
 import RequireAuth from "@/components/RequireAuth";
 import GrandTestHero from "@/components/testpage/GrandTestHero";
 import PlatformStats from "@/components/testpage/PlatformStats";
@@ -50,7 +51,9 @@ function GrandTestContent() {
           href="/grand-test/series"
           className="flex items-center justify-between rounded-2xl border border-[var(--color-border)] bg-white px-4 py-3 text-sm font-bold text-brand-blue transition hover:border-brand-blue"
         >
-          <span>📈 My Grand Test series — progress, trend &amp; attendance</span>
+          <span className="flex items-center gap-1.5">
+            <ChartIcon className="h-4 w-4" aria-hidden="true" /> My Grand Test series — progress, trend &amp; attendance
+          </span>
           <span aria-hidden>→</span>
         </Link>
 

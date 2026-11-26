@@ -1,17 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { BuildingIcon, DocumentIcon } from "@/components/icons";
 
 export default function UniversityCard({ university }) {
   return (
     <div className="hm-card flex flex-col gap-3 p-4">
       <div className="flex items-center gap-3">
         <span
-          className="flex h-11 w-11 flex-none items-center justify-center rounded-full text-xl text-white shadow-sm"
+          className="flex h-11 w-11 flex-none items-center justify-center rounded-full text-white shadow-sm"
           style={{ background: "linear-gradient(135deg, var(--color-brand-teal-from) 0%, var(--color-brand-teal-to) 100%)" }}
           aria-hidden="true"
         >
-          🏫
+          <BuildingIcon className="h-5 w-5" />
         </span>
         <p className="min-w-0 truncate text-sm font-bold text-[var(--color-text)]">{university.name}</p>
       </div>
@@ -22,7 +23,7 @@ export default function UniversityCard({ university }) {
           <p className="text-sm font-bold text-[var(--color-text)]">{university.years_available}</p>
         </div>
         <div className="flex items-center gap-1">
-          <span aria-hidden="true">📄</span>
+          <DocumentIcon className="h-3.5 w-3.5" aria-hidden="true" />
           {university.paper_count}+ Papers
         </div>
       </div>

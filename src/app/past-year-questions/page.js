@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
 import CourseSwitcher from "@/components/CourseSwitcher";
 import Header from "@/components/Header";
+import { BuildingIcon, CheckCircleIcon, ClockIcon, DocumentIcon, EditIcon, TargetIcon } from "@/components/icons";
 import RequireAuth from "@/components/RequireAuth";
 import TestPageFooter from "@/components/testpage/TestPageFooter";
 import TestPageHero from "@/components/testpage/TestPageHero";
@@ -13,17 +14,17 @@ import { useCourse } from "@/lib/course-context";
 import { buildMailtoUrl } from "@/lib/support";
 
 const INFO_TILES = [
-  { icon: "📄", label: "Real Exam Questions", sub: "Past year papers" },
-  { icon: "🏛️", label: "University-wise", sub: "Organized collection" },
-  { icon: "📝", label: "Exam Pattern Based", sub: "Chapter & topic wise" },
-  { icon: "⏱️", label: "Performance Insights", sub: "Track your progress" },
+  { Icon: DocumentIcon, label: "Real Exam Questions", sub: "Past year papers" },
+  { Icon: BuildingIcon, label: "University-wise", sub: "Organized collection" },
+  { Icon: EditIcon, label: "Exam Pattern Based", sub: "Chapter & topic wise" },
+  { Icon: ClockIcon, label: "Performance Insights", sub: "Track your progress" },
 ];
 
 const WHY_TILES = [
-  { icon: "📝", label: "Understand Exam Pattern", sub: "Get familiar with the actual question pattern & marking." },
-  { icon: "✅", label: "Identify Important Topics", sub: "Focus on high-yield topics asked repeatedly." },
-  { icon: "✏️", label: "Improve Accuracy", sub: "Practice to reduce mistakes and improve accuracy." },
-  { icon: "🎯", label: "Boost Confidence", sub: "Be well-prepared and confident on exam day." },
+  { Icon: EditIcon, label: "Understand Exam Pattern", sub: "Get familiar with the actual question pattern & marking." },
+  { Icon: CheckCircleIcon, label: "Identify Important Topics", sub: "Focus on high-yield topics asked repeatedly." },
+  { Icon: EditIcon, label: "Improve Accuracy", sub: "Practice to reduce mistakes and improve accuracy." },
+  { Icon: TargetIcon, label: "Boost Confidence", sub: "Be well-prepared and confident on exam day." },
 ];
 
 function PastYearQuestionsContent() {
@@ -61,8 +62,8 @@ function PastYearQuestionsContent() {
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {INFO_TILES.map((t) => (
               <div key={t.label} className="flex items-center gap-2.5">
-                <span className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-[var(--color-surface-muted)] text-base" aria-hidden="true">
-                  {t.icon}
+                <span className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-[var(--color-surface-muted)] text-[var(--color-text-muted)]" aria-hidden="true">
+                  <t.Icon className="h-5 w-5" />
                 </span>
                 <div className="min-w-0 leading-tight">
                   <p className="truncate text-xs font-bold text-[var(--color-text)]">{t.label}</p>
@@ -144,8 +145,8 @@ function PastYearQuestionsContent() {
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {WHY_TILES.map((t) => (
               <div key={t.label} className="hm-card flex flex-col gap-1.5 p-3.5">
-                <span className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-[var(--color-surface-muted)] text-base" aria-hidden="true">
-                  {t.icon}
+                <span className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-[var(--color-surface-muted)] text-[var(--color-text-muted)]" aria-hidden="true">
+                  <t.Icon className="h-5 w-5" />
                 </span>
                 <p className="text-xs font-bold text-[var(--color-text)]">{t.label}</p>
                 <p className="text-[11px] text-[var(--color-text-muted)]">{t.sub}</p>

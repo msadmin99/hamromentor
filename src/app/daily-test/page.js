@@ -6,6 +6,7 @@ import AppShell from "@/components/AppShell";
 import CourseSwitcher from "@/components/CourseSwitcher";
 import ExamCard from "@/components/ExamCard";
 import Header from "@/components/Header";
+import { CalendarIcon, TargetIcon } from "@/components/icons";
 import RequireAuth from "@/components/RequireAuth";
 import PastTestRow from "@/components/testpage/PastTestRow";
 import TestGuidelines from "@/components/testpage/TestGuidelines";
@@ -124,7 +125,7 @@ function DailyTestContent() {
           <section className="order-1 lg:order-2 lg:col-span-3">
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
-                <span aria-hidden="true">📅</span> Today&apos;s Daily Tests
+                <CalendarIcon className="h-4 w-4" aria-hidden="true" /> Today&apos;s Daily Tests
                 {!loading && (
                   <span className="rounded-full bg-[var(--color-surface-muted)] px-2 py-0.5 text-[10px] font-bold text-[var(--color-text)]">
                     {today.length}
@@ -132,7 +133,7 @@ function DailyTestContent() {
                 )}
               </p>
               <span className="flex items-center gap-1 text-xs text-[var(--color-text-muted)]">
-                <span aria-hidden="true">🗓️</span> {todayLabel}
+                <CalendarIcon className="h-3.5 w-3.5" aria-hidden="true" /> {todayLabel}
               </span>
             </div>
 
@@ -160,7 +161,7 @@ function DailyTestContent() {
           {!loading && !error && upcoming.length > 0 && (
             <section className="order-2 lg:order-3 lg:col-span-3">
               <p className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
-                <span aria-hidden="true">📅</span> Upcoming Daily Tests
+                <CalendarIcon className="h-4 w-4" aria-hidden="true" /> Upcoming Daily Tests
                 <span className="rounded-full bg-[var(--color-surface-muted)] px-2 py-0.5 text-[10px] font-bold text-[var(--color-text)]">
                   {upcoming.length}
                 </span>
@@ -185,7 +186,7 @@ function DailyTestContent() {
           {!loading && !error && past.length > 0 && (
             <section className="order-3 lg:order-4 lg:col-span-3">
               <p className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
-                <span aria-hidden="true">📅</span> Past Daily Tests
+                <CalendarIcon className="h-4 w-4" aria-hidden="true" /> Past Daily Tests
               </p>
               <div className="hm-card p-4">
                 {past.slice(0, pastVisible).map((t) => (
@@ -207,8 +208,8 @@ function DailyTestContent() {
 
         <div className="hm-card flex flex-col items-start justify-between gap-3 p-4 sm:flex-row sm:items-center">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-brand-green-light text-lg" aria-hidden="true">
-              🎯
+            <span className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-brand-green-light text-brand-green" aria-hidden="true">
+              <TargetIcon className="h-5 w-5" />
             </span>
             <div>
               <p className="text-sm font-bold text-[var(--color-text)]">Keep the momentum going!</p>

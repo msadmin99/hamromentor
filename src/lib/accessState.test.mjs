@@ -77,7 +77,7 @@ describe("card presentation comes from the backend state, never from price", () 
   it("gives every state a distinct label and icon, so state is never colour-only", () => {
     const states = ["continue", "review", "start", "upcoming", "closed", "missed", "attempts_exhausted", "locked"];
     const labels = states.map((s) => cardPresentation(test_({ state: s })).label);
-    const icons = states.map((s) => cardPresentation(test_({ state: s })).icon);
+    const icons = states.map((s) => cardPresentation(test_({ state: s })).iconKey);
     assert.equal(new Set(labels).size, states.length);
     assert.equal(new Set(icons).size, states.length);
   });

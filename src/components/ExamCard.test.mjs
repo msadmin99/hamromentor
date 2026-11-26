@@ -55,7 +55,7 @@ test("the schedule row shows ISO date + full weekday + 12h time, matching the ta
 
   await t.test("all three pieces render with the calendar icon, in order", () => {
     const block = src.slice(src.indexOf("{schedule && ("), src.indexOf("{schedule && (") + 400);
-    assert.match(block, /📅/);
+    assert.match(block, /<CalendarIcon/);
     assert.match(block, /\{schedule\.isoDate\}[\s\S]*\{schedule\.weekday\}[\s\S]*\{schedule\.time\}/);
   });
 });
@@ -64,7 +64,7 @@ test("the schedule row sits between the description and the Questions/Minutes st
   await t.test("source order: description paragraph, then schedule row, then StatBlock row", () => {
     const descIndex = src.indexOf('{test.description || meta.tagline}');
     const scheduleIndex = src.indexOf("{schedule && (");
-    const statsIndex = src.indexOf('<StatBlock icon="❓"');
+    const statsIndex = src.indexOf("<StatBlock Icon={HelpCircleIcon}");
     assert.ok(descIndex !== -1 && scheduleIndex !== -1 && statsIndex !== -1);
     assert.ok(descIndex < scheduleIndex && scheduleIndex < statsIndex);
   });
@@ -72,12 +72,12 @@ test("the schedule row sits between the description and the Questions/Minutes st
 
 test("Regression safety: existing card behavior is untouched", async (t) => {
   await t.test("StatBlock (Questions/Minutes) is unchanged", () => {
-    assert.match(src, /<StatBlock icon="❓" value=\{test\.question_count\} label="Questions" \/>/);
-    assert.match(src, /<StatBlock icon="⏱️" value=\{test\.duration_minutes\} label="Minutes" \/>/);
+    assert.match(src, /<StatBlock Icon=\{HelpCircleIcon\} value=\{test\.question_count\} label="Questions" \/>/);
+    assert.match(src, /<StatBlock Icon=\{ClockIcon\} value=\{test\.duration_minutes\} label="Minutes" \/>/);
   });
 
   await t.test("PRO/difficulty badges, attempts-left text, and Details link are unchanged", () => {
-    assert.match(src, /👑 PRO/);
+    assert.match(src, /<CrownIcon[\s\S]*?\/> PRO/);
     assert.match(src, /attempt\$\{attemptsLeft === 1 \? "" : "s"\} left/);
     assert.match(src, /Details →/);
   });

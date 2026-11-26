@@ -45,18 +45,23 @@ export function accessOf(test) {
  * it to their own classes, and every state also carries a distinct label
  * and icon so state is never communicated by colour alone (a11y).
  */
+// `iconKey` is a plain string naming a src/components/icons.js export — NOT
+// the component itself. This file is pure, framework-free (imported by
+// node --test, which has no JSX transform; a real component reference here
+// broke every test that imports this module). The consumer (ExamCard.js)
+// resolves iconKey -> an actual Icon component via its own small lookup.
 const PRESENTATION = {
-  continue: { label: "In Progress", cta: "Continue Test", icon: "▶️", tone: "progress" },
-  review: { label: "Completed", cta: "Review Test", icon: "📖", tone: "done" },
-  start: { label: "Available", cta: "Start Test", icon: "🎯", tone: "ready" },
-  upcoming: { label: "Upcoming", cta: "Starts on Schedule", icon: "🕒", tone: "waiting", disabled: true },
-  closed: { label: "Closed", cta: "Closed", icon: "🔔", tone: "closed", disabled: true },
+  continue: { label: "In Progress", cta: "Continue Test", iconKey: "PlayIcon", tone: "progress" },
+  review: { label: "Completed", cta: "Review Test", iconKey: "BookOpenIcon", tone: "done" },
+  start: { label: "Available", cta: "Start Test", iconKey: "TargetIcon", tone: "ready" },
+  upcoming: { label: "Upcoming", cta: "Starts on Schedule", iconKey: "ClockIcon", tone: "waiting", disabled: true },
+  closed: { label: "Closed", cta: "Closed", iconKey: "XCircleIcon", tone: "closed", disabled: true },
   // Grand Test 3.0 — the student was entitled but the scheduled window
   // passed without them starting. Distinct from `closed` so the card
   // can carry the approved "Missed" wording, and never "failed"/zero.
-  missed: { label: "Missed", cta: "Exam Ended", icon: "⌛", tone: "closed", disabled: true },
-  attempts_exhausted: { label: "No attempts left", cta: "No attempts left", icon: "🚫", tone: "closed", disabled: true },
-  locked: { label: "Locked", cta: "Unlock Test", icon: "🔒", tone: "locked" },
+  missed: { label: "Missed", cta: "Exam Ended", iconKey: "WarningTriangleIcon", tone: "closed", disabled: true },
+  attempts_exhausted: { label: "No attempts left", cta: "No attempts left", iconKey: "CircleDashedIcon", tone: "closed", disabled: true },
+  locked: { label: "Locked", cta: "Unlock Test", iconKey: "LockIcon", tone: "locked" },
 };
 
 export function cardPresentation(test) {

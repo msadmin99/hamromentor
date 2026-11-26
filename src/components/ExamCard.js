@@ -1,9 +1,37 @@
 "use client";
 
 import Link from "next/link";
+import {
+  BookOpenIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  CircleDashedIcon,
+  ClockIcon,
+  CrownIcon,
+  HelpCircleIcon,
+  LockIcon,
+  PlayIcon,
+  TargetIcon,
+  WarningTriangleIcon,
+  XCircleIcon,
+} from "@/components/icons";
 import { cardPresentation, isLocked, primaryHref, sourceLabel } from "@/lib/accessState";
 import { formatScheduleParts, resolveExamSchedule } from "@/lib/examSchedule";
 import { EXAM_TYPE_META } from "./testpage/examTypeMeta";
+
+// Resolves accessState.js's plain-string `iconKey` to a real icon component
+// — kept out of accessState.js itself, which is a pure, framework-free
+// module imported by plain `node --test` with no JSX transform.
+const PRESENTATION_ICONS = {
+  PlayIcon,
+  BookOpenIcon,
+  TargetIcon,
+  ClockIcon,
+  XCircleIcon,
+  WarningTriangleIcon,
+  CircleDashedIcon,
+  LockIcon,
+};
 
 // Phase 10: keyed by the backend's `access.state`, not by a locally
 // inferred status. Each tone carries its own label + icon (see
@@ -23,11 +51,11 @@ const DIFFICULTY_META = {
   hard: { label: "Hard", className: "bg-brand-red-light text-brand-red" },
 };
 
-function StatBlock({ icon, value, label }) {
+function StatBlock({ Icon, value, label }) {
   return (
     <div className="flex flex-1 items-center justify-center gap-2 py-2">
-      <span className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-[var(--color-marketing-bar)]/10 text-sm">
-        {icon}
+      <span className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-[var(--color-marketing-bar)]/10 text-[var(--color-marketing-bar)]">
+        <Icon className="h-4 w-4" />
       </span>
       <div className="leading-tight">
         <p className="text-base font-extrabold text-[var(--color-marketing-bar)]">{value}</p>
@@ -38,7 +66,7 @@ function StatBlock({ icon, value, label }) {
 }
 
 export default function ExamCard({ test }) {
-  const meta = EXAM_TYPE_META[test.exam_type] || { label: "Practice", emoji: "🎯", subtitle: "", tagline: "" };
+  const meta = EXAM_TYPE_META[test.exam_type] || { label: "Practice", Icon: TargetIcon, subtitle: "", tagline: "" };
   const difficulty = DIFFICULTY_META[test.difficulty];
 
   // Phase 10 — every one of these comes from the server's own access
@@ -64,7 +92,7 @@ export default function ExamCard({ test }) {
   const ctaHref = primaryHref(test);
   const entitledVia = sourceLabel(test);
   const cta = presentation.cta;
-  const ctaIcon = presentation.icon;
+  const CtaIcon = PRESENTATION_ICONS[presentation.iconKey] || TargetIcon;
   const statusClass = TONE_CLASS[presentation.tone] || TONE_CLASS.ready;
 
   // Titles authored as "Main Title - Subtitle" render as two visual lines
@@ -78,10 +106,10 @@ export default function ExamCard({ test }) {
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2">
           <span
-            className="flex h-9 w-9 flex-none items-center justify-center rounded-lg text-base shadow-sm"
+            className="flex h-9 w-9 flex-none items-center justify-center rounded-lg text-white shadow-sm"
             style={{ background: "linear-gradient(135deg, var(--color-brand-teal-from) 0%, var(--color-marketing-bar) 100%)" }}
           >
-            {meta.emoji}
+            <meta.Icon className="h-5 w-5" />
           </span>
           <div>
             <p className="text-xs font-extrabold text-[var(--color-marketing-bar)]">{meta.label}</p>
@@ -89,7 +117,7 @@ export default function ExamCard({ test }) {
           </div>
         </div>
         <span className={`flex flex-none items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${statusClass}`}>
-          <span aria-hidden>{presentation.icon}</span> {presentation.label}
+          <CtaIcon className="h-2.5 w-2.5" aria-hidden="true" /> {presentation.label}
         </span>
       </div>
 
@@ -102,7 +130,7 @@ export default function ExamCard({ test }) {
 
       {schedule && (
         <div className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-2 text-xs font-bold text-[var(--color-navy)]">
-          <span aria-hidden>📅</span>
+          <CalendarIcon className="h-3.5 w-3.5 flex-none" aria-hidden="true" />
           <span>{schedule.isoDate}</span>
           <span>{schedule.weekday}</span>
           <span>{schedule.time}</span>
@@ -110,9 +138,9 @@ export default function ExamCard({ test }) {
       )}
 
       <div className="flex items-center rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
-        <StatBlock icon="❓" value={test.question_count} label="Questions" />
+        <StatBlock Icon={HelpCircleIcon} value={test.question_count} label="Questions" />
         <span className="h-8 w-px flex-none bg-[var(--color-border)]" />
-        <StatBlock icon="⏱️" value={test.duration_minutes} label="Minutes" />
+        <StatBlock Icon={ClockIcon} value={test.duration_minutes} label="Minutes" />
       </div>
 
       {presentation.state === "continue" && test.in_progress_answered_count != null && test.question_count > 0 && (
@@ -133,15 +161,15 @@ export default function ExamCard({ test }) {
         <div className="flex flex-wrap items-center gap-1.5">
           {test.is_pro && (
             <span className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold bg-brand-green-light text-brand-green">
-              👑 PRO
+              <CrownIcon className="h-2.5 w-2.5" aria-hidden="true" /> PRO
             </span>
           )}
           {difficulty && (
             <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${difficulty.className}`}>{difficulty.label}</span>
           )}
           {test.exam_type === "pyq" && test.academic_year && (
-            <span className="rounded bg-[var(--color-surface-muted)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--color-text-muted)]">
-              📅 {test.academic_year}
+            <span className="flex items-center gap-1 rounded bg-[var(--color-surface-muted)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--color-text-muted)]">
+              <CalendarIcon className="h-2.5 w-2.5" aria-hidden="true" /> {test.academic_year}
             </span>
           )}
           <span className="text-[11px] text-[var(--color-text-muted)]">
@@ -159,7 +187,9 @@ export default function ExamCard({ test }) {
       </div>
 
       {entitledVia && (
-        <p className="text-[11px] font-semibold text-brand-green">✓ {entitledVia}</p>
+        <p className="flex items-center gap-1 text-[11px] font-semibold text-brand-green">
+          <CheckCircleIcon className="h-3 w-3" aria-hidden="true" /> {entitledVia}
+        </p>
       )}
 
       {presentation.disabled ? (
@@ -171,7 +201,7 @@ export default function ExamCard({ test }) {
           className="flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] py-2.5 text-sm font-bold text-[var(--color-text-muted)]"
           aria-disabled="true"
         >
-          <span aria-hidden>{ctaIcon}</span>
+          <CtaIcon className="h-4 w-4" aria-hidden="true" />
           {cta}
         </p>
       ) : (
@@ -185,8 +215,8 @@ export default function ExamCard({ test }) {
               : { background: "linear-gradient(120deg, var(--color-marketing-bar) 0%, var(--color-exam-card) 100%)" }
           }
         >
-          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs" aria-hidden>
-            {ctaIcon}
+          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20" aria-hidden="true">
+            <CtaIcon className="h-3 w-3" />
           </span>
           {cta}
           <span aria-hidden>→</span>

@@ -189,9 +189,15 @@ test("single-viewport composition (Mobile Exams Hub Single-Viewport Update)", as
     assert.doesNotMatch(stripComments(cardSource), /window\.innerHeight|ResizeObserver|addEventListener\(.resize/);
   });
 
-  await t.test("Header renders in its compact `dense` mode only on this page", () => {
-    assert.match(pageSource, /<Header\s+title="Exams"[\s\S]*?\bdense\b/);
-    // Every other Header caller in the app is untouched by the dense prop.
+  await t.test("Header no longer renders in compact `dense` mode on this page", () => {
+    // Bottom-space fix (live-device report: a dead gray gap above the tab
+    // bar on taller phones): the original single-viewport squeeze
+    // (dense Header + tight card padding) was replaced with a fixed,
+    // slightly more generous layout that's fine scrolling a little on a
+    // short phone, rather than fitting everything into exactly one
+    // screen. Header now uses its normal, un-squeezed spacing here, same
+    // as every other page.
+    assert.doesNotMatch(pageCode.slice(0, pageCode.indexOf("</Header>")), /\bdense\b/);
     assert.doesNotMatch(headerSource, /dense = true/);
   });
 

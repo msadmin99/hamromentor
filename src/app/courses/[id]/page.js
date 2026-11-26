@@ -5,11 +5,11 @@ import { useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
 import CheckoutModal from "@/components/CheckoutModal";
 import Header from "@/components/Header";
-import { LockIcon } from "@/components/icons";
+import { BroadcastIcon, CheckCircleIcon, DocumentIcon, EditIcon, LockIcon, PlayIcon } from "@/components/icons";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
-const LESSON_ICONS = { video: "🎥", pdf: "📄", quiz: "📝", live_class: "📡", notes: "📓" };
+const LESSON_ICONS = { video: PlayIcon, pdf: DocumentIcon, quiz: EditIcon, live_class: BroadcastIcon, notes: DocumentIcon };
 
 function lessonHref(lesson) {
   if (lesson.lesson_type === "video" && lesson.video) return `/videos/${lesson.video}`;
@@ -93,7 +93,9 @@ function CourseDetailContent() {
                 <span className="text-2xl font-extrabold text-[var(--color-text)]">Rs. {course.price}</span>
               )}
               {enrolled ? (
-                <span className="rounded-lg bg-brand-green-light px-4 py-2 text-sm font-bold text-brand-green">✓ Purchased</span>
+                <span className="flex items-center gap-1 rounded-lg bg-brand-green-light px-4 py-2 text-sm font-bold text-brand-green">
+                  <CheckCircleIcon className="h-4 w-4" aria-hidden="true" /> Purchased
+                </span>
               ) : (
                 <button onClick={handleBuy} className="rounded-xl bg-brand-blue px-5 py-2.5 text-sm font-bold text-white">
                   {course.is_free ? "Enroll Free" : "Buy Course"}
@@ -120,13 +122,14 @@ function CourseDetailContent() {
                   {section.lessons.map((lesson) => {
                     const href = enrolled ? lessonHref(lesson) : null;
                     const Wrapper = href ? "a" : "div";
+                    const LessonIcon = LESSON_ICONS[lesson.lesson_type] || DocumentIcon;
                     return (
                       <Wrapper
                         key={lesson.id}
                         {...(href ? { href } : {})}
                         className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm text-[var(--color-text)]"
                       >
-                        <span>{LESSON_ICONS[lesson.lesson_type] || "📘"}</span>
+                        <LessonIcon className="h-3.5 w-3.5 flex-none" />
                         <span className="flex-1">{lesson.title}</span>
                         {!enrolled && <LockIcon className="h-3.5 w-3.5 flex-none text-[var(--color-text-muted)]" />}
                       </Wrapper>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import Logo from "@/components/Logo";
+import { CheckCircleIcon, WarningTriangleIcon } from "@/components/icons";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
@@ -85,9 +86,7 @@ export default function VerifyEmailPage() {
 
         {state === "success" && (
           <>
-            <p className="text-3xl" aria-hidden="true">
-              ✓
-            </p>
+            <CheckCircleIcon className="mx-auto h-8 w-8 text-brand-green" aria-hidden="true" />
             <h1 className="mt-2 text-lg font-extrabold text-[var(--color-text)]">Email verified</h1>
             <p className="mt-2 text-sm text-[var(--color-text-muted)]">
               Thanks — your email address is now confirmed. You&apos;ll receive email notifications going forward.
@@ -104,9 +103,7 @@ export default function VerifyEmailPage() {
 
         {state === "error" && (
           <>
-            <p className="text-3xl" aria-hidden="true">
-              ⚠
-            </p>
+            <WarningTriangleIcon className="mx-auto h-8 w-8 text-amber-600" aria-hidden="true" />
             <h1 className="mt-2 text-lg font-extrabold text-[var(--color-text)]">{knownError?.title || "Couldn't verify your email"}</h1>
             <p className="mt-2 text-sm text-[var(--color-text-muted)]">{knownError?.body || errorMessage}</p>
             <div className="mt-6 flex flex-col gap-2.5">

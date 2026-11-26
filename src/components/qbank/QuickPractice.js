@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { BoltIcon } from "@/components/icons";
+import { BoltIcon, ClockIcon } from "@/components/icons";
 
 // ~1 question/minute — matches the reference design's own "10 min -> ~10 Qs"
 // ratio. Purely a display estimate; the practice-session endpoint sizes the
@@ -40,7 +40,7 @@ export default function QuickPractice() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <p className="flex items-center gap-1.5 text-sm font-bold text-[var(--color-text)]">
-            <span aria-hidden="true">⏱</span> Quick Practice
+            <ClockIcon className="h-3.5 w-3.5" aria-hidden="true" /> Quick Practice
           </p>
           <p className="text-xs text-[var(--color-text-muted)]">Practice a few questions anytime</p>
         </div>

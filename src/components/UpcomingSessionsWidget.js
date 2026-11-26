@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { CalendarIcon, ClockIcon, DocumentIcon, TargetIcon } from "@/components/icons";
 import { api } from "@/lib/api";
 
 const STATUS_LABELS = {
@@ -44,11 +45,21 @@ export default function UpcomingSessionsWidget() {
             <p className="truncate text-sm font-bold text-[var(--color-text)]">{s.exam_template_title}</p>
             <p className="text-xs font-semibold text-brand-blue">{s.session_name}</p>
             <div className="mt-2 flex flex-col gap-1 text-xs text-[var(--color-text-muted)]">
-              <span>📅 {formatDate(s.start_datetime)}</span>
-              <span>⏰ {formatTime(s.start_datetime)}</span>
-              <span>⏱ {s.duration_minutes} Minutes</span>
-              <span>📝 {s.question_count} Questions</span>
-              <span>🎯 {s.total_marks} Marks</span>
+              <span className="flex items-center gap-1">
+                <CalendarIcon className="h-3 w-3 flex-none" aria-hidden="true" /> {formatDate(s.start_datetime)}
+              </span>
+              <span className="flex items-center gap-1">
+                <ClockIcon className="h-3 w-3 flex-none" aria-hidden="true" /> {formatTime(s.start_datetime)}
+              </span>
+              <span className="flex items-center gap-1">
+                <ClockIcon className="h-3 w-3 flex-none" aria-hidden="true" /> {s.duration_minutes} Minutes
+              </span>
+              <span className="flex items-center gap-1">
+                <DocumentIcon className="h-3 w-3 flex-none" aria-hidden="true" /> {s.question_count} Questions
+              </span>
+              <span className="flex items-center gap-1">
+                <TargetIcon className="h-3 w-3 flex-none" aria-hidden="true" /> {s.total_marks} Marks
+              </span>
             </div>
             <span className="mt-3 inline-block rounded-md bg-brand-green-light px-2 py-0.5 text-[10px] font-bold text-brand-green">
               {STATUS_LABELS[s.status] || s.status}

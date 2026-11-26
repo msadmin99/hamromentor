@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { ClockIcon, UserIcon, WarningTriangleIcon, XCircleIcon } from "@/components/icons";
 import { useAuth } from "@/lib/auth-context";
 
 export default function RequireTeacher({ children }) {
@@ -32,7 +33,7 @@ export default function RequireTeacher({ children }) {
   if (status === "pending") {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 p-6 text-center">
-        <span className="text-3xl">⏳</span>
+        <ClockIcon className="h-8 w-8 text-amber-600" />
         <p className="text-lg font-bold text-[var(--color-text)]">Application under review</p>
         <p className="max-w-sm text-sm text-[var(--color-text-muted)]">
           Your teacher application is pending admin approval. We&apos;ll notify you once it&apos;s reviewed.
@@ -44,7 +45,7 @@ export default function RequireTeacher({ children }) {
   if (status === "rejected") {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 p-6 text-center">
-        <span className="text-3xl">✕</span>
+        <XCircleIcon className="h-8 w-8 text-brand-red" />
         <p className="text-lg font-bold text-[var(--color-text)]">Application not approved</p>
         {user.teacher_profile?.rejection_reason && (
           <p className="max-w-sm text-sm text-[var(--color-text-muted)]">{user.teacher_profile.rejection_reason}</p>
@@ -59,7 +60,7 @@ export default function RequireTeacher({ children }) {
   if (status === "suspended") {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 p-6 text-center">
-        <span className="text-3xl">⚠️</span>
+        <WarningTriangleIcon className="h-8 w-8 text-amber-600" />
         <p className="text-lg font-bold text-[var(--color-text)]">Account suspended</p>
         <p className="max-w-sm text-sm text-[var(--color-text-muted)]">
           Your teacher account has been suspended. Contact support for details.
@@ -70,7 +71,7 @@ export default function RequireTeacher({ children }) {
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 p-6 text-center">
-      <span className="text-3xl">🧑‍🏫</span>
+      <UserIcon className="h-8 w-8 text-brand-blue" />
       <p className="text-lg font-bold text-[var(--color-text)]">Become a teacher</p>
       <p className="max-w-sm text-sm text-[var(--color-text-muted)]">
         Apply to become an instructor and start creating and selling your own courses.

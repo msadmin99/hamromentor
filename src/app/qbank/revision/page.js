@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
 import Header from "@/components/Header";
-import { CalendarIcon, CheckCircleIcon, RefreshIcon, TargetIcon, XCircleIcon } from "@/components/icons";
+import { CalendarIcon, CheckCircleIcon, ClockIcon, RefreshIcon, TargetIcon, XCircleIcon } from "@/components/icons";
 import { MASTERY_META, SkeletonCard, stripHtml } from "@/components/qbank/revisionListShared";
 import RequireAuth from "@/components/RequireAuth";
 import RichContent from "@/components/RichContent";
@@ -20,7 +20,7 @@ import { useCourse } from "@/lib/course-context";
 // existing paginated GET /questions/browse/?status=... — no new
 // endpoints, no second mastery/revision system.
 const CATEGORIES = [
-  { key: "overdue", label: "Overdue", icon: "⏰", statKey: "overdue", accent: "bg-brand-red-light text-brand-red" },
+  { key: "overdue", label: "Overdue", Icon: ClockIcon, statKey: "overdue", accent: "bg-brand-red-light text-brand-red" },
   { key: "due_today", label: "Due Today", Icon: CalendarIcon, statKey: "due_today", accent: "bg-info-soft text-info" },
   { key: "weak", label: "Weak", Icon: TargetIcon, statKey: "weak", accent: "bg-brand-red-light text-brand-red" },
   { key: "recent_mistake", label: "Recent Mistakes", Icon: XCircleIcon, statKey: "recent_mistakes", accent: "bg-warning-soft text-amber-700" },

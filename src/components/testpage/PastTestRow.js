@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarIcon } from "@/components/icons";
+import { CalendarIcon, XCircleIcon } from "@/components/icons";
 import { formatScheduleDay, formatScheduleParts, resolveExamSchedule } from "@/lib/examSchedule";
 
 const STATUS_META = {
@@ -64,7 +64,7 @@ export default function PastTestRow({ test }) {
               className="flex-none rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3.5 py-2 text-xs font-bold text-[var(--color-text-muted)]"
               aria-disabled="true"
             >
-              <span aria-hidden>⌛</span> Window Closed
+              <XCircleIcon className="inline h-3.5 w-3.5" aria-hidden="true" /> Window Closed
             </span>
           ) : (
             <Link

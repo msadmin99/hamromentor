@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { TargetIcon } from "@/components/icons";
 import { api } from "@/lib/api";
 import { useCourse } from "@/lib/course-context";
 
@@ -55,7 +56,7 @@ export default function DailyRecommendedCard() {
   return (
     <div className="hm-card p-5" style={{ background: "linear-gradient(135deg, var(--color-brand-green-light) 0%, rgba(255,255,255,0.4) 100%)" }}>
       <p className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
-        <span aria-hidden="true">⏰</span> Recommended For You
+        <TargetIcon className="h-3.5 w-3.5" aria-hidden="true" /> Recommended For You
       </p>
       <h3 className="text-xl font-extrabold text-[var(--color-text)]">{test.title}</h3>
       <p className="mt-1 text-sm text-[var(--color-text-muted)]">

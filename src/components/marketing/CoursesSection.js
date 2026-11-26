@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { BookOpenIcon } from "@/components/icons";
 import { useAuth } from "@/lib/auth-context";
 import { useCourse } from "@/lib/course-context";
 
@@ -85,8 +86,11 @@ export default function CoursesSection({ s, courses }) {
             <div className="h-1.5" style={{ background: "var(--color-brand-red)" }} />
             <div className="p-6">
               <div className="flex items-start justify-between">
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl text-xl" style={{ background: "#ed220d22" }}>
-                  📚
+                <span
+                  className="flex h-11 w-11 items-center justify-center rounded-xl"
+                  style={{ background: "#ed220d22", color: "var(--color-brand-red)" }}
+                >
+                  <BookOpenIcon className="h-5 w-5" />
                 </span>
                 <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--color-border)] text-[var(--color-text-muted)]">
                   →

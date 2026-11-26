@@ -110,23 +110,25 @@ const EXAM_CATEGORIES = [
 function ExamsContent() {
   return (
     <AppShell>
-      {/* Bottom-space fix: on a phone tall enough for the 4 cards + support
-          link to not fill the viewport, they used to pack at the top and
-          leave a dead gray gap above BottomNav (reported directly from a
-          live-device screenshot). This wrapper makes the content area fill
-          whatever height AppShell's scroll region actually gives it
-          (min-h-full) and the card list below uses flex-1 + justify-between
-          to spread the cards + link evenly across that height, so it
-          auto-adjusts to every phone size instead of a fixed gap. On a
-          screen short enough that the content is already taller than the
-          viewport, this has no effect and the page scrolls exactly as
-          before. */}
+      {/* Bottom-space fix, take 2: a first attempt made the card list
+          stretch (flex-1 + justify-between) to fill whatever height the
+          phone gave it, which fixed the dead gap below but, on an
+          unusually tall phone, spread the extra space out as large,
+          disconnected-looking gaps BETWEEN the cards instead (reported
+          directly from a live-device screenshot) — worse than the
+          original gap. The fix here instead puts that extra room INTO the
+          content itself: the header drops its old `dense` squeeze (this
+          page no longer needs to protect a strict single-viewport budget
+          now that some scroll is fine) and each card's own internal
+          padding (ExamCategoryCard.js) is a bit more generous, so the
+          page reads as fuller and more deliberate rather than relying on
+          dynamically-stretched whitespace that looks fine on one device
+          and odd on the next. */}
       <div className="flex min-h-full flex-col">
         <Header
           title="Exams"
           subtitle="Choose an exam type and start your preparation"
           courseSwitcher={<CourseSwitcher variant="solid" />}
-          dense
         >
           {/* Reference's "Your Success / Our Mission" + graduation-cap + "Learn
               Practice Succeed" mission copy — purely decorative brand
@@ -185,8 +187,13 @@ function ExamsContent() {
           Past Year Questions on some device if this budget is ever
           slightly wrong — worse than the rare case of a few pixels of
           scroll.
+
+          gap-4 (not the earlier gap-3): a fixed, modest bump — paired with
+          ExamCategoryCard's own slightly larger internal padding below —
+          rather than a dynamic stretch, so spacing stays consistent across
+          every device instead of ballooning on tall screens.
         */}
-        <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col justify-between gap-3 px-4 pb-6 pt-3 sm:px-10 xl:max-w-[82.5rem] 2xl:max-w-[100rem]">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 pb-6 pt-3 sm:px-10 xl:max-w-[82.5rem] 2xl:max-w-[100rem]">
           {EXAM_CATEGORIES.map((c) => (
             <ExamCategoryCard key={c.href} {...c} />
           ))}

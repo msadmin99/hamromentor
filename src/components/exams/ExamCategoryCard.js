@@ -48,11 +48,11 @@ export default function ExamCategoryCard({ href, Icon, title, description, badge
           width more than the panel needed the extra size at this range. */}
       <div
         aria-hidden="true"
-        className="flex w-[24%] max-w-[100px] flex-none flex-col items-center justify-between gap-1 px-1 py-[clamp(0.375rem,3vw,1rem)] text-center text-white sm:max-w-[126px]"
+        className="flex w-[24%] max-w-[100px] flex-none flex-col items-center justify-between gap-1 px-1 py-[clamp(0.625rem,3vw,1.125rem)] text-center text-white sm:max-w-[126px]"
         style={{ background: "linear-gradient(160deg, var(--color-exam-card) 0%, var(--color-exam-card-deep) 100%)" }}
       >
-        <span className="flex h-[clamp(2.25rem,9vw,3.5rem)] w-[clamp(2.25rem,9vw,3.5rem)] flex-1 items-center justify-center rounded-full bg-white/15">
-          <Icon className="h-[clamp(1.125rem,4.5vw,1.75rem)] w-[clamp(1.125rem,4.5vw,1.75rem)]" />
+        <span className="flex h-[clamp(2.5rem,9vw,3.5rem)] w-[clamp(2.5rem,9vw,3.5rem)] flex-1 items-center justify-center rounded-full bg-white/15">
+          <Icon className="h-[clamp(1.25rem,4.5vw,1.75rem)] w-[clamp(1.25rem,4.5vw,1.75rem)]" />
         </span>
         <p className="text-[10px] font-extrabold uppercase leading-tight tracking-wide text-white/90 sm:text-[11px]">
           {panelLabel}
@@ -60,7 +60,7 @@ export default function ExamCategoryCard({ href, Icon, title, description, badge
       </div>
 
       {/* Right content — 3 compact rows: title+badge, description, chips+arrow. */}
-      <div className="flex min-w-0 flex-1 flex-col gap-[clamp(0.125rem,1.5vw,0.5rem)] px-[clamp(0.4rem,2.5vw,0.75rem)] py-[clamp(0.25rem,3vw,0.875rem)]">
+      <div className="flex min-w-0 flex-1 flex-col gap-[clamp(0.25rem,1.5vw,0.5rem)] px-[clamp(0.4rem,2.5vw,0.75rem)] py-[clamp(0.5rem,3vw,1rem)]">
         <div className="flex items-start justify-between gap-1.5">
           {/* clamp(), not a fixed text-base/sm:text-lg step: the badge's
               width barely shrinks as the viewport narrows, so it eats a

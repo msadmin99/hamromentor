@@ -110,86 +110,99 @@ const EXAM_CATEGORIES = [
 function ExamsContent() {
   return (
     <AppShell>
-      <Header
-        title="Exams"
-        subtitle="Choose an exam type and start your preparation"
-        courseSwitcher={<CourseSwitcher variant="solid" />}
-        dense
-      >
-        {/* Reference's "Your Success / Our Mission" + graduation-cap + "Learn
-            Practice Succeed" mission copy — purely decorative brand
-            identity, no data behind it. Shown from `sm` up: at real phone
-            widths (<640px, the primary target — see Steps 4/29) there
-            isn't room for it without either shrinking the functional title/
-            subtitle/course-selector or exceeding the single-viewport
-            budget below, so it's a progressive enhancement rather than
-            forced onto the narrowest screens. */}
-        <div className="pointer-events-none absolute right-4 top-1/2 hidden -translate-y-1/2 items-center gap-3 sm:flex md:right-10 md:gap-5">
-          <div className="text-right leading-tight">
-            <p className="text-xs font-semibold text-white/70">Your Success</p>
-            <p className="text-xs font-semibold text-white/70">Our Mission</p>
-          </div>
-          <span className="text-3xl opacity-80 md:text-4xl" aria-hidden="true">
-            🎓
-          </span>
-          <p className="hidden text-xs italic leading-snug text-white/50 md:block">
-            Learn
-            <br />
-            Practice
-            <br />
-            Succeed
-          </p>
-        </div>
-      </Header>
-
-      {/*
-        Mobile visual-consistency fix: the "Single-Viewport Update"'s
-        mobile-only gap-0.5/pt-0.5/pb-1 squeeze combined with
-        ExamCategoryCard's vw-based clamp() sizing meant the visible gap
-        between cards shrank toward invisible on narrower phones (cards
-        read as touching/merged) while comfortably wider phones — still
-        well under the `sm:` breakpoint — kept a clear, well-separated
-        look. Confirmed by direct screenshot comparison across mobile
-        widths (see the incident report). Using the same gap/padding at
-        every width below `sm:` removes that inconsistency: every mobile
-        screen now gets the same comfortable spacing this page's own
-        `sm:` values already established as correct, rather than a
-        width-dependent squeeze.
-
-        Deliberately NOT the shared `.hm-page` class here — that class is
-        a plain (un-layered) CSS rule, which in this Tailwind v4 setup
-        beats utility classes regardless of source order, so a
-        `pt-2`/`pb-2` override on the div itself could not reliably win
-        against `.hm-page { padding: 1rem }`. Rebuilding the same
-        max-width/centering rules directly as utilities is the only way
-        to control this page's own padding without touching `.hm-page`
-        (which every other page also uses, unchanged, at its normal
-        padding).
-
-        This container intentionally has no overflow/height rule of its
-        own: the four cards below use natural sizing (via
-        ExamCategoryCard's own clamp()s) rather than being force-fit with
-        `overflow: hidden`, which risks silently clipping Grand Test or
-        Past Year Questions on some device if this budget is ever
-        slightly wrong — worse than the rare case of a few pixels of
-        scroll.
-      */}
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 pb-6 pt-3 sm:px-10 xl:max-w-[82.5rem] 2xl:max-w-[100rem]">
-        {EXAM_CATEGORIES.map((c) => (
-          <ExamCategoryCard key={c.href} {...c} />
-        ))}
-
-        {/* Deliberately a single plain text link, not the full
-            SupportContactInline block — this page's own layout comments
-            above document a tight, carefully-tuned mobile viewport budget,
-            so this stays outside that budget's risk by adding only one
-            line below the cards rather than a multi-line component. */}
-        <a
-          href="/support"
-          className="mt-1 text-center text-xs font-semibold text-[var(--color-text-muted)] underline underline-offset-2"
+      {/* Bottom-space fix: on a phone tall enough for the 4 cards + support
+          link to not fill the viewport, they used to pack at the top and
+          leave a dead gray gap above BottomNav (reported directly from a
+          live-device screenshot). This wrapper makes the content area fill
+          whatever height AppShell's scroll region actually gives it
+          (min-h-full) and the card list below uses flex-1 + justify-between
+          to spread the cards + link evenly across that height, so it
+          auto-adjusts to every phone size instead of a fixed gap. On a
+          screen short enough that the content is already taller than the
+          viewport, this has no effect and the page scrolls exactly as
+          before. */}
+      <div className="flex min-h-full flex-col">
+        <Header
+          title="Exams"
+          subtitle="Choose an exam type and start your preparation"
+          courseSwitcher={<CourseSwitcher variant="solid" />}
+          dense
         >
-          Need help? Contact Dr. Gutka Support
-        </a>
+          {/* Reference's "Your Success / Our Mission" + graduation-cap + "Learn
+              Practice Succeed" mission copy — purely decorative brand
+              identity, no data behind it. Shown from `sm` up: at real phone
+              widths (<640px, the primary target — see Steps 4/29) there
+              isn't room for it without either shrinking the functional title/
+              subtitle/course-selector or exceeding the single-viewport
+              budget below, so it's a progressive enhancement rather than
+              forced onto the narrowest screens. */}
+          <div className="pointer-events-none absolute right-4 top-1/2 hidden -translate-y-1/2 items-center gap-3 sm:flex md:right-10 md:gap-5">
+            <div className="text-right leading-tight">
+              <p className="text-xs font-semibold text-white/70">Your Success</p>
+              <p className="text-xs font-semibold text-white/70">Our Mission</p>
+            </div>
+            <span className="text-3xl opacity-80 md:text-4xl" aria-hidden="true">
+              🎓
+            </span>
+            <p className="hidden text-xs italic leading-snug text-white/50 md:block">
+              Learn
+              <br />
+              Practice
+              <br />
+              Succeed
+            </p>
+          </div>
+        </Header>
+
+        {/*
+          Mobile visual-consistency fix: the "Single-Viewport Update"'s
+          mobile-only gap-0.5/pt-0.5/pb-1 squeeze combined with
+          ExamCategoryCard's vw-based clamp() sizing meant the visible gap
+          between cards shrank toward invisible on narrower phones (cards
+          read as touching/merged) while comfortably wider phones — still
+          well under the `sm:` breakpoint — kept a clear, well-separated
+          look. Confirmed by direct screenshot comparison across mobile
+          widths (see the incident report). Using the same gap/padding at
+          every width below `sm:` removes that inconsistency: every mobile
+          screen now gets the same comfortable spacing this page's own
+          `sm:` values already established as correct, rather than a
+          width-dependent squeeze.
+
+          Deliberately NOT the shared `.hm-page` class here — that class is
+          a plain (un-layered) CSS rule, which in this Tailwind v4 setup
+          beats utility classes regardless of source order, so a
+          `pt-2`/`pb-2` override on the div itself could not reliably win
+          against `.hm-page { padding: 1rem }`. Rebuilding the same
+          max-width/centering rules directly as utilities is the only way
+          to control this page's own padding without touching `.hm-page`
+          (which every other page also uses, unchanged, at its normal
+          padding).
+
+          This container intentionally has no overflow/height rule of its
+          own: the four cards below use natural sizing (via
+          ExamCategoryCard's own clamp()s) rather than being force-fit with
+          `overflow: hidden`, which risks silently clipping Grand Test or
+          Past Year Questions on some device if this budget is ever
+          slightly wrong — worse than the rare case of a few pixels of
+          scroll.
+        */}
+        <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col justify-between gap-3 px-4 pb-6 pt-3 sm:px-10 xl:max-w-[82.5rem] 2xl:max-w-[100rem]">
+          {EXAM_CATEGORIES.map((c) => (
+            <ExamCategoryCard key={c.href} {...c} />
+          ))}
+
+          {/* Deliberately a single plain text link, not the full
+              SupportContactInline block — this page's own layout comments
+              above document a tight, carefully-tuned mobile viewport budget,
+              so this stays outside that budget's risk by adding only one
+              line below the cards rather than a multi-line component. */}
+          <a
+            href="/support"
+            className="mt-1 text-center text-xs font-semibold text-[var(--color-text-muted)] underline underline-offset-2"
+          >
+            Need help? Contact Dr. Gutka Support
+          </a>
+        </div>
       </div>
     </AppShell>
   );

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { MASTERY_META } from "./qbank/revisionListShared";
 import ExplanationDisplay from "./ExplanationDisplay";
-import { BookmarkIcon, CalendarIcon, CheckCircleIcon, SparkleIcon, XCircleIcon } from "./icons";
+import { BookmarkIcon, CalendarIcon, CheckCircleIcon, ClockIcon, SparkleIcon, XCircleIcon } from "./icons";
 import OptionResultBar from "./OptionResultBar";
 import PerformanceMessage from "./PerformanceMessage";
 import ReportQuestionButton from "./ReportQuestionModal";
@@ -239,8 +239,11 @@ export default function QuestionSolver({
           </p>
           <div className="flex flex-none items-center gap-3">
             {secondsLeft !== null && (
-              <span className={`text-xs font-bold tabular-nums ${secondsLeft <= 30 ? "text-brand-red" : "text-brand-blue"}`}>
-                ⏱ {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, "0")}
+              <span
+                className={`flex items-center gap-1 text-xs font-bold tabular-nums ${secondsLeft <= 30 ? "text-brand-red" : "text-brand-blue"}`}
+              >
+                <ClockIcon className="h-3 w-3" aria-hidden="true" /> {Math.floor(secondsLeft / 60)}:
+                {String(secondsLeft % 60).padStart(2, "0")}
               </span>
             )}
             <button

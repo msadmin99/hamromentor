@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CheckCircleIcon, WarningTriangleIcon } from "@/components/icons";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
@@ -79,11 +80,11 @@ export default function EmailVerificationSection() {
         <p className="text-sm text-[var(--color-text)]">{user?.email}</p>
         {user?.email_verified ? (
           <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-green">
-            <span aria-hidden="true">✓</span> Verified
+            <CheckCircleIcon className="h-4 w-4" aria-hidden="true" /> Verified
           </span>
         ) : (
           <span className="inline-flex items-center gap-1 text-xs font-bold text-yellow-700">
-            <span aria-hidden="true">⚠</span> Not verified
+            <WarningTriangleIcon className="h-4 w-4" aria-hidden="true" /> Not verified
           </span>
         )}
       </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -9,6 +10,36 @@ function greetingForHour(hour) {
   if (hour < 12) return "Good morning";
   if (hour < 17) return "Good afternoon";
   return "Good evening";
+}
+
+/** Avatar circle next to the greeting — shows the student's own profile
+ * photo (same `user.profile.photo` field and upload flow as
+ * ProfileHero.js on /profile — nothing new to fetch, nothing new to
+ * upload), or an "Add Image" prompt when they haven't set one. Links to
+ * /profile (where the real photo picker lives, camera button and all)
+ * rather than /settings: /settings is for editing text fields, the
+ * photo picker has always lived on /profile. Gives a student this
+ * upload entry point right where they land every day, not only after
+ * finding their way to Profile first. */
+function AvatarCircle({ photoUrl }) {
+  return (
+    <Link
+      href="/profile"
+      aria-label={photoUrl ? "Open your profile photo" : "Add a profile photo"}
+      className="flex h-[88px] w-[88px] flex-none items-center justify-center overflow-hidden rounded-full bg-brand-blue text-center text-xs font-bold text-white"
+    >
+      {photoUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={photoUrl} alt="" className="h-full w-full object-cover" />
+      ) : (
+        <span>
+          Add
+          <br />
+          Image
+        </span>
+      )}
+    </Link>
+  );
 }
 
 function StatChip({ icon, value, label }) {
@@ -59,6 +90,7 @@ export default function QBankHero({ accuracy, attempted }) {
 
   const greeting = greetingForHour(new Date().getHours());
   const name = user?.first_name || "Student";
+  const photoUrl = user?.profile?.photo || null;
   const streak = kpis?.current_streak_days ?? 0;
   const questionsToday = kpis?.questions_today ?? 0;
   const hasAccuracy = (attempted ?? 0) > 0;
@@ -78,6 +110,7 @@ export default function QBankHero({ accuracy, attempted }) {
             Let&apos;s make progress today.
           </h1>
         </div>
+        <AvatarCircle photoUrl={photoUrl} />
       </div>
 
       {/* Mobile scroll-blanking fix: this stat row previously rendered

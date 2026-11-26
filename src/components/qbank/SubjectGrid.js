@@ -2,44 +2,55 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { LockIcon } from "@/components/icons";
+import {
+  BoltIcon,
+  BookOpenIcon,
+  BuildingIcon,
+  DnaIcon,
+  FlaskIcon,
+  GlobeIcon,
+  HeartPulseIcon,
+  LeafIcon,
+  LockIcon,
+  PawIcon,
+  RulerIcon,
+} from "@/components/icons";
 import { themeForKey } from "@/lib/theme";
 
 const INITIAL_COUNT = 5;
 
 // "Browse by Subject" cards, presentation-only: a subject/institution name
-// → representative emoji. Purely a frontend display choice — Subject.icon
+// → representative icon. Purely a frontend display choice — Subject.icon
 // (Backend/academics/models.py, DB default 'book') is never read from or
 // written to here, so no backend/data change is needed or made. Keyed by
 // the subject's own existing `name` field, normalized (trimmed + upper-
 // cased) since real subject names are stored in Title Case ("Physiology")
 // while this mapping's keys read naturally in caps.
-const SUBJECT_EMOJIS = {
-  BOTANY: "🌿",
-  CHEMISTRY: "⚗️",
-  PHYSICS: "⚡",
-  BIOLOGY: "🧬",
-  ANATOMY: "🫀",
-  PHYSIOLOGY: "🫀",
-  ZOOLOGY: "🐾",
-  MATHEMATICS: "📐",
-  ENGLISH: "📖",
-  "GENERAL KNOWLEDGE": "🌐",
+const SUBJECT_ICONS = {
+  BOTANY: LeafIcon,
+  CHEMISTRY: FlaskIcon,
+  PHYSICS: BoltIcon,
+  BIOLOGY: DnaIcon,
+  ANATOMY: HeartPulseIcon,
+  PHYSIOLOGY: HeartPulseIcon,
+  ZOOLOGY: PawIcon,
+  MATHEMATICS: RulerIcon,
+  ENGLISH: BookOpenIcon,
+  "GENERAL KNOWLEDGE": GlobeIcon,
   // Institution/source collections (e.g. PYQ grouped by university) have
-  // no obvious academic-subject emoji of their own.
-  BPKIHS: "🏛️",
-  IOM: "🏛️",
-  KU: "🏛️",
-  MOE: "🏛️",
+  // no obvious academic-subject icon of their own.
+  BPKIHS: BuildingIcon,
+  IOM: BuildingIcon,
+  KU: BuildingIcon,
+  MOE: BuildingIcon,
 };
 
-// Falls back to the subject's own existing `icon` value (today's behavior
-// — the generic 'book' default for most rows, or a real emoji a subject
-// already had set) whenever the name isn't a recognised match, exactly as
-// required: never guess at an emoji, never show nothing.
-function emojiForSubject(subject) {
+// Falls back to the generic BookOpenIcon (matching the backend's own
+// generic 'book' default for a subject with no specific match) whenever the
+// name isn't recognised — never raw text, never nothing.
+function iconForSubject(subject) {
   const key = subject.name?.trim().toUpperCase();
-  return (key && SUBJECT_EMOJIS[key]) || subject.icon;
+  return (key && SUBJECT_ICONS[key]) || BookOpenIcon;
 }
 
 // QBank 2.0 (§10): color must be deterministic per subject, not per list
@@ -50,7 +61,7 @@ function emojiForSubject(subject) {
 // themeForIndex(i), which could shift a subject's color whenever its
 // position in the list changed — e.g. reordering, or a new subject
 // inserted before it).
-function SubjectCard({ subject, theme }) {
+function SubjectCard({ subject, theme, Icon }) {
   const pct = subject.percent_practiced ?? 0;
 
   return (
@@ -65,10 +76,10 @@ function SubjectCard({ subject, theme }) {
         </span>
       )}
       <span
-        className={`flex h-11 w-11 flex-none items-center justify-center rounded-full text-xl ${theme.iconBg} ${theme.fg}`}
+        className={`flex h-11 w-11 flex-none items-center justify-center rounded-full ${theme.iconBg} ${theme.fg}`}
         aria-hidden="true"
       >
-        {emojiForSubject(subject)}
+        <Icon className="h-5 w-5" />
       </span>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-bold uppercase tracking-wide text-[var(--color-text)]">{subject.name}</p>
@@ -134,7 +145,7 @@ export default function SubjectGrid({ subjects, loading }) {
             // entirely, the same technique already used for the other
             // QBank cards' skeletons.
             Array.from({ length: INITIAL_COUNT }).map((_, i) => <SubjectCardSkeleton key={i} />)
-          : visible.map((s) => <SubjectCard key={s.id} subject={s} theme={themeForKey(s.slug)} />)}
+          : visible.map((s) => <SubjectCard key={s.id} subject={s} theme={themeForKey(s.slug)} Icon={iconForSubject(s)} />)}
       </div>
       {!loading && subjects.length === 0 && (
         <p className="hm-card p-4 text-center text-sm text-[var(--color-text-muted)]">

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { BookmarkIcon, BrainIcon, CalendarIcon, RefreshIcon, ShuffleIcon, SparkleIcon, TargetIcon } from "@/components/icons";
 import { api } from "@/lib/api";
 import { useCourse } from "@/lib/course-context";
 
@@ -34,7 +35,7 @@ const TILES = [
   {
     key: "weak",
     label: "Fix Weak Areas",
-    icon: "🎯",
+    Icon: TargetIcon,
     status: "weak",
     group: "recommended",
     iconBg: "bg-brand-red-light text-brand-red",
@@ -43,7 +44,7 @@ const TILES = [
   {
     key: "need_revision",
     label: "Due for Review",
-    icon: "📅",
+    Icon: CalendarIcon,
     status: "need_revision",
     group: "recommended",
     iconBg: "bg-info-soft text-info",
@@ -52,23 +53,23 @@ const TILES = [
   {
     key: "incorrect",
     label: "Master Mistakes",
-    icon: "🔄",
+    Icon: RefreshIcon,
     status: "incorrect",
     group: "recommended",
     iconBg: "bg-warning-soft text-amber-700",
     cardBg: "border-warning-soft bg-warning-soft/50",
   },
-  { key: "strengthen_concepts", label: "Strengthen Concepts", icon: "🧠", group: "explore", iconBg: "bg-violet-100 text-violet-600" },
-  { key: "new", label: "New Questions", icon: "🆕", status: "new", group: "explore", iconBg: "bg-brand-green-light text-brand-green" },
+  { key: "strengthen_concepts", label: "Strengthen Concepts", Icon: BrainIcon, group: "explore", iconBg: "bg-violet-100 text-violet-600" },
+  { key: "new", label: "New Questions", Icon: SparkleIcon, status: "new", group: "explore", iconBg: "bg-brand-green-light text-brand-green" },
   {
     key: "ai_mixed",
     label: "AI Mixed Practice",
-    icon: "🎲",
+    Icon: ShuffleIcon,
     status: "weak,incorrect,need_revision,new",
     group: "explore",
     iconBg: "bg-cyan-100 text-cyan-600",
   },
-  { key: "bookmarked", label: "Bookmarked", icon: "⭐", status: "bookmarked", group: "explore", iconBg: "bg-amber-100 text-amber-700" },
+  { key: "bookmarked", label: "Bookmarked", Icon: BookmarkIcon, status: "bookmarked", group: "explore", iconBg: "bg-amber-100 text-amber-700" },
 ];
 
 function hrefFor(status) {
@@ -85,8 +86,8 @@ function Tile({ t, href, count, loading, stats, weakSuggestion, prominent }) {
         prominent ? t.cardBg : "hm-card"
       }`}
     >
-      <span className={`flex h-9 w-9 flex-none items-center justify-center rounded-full text-lg ${t.iconBg}`} aria-hidden="true">
-        {t.icon}
+      <span className={`flex h-9 w-9 flex-none items-center justify-center rounded-full ${t.iconBg}`} aria-hidden="true">
+        <t.Icon className="h-5 w-5" />
       </span>
       <div className="min-w-0">
         <p className="text-sm font-bold leading-tight text-[var(--color-text)]">{t.label}</p>
@@ -158,7 +159,7 @@ export default function SmartPracticeGrid({ stats, loading }) {
     <section>
       <div className="mb-2 flex items-center justify-between">
         <div>
-          <p className="text-sm font-bold text-[var(--color-text)]">🧠 Intelligent QBank Engine</p>
+          <p className="text-sm font-bold text-[var(--color-text)]">Intelligent QBank Engine</p>
           <p className="text-xs text-[var(--color-text-muted)]">Practice what matters most</p>
         </div>
         <Link href="/qbank/practice" className="flex-none text-xs font-bold text-brand-blue">

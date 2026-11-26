@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { ChartIcon, FlameIcon, TargetIcon } from "@/components/icons";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useCourse } from "@/lib/course-context";
@@ -42,12 +43,13 @@ function AvatarCircle({ photoUrl }) {
   );
 }
 
-function StatChip({ icon, value, label }) {
+function StatChip({ Icon, iconColor, value, label }) {
   return (
-    <div className="flex flex-1 flex-col items-center gap-0.5 py-2 text-center">
-      <p className="text-base font-extrabold leading-none text-[var(--color-text)]">
-        <span aria-hidden="true">{icon}</span> {value}
-      </p>
+    <div className="flex flex-1 flex-col items-center gap-1 py-2 text-center">
+      <div className="flex items-center gap-1">
+        <Icon className={`h-4 w-4 ${iconColor}`} aria-hidden="true" />
+        <p className="text-base font-extrabold leading-none text-[var(--color-text)]">{value}</p>
+      </div>
       <p className="text-[10px] font-semibold leading-tight text-[var(--color-text-muted)]">{label}</p>
     </div>
   );
@@ -100,7 +102,7 @@ export default function QBankHero({ accuracy, attempted }) {
       <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-[var(--color-text)]">
-            {greeting}, {name}! <span aria-hidden="true">👋</span>
+            {greeting}, {name}!
           </p>
           {/* QBank 2.0 visual QA (Qbank12.png): this headline is the single
               largest, boldest text on the reference's home screen — bigger
@@ -129,12 +131,14 @@ export default function QBankHero({ accuracy, attempted }) {
           collapsing to nothing, which is the safer failure mode. */}
       {kpis ? (
         <div className="hm-card flex items-stretch divide-x divide-[var(--color-border)]">
-          {/* Icon-per-stat swapped to match Qbank12.png exactly: 🎯 for
-              Qs Today, 📈 for Overall Accuracy (was 📝/🎯 — visually close
-              but not the reference's own pairing). */}
-          <StatChip icon="🔥" value={streak} label={`Day Streak${streak === 1 ? "" : "s"}`} />
-          <StatChip icon="🎯" value={questionsToday} label="Qs Today" />
-          <StatChip icon="📈" value={hasAccuracy ? `${accuracy}%` : "—"} label="Overall Accuracy" />
+          <StatChip Icon={FlameIcon} iconColor="text-orange-500" value={streak} label={`Day Streak${streak === 1 ? "" : "s"}`} />
+          <StatChip Icon={TargetIcon} iconColor="text-brand-blue" value={questionsToday} label="Qs Today" />
+          <StatChip
+            Icon={ChartIcon}
+            iconColor="text-brand-green"
+            value={hasAccuracy ? `${accuracy}%` : "—"}
+            label="Overall Accuracy"
+          />
         </div>
       ) : (
         <div className="hm-card flex animate-pulse items-stretch divide-x divide-[var(--color-border)]">

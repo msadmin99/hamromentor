@@ -381,3 +381,216 @@ export function PrintIcon(props) {
     </svg>
   );
 }
+
+// Professional-icon pass: the icons below replace emoji that were standing
+// in for these exact meanings across QBank, Progress, subject, exam and
+// notification tiles — same rationale as LockIcon above (that comment's
+// "no shared icon before now" applies to all of these too).
+
+/** Accuracy / goal-oriented tiles (bullseye). */
+export function TargetIcon(props) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+      <circle cx="12" cy="12" r="8" />
+      <circle cx="12" cy="12" r="4.3" />
+      <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+/** Concepts / intelligence — "Strengthen Concepts". */
+export function BrainIcon(props) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+      <path
+        d="M9 4.5a3 3 0 0 0-3 3v.3A3.2 3.2 0 0 0 4.5 13a3 3 0 0 0 1.2 5.3A3 3 0 0 0 11 20V6.8A2.3 2.3 0 0 0 9 4.5Z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M15 4.5a3 3 0 0 1 3 3v.3a3.2 3.2 0 0 1 1.5 5.2 3 3 0 0 1-1.2 5.3A3 3 0 0 1 13 20V6.8a2.3 2.3 0 0 1 2-2.3Z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Revision / repeat-practice — "Master Mistakes". */
+export function RefreshIcon(props) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+      <path d="M4.5 12a7.5 7.5 0 0 1 12.6-5.5M19.5 12a7.5 7.5 0 0 1-12.6 5.5" strokeLinecap="round" />
+      <path d="M17.5 3.5v3.5H14M6.5 20.5V17H10" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** Freshness — "New Questions". */
+export function SparkleIcon(props) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" {...props}>
+      <path d="M12 3c.6 3.6 1.4 6 3 7.5 1.6 1.5 4 2.2 7.5 3-3.5.8-5.9 1.5-7.5 3-1.6 1.5-2.4 3.9-3 7.5-.6-3.6-1.4-6-3-7.5-1.6-1.5-4-2.2-7.5-3 3.5-.8 5.9-1.5 7.5-3 1.6-1.5 2.4-3.9 3-7.5Z" />
+    </svg>
+  );
+}
+
+/** Botany subject icon. */
+export function LeafIcon(props) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+      <path d="M5 19c-1-6 1.5-13 14-14 1 10-5 14-14 14Z" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5 19c3-4 6-7 12.5-12.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** Chemistry subject icon. */
+export function FlaskIcon(props) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+      <path d="M10 3.5h4M9.5 3.5v5.3L5.3 17a2 2 0 0 0 1.8 3h9.8a2 2 0 0 0 1.8-3L14.5 8.8V3.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M7.5 14.5h9" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** Physics subject icon / speed stats. */
+export function BoltIcon(props) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" {...props}>
+      <path d="M13 2 4.5 14h5.5l-1 8L19.5 10H14l-1-8Z" />
+    </svg>
+  );
+}
+
+/** Biology subject icon. */
+export function DnaIcon(props) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+      <path d="M7 3c0 6 10 12 10 18M17 3c0 6-10 12-10 18" strokeLinecap="round" />
+      <path d="M8 7h8M7 12h10M8 17h8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** Anatomy / Physiology subject icon. */
+export function HeartPulseIcon(props) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+      <path
+        d="M12 20.3 4.6 13a4.6 4.6 0 0 1 6.5-6.5l.9.9.9-.9a4.6 4.6 0 0 1 6.5 6.5L12 20.3Z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M6.5 13h2.5l1.5-3 2 5 1.5-2.5h3.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** Zoology subject icon. */
+export function PawIcon(props) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" {...props}>
+      <ellipse cx="12" cy="16" rx="5" ry="4.2" />
+      <ellipse cx="5.5" cy="10" rx="2.1" ry="2.6" />
+      <ellipse cx="18.5" cy="10" rx="2.1" ry="2.6" />
+      <ellipse cx="8.5" cy="5.8" rx="1.8" ry="2.3" />
+      <ellipse cx="15.5" cy="5.8" rx="1.8" ry="2.3" />
+    </svg>
+  );
+}
+
+/** Mathematics subject icon (set square). */
+export function RulerIcon(props) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+      <path d="M4 20 20 4" strokeLinecap="round" />
+      <path d="M4 20h16V4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M7 17v2M10 14v2M13 11v2M16 8v2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** General Knowledge subject icon. */
+export function GlobeIcon(props) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path
+        d="M3.5 12h17M12 3.5c2.5 2.3 3.8 5.3 3.8 8.5s-1.3 6.2-3.8 8.5c-2.5-2.3-3.8-5.3-3.8-8.5s1.3-6.2 3.8-8.5Z"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/** University/institution subject icon (BPKIHS, IOM, KU, MOE). */
+export function BuildingIcon(props) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+      <path d="M4 9.5 12 4l8 5.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5 9.5V19M19 9.5V19M9 9.5V19M15 9.5V19" strokeLinecap="round" />
+      <path d="M3.5 19h17" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** Incorrect-answer stat — mirrors CheckCircleIcon above. */
+export function XCircleIcon(props) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M9 9l6 6M15 9l-6 6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** Unanswered-question stat. */
+export function CircleDashedIcon(props) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeDasharray="3 3" {...props}>
+      <circle cx="12" cy="12" r="8.5" />
+    </svg>
+  );
+}
+
+/** Streak stat. */
+export function FlameIcon(props) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" {...props}>
+      <path d="M12 2c1 3-2 4.5-2 7.5a2 2 0 0 0 4 0c1.5 1 3 3 3 5.5a5 5 0 0 1-10 0c0-4 2-5 2-8.5 1 .5 1.5 1.5 1.5 2.5.5-2 1.5-4 1.5-7Z" />
+    </svg>
+  );
+}
+
+/** PRO / upgrade badges. */
+export function CrownIcon(props) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+      <path d="M4 18h16l-1.3-8-4.2 3.3L12 7l-2.5 6.3L5.3 10 4 18Z" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4 20.5h16" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** Plain document/paper counts (MCQ counts, PDFs, notes). */
+export function DocumentIcon(props) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+      <path d="M7 3.5h7l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-16a1 1 0 0 1 1-1Z" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9 12.5h6M9 16h6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** Live class lesson type. */
+export function BroadcastIcon(props) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+      <circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none" />
+      <path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7" strokeLinecap="round" />
+      <path d="M5.3 5.3a9.5 9.5 0 0 0 0 13.4M18.7 5.3a9.5 9.5 0 0 1 0 13.4" strokeLinecap="round" />
+    </svg>
+  );
+}

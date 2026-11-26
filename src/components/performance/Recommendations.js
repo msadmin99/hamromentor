@@ -8,7 +8,7 @@ export default function Recommendations({ recommendations }) {
   return (
     <div className="hm-card p-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-bold text-[var(--color-text)]">💡 Smart Suggestions</p>
+        <p className="text-sm font-bold text-[var(--color-text)]">Smart Suggestions</p>
         <span className="text-[10px] text-[var(--color-text-muted)]">Rule-based, from your own data</span>
       </div>
 

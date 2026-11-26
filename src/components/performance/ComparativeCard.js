@@ -19,7 +19,7 @@ export default function ComparativeCard({ comparative, testTitle }) {
     <div className="hm-card p-4">
       <p className="text-sm font-bold text-[var(--color-text)]">Comparative — {testTitle}</p>
       {comparative.is_best_attempt && (
-        <p className="mt-1 text-xs font-semibold text-brand-green">🎉 This is your best attempt on this test!</p>
+        <p className="mt-1 text-xs font-semibold text-brand-green">This is your best attempt on this test!</p>
       )}
       <div className="mt-3 flex flex-col divide-y divide-[var(--color-border)]">
         <Row label="This attempt" score={comparative.current.score} accuracy={comparative.current.accuracy} highlight />

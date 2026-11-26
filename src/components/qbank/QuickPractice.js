@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { BoltIcon } from "@/components/icons";
 
 // ~1 question/minute — matches the reference design's own "10 min -> ~10 Qs"
 // ratio. Purely a display estimate; the practice-session endpoint sizes the
@@ -96,7 +97,7 @@ export default function QuickPractice() {
         href="/qbank/practice?time=5&count=5&status=need_revision,incorrect&auto=1"
         className="mt-3 flex items-center justify-center gap-1.5 rounded-xl border border-[var(--color-border)] py-2 text-xs font-bold text-[var(--color-text-muted)] transition hover:border-brand-blue hover:text-brand-blue"
       >
-        <span aria-hidden="true">⚡</span> Quick Revision (5 min): Due + Mistakes
+        <BoltIcon className="h-3.5 w-3.5" aria-hidden="true" /> Quick Revision (5 min): Due + Mistakes
       </Link>
     </section>
   );

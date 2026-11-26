@@ -6,17 +6,23 @@
 // academics/serializers.py) and needed the same three small pieces, so
 // they're defined once here instead of copy-pasted into both pages.
 
+// `dotClass` is a plain solid-color CSS dot (not an emoji) rendered next to
+// the label where there's room (QuestionSolver's result banner) — a flat
+// color dot matches the badge's own palette exactly and renders identically
+// everywhere, unlike an emoji circle (font-dependent color/shape, never
+// quite the brand color).
 export const MASTERY_META = {
-  weak: { label: "Weak", emoji: "🔴", className: "bg-brand-red-light text-brand-red" },
-  need_practice: { label: "Need Practice", emoji: "🟠", className: "bg-warning-soft text-amber-700" },
-  learning: { label: "Learning", emoji: "🔵", className: "bg-info-soft text-info" },
-  mastered: { label: "Mastered", emoji: "🟢", className: "bg-brand-green-light text-brand-green" },
+  weak: { label: "Weak", dotClass: "bg-brand-red", className: "bg-brand-red-light text-brand-red" },
+  need_practice: { label: "Need Practice", dotClass: "bg-amber-500", className: "bg-warning-soft text-amber-700" },
+  learning: { label: "Learning", dotClass: "bg-info", className: "bg-info-soft text-info" },
+  mastered: { label: "Mastered", dotClass: "bg-brand-green", className: "bg-brand-green-light text-brand-green" },
   // "new" is intentionally not in this map — a question with no real
   // mastery signal yet would just be visual noise on a list of many
   // questions (Bookmarks/Mistakes, the two existing consumers of this
-  // map). QBank 2.0 Phase 2D: QuestionSolver shows "🆕 New" for this case
-  // itself, locally, rather than adding it here and changing what those
-  // two existing list pages render for every never-attempted question.
+  // map). QBank 2.0 Phase 2D: QuestionSolver shows a "New" badge for this
+  // case itself, locally, rather than adding it here and changing what
+  // those two existing list pages render for every never-attempted
+  // question.
 };
 
 export function stripHtml(html) {

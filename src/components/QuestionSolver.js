@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { MASTERY_META } from "./qbank/revisionListShared";
 import ExplanationDisplay from "./ExplanationDisplay";
-import { BookmarkIcon } from "./icons";
+import { BookmarkIcon, CalendarIcon, CheckCircleIcon, SparkleIcon, XCircleIcon } from "./icons";
 import OptionResultBar from "./OptionResultBar";
 import PerformanceMessage from "./PerformanceMessage";
 import ReportQuestionButton from "./ReportQuestionModal";
@@ -475,19 +475,19 @@ export default function QuestionSolver({
             {(masteryMeta || result.mastery_status === "new" || revisionLabel) && (
               <div className="flex flex-wrap items-center gap-2 text-xs">
                 {masteryMeta ? (
-                  <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-bold ${masteryMeta.className}`}>
-                    <span aria-hidden="true">{masteryMeta.emoji}</span> {masteryMeta.label}
+                  <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-bold ${masteryMeta.className}`}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${masteryMeta.dotClass}`} aria-hidden="true" /> {masteryMeta.label}
                   </span>
                 ) : (
                   result.mastery_status === "new" && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-surface-muted)] px-2.5 py-1 font-bold text-[var(--color-text-muted)]">
-                      <span aria-hidden="true">🆕</span> New
+                      <SparkleIcon className="h-3 w-3" aria-hidden="true" /> New
                     </span>
                   )
                 )}
                 {revisionLabel && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-surface-muted)] px-2.5 py-1 font-semibold text-[var(--color-text-muted)]">
-                    <span aria-hidden="true">📅</span> {revisionLabel}
+                    <CalendarIcon className="h-3 w-3" aria-hidden="true" /> {revisionLabel}
                   </span>
                 )}
               </div>
@@ -506,7 +506,11 @@ export default function QuestionSolver({
                 <div className="flex flex-col gap-1">
                   {result.recent_events.map((e, i) => (
                     <p key={i} className="text-xs text-[var(--color-text)]">
-                      <span aria-hidden="true">{e.is_correct ? "✅" : "❌"}</span>{" "}
+                      {e.is_correct ? (
+                        <CheckCircleIcon className="inline h-3 w-3 text-brand-green" aria-hidden="true" />
+                      ) : (
+                        <XCircleIcon className="inline h-3 w-3 text-brand-red" aria-hidden="true" />
+                      )}{" "}
                       <span className="sr-only">{e.is_correct ? "Correct" : "Incorrect"} on </span>
                       {formatEventDate(e.date)}
                     </p>

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
 import Header from "@/components/Header";
-import { BookmarkIcon, SearchIcon } from "@/components/icons";
+import { BookmarkIcon, RefreshIcon, SearchIcon, TargetIcon, WarningTriangleIcon } from "@/components/icons";
 import { MASTERY_META, SkeletonCard, stripHtml } from "@/components/qbank/revisionListShared";
 import RequireAuth from "@/components/RequireAuth";
 import RichContent from "@/components/RichContent";
@@ -183,7 +183,7 @@ function MistakesContent() {
                   weakOnly ? "bg-brand-red text-white" : "bg-brand-red-light text-brand-red"
                 }`}
               >
-                🔴 Weak
+                <TargetIcon className="inline h-3 w-3" aria-hidden="true" /> Weak
               </button>
               <button
                 type="button"
@@ -193,7 +193,7 @@ function MistakesContent() {
                   highConfidenceOnly ? "bg-amber-600 text-white" : "bg-warning-soft text-amber-700"
                 }`}
               >
-                ⚠️ Confidence Trap
+                <WarningTriangleIcon className="inline h-3 w-3" aria-hidden="true" /> Confidence Trap
               </button>
             </div>
           )}
@@ -284,14 +284,14 @@ function MistakesContent() {
                     <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] text-[var(--color-text-muted)]">
                       {q.incorrect_count != null && (
                         <span className={isRepeated ? "font-bold text-brand-red" : ""}>
-                          {isRepeated && <span aria-hidden="true">🔁 </span>}
+                          {isRepeated && <RefreshIcon className="mr-0.5 inline h-3 w-3" aria-hidden="true" />}
                           {q.incorrect_count === 1 ? "Wrong once" : `Wrong ${q.incorrect_count} times`}
                         </span>
                       )}
                       {lastAttempted && <span>Last attempted: {lastAttempted}</span>}
                       {isConfidenceTrap && (
                         <span className="font-bold text-amber-700">
-                          <span aria-hidden="true">⚠️</span> Confidence Trap
+                          <WarningTriangleIcon className="inline h-3 w-3" aria-hidden="true" /> Confidence Trap
                         </span>
                       )}
                     </div>

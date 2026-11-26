@@ -6,6 +6,7 @@ import AppShell from "@/components/AppShell";
 import Header from "@/components/Header";
 import RequireAuth from "@/components/RequireAuth";
 import ChapterGrid from "@/components/qbank/ChapterGrid";
+import { iconForSubject } from "@/components/qbank/SubjectGrid";
 import { api } from "@/lib/api";
 import { themeForKey } from "@/lib/theme";
 
@@ -61,7 +62,7 @@ function SubjectContent() {
             </div>
 
             {chapters.length > 0 ? (
-              <ChapterGrid chapters={chapters} subjectSlug={subjectSlug} icon={subject.icon} />
+              <ChapterGrid chapters={chapters} subjectSlug={subjectSlug} Icon={iconForSubject(subject)} />
             ) : (
               <p className="text-sm text-[var(--color-text-muted)]">No units added for this subject yet.</p>
             )}

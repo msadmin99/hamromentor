@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { ClockIcon, DocumentIcon, TargetIcon } from "@/components/icons";
 import { api } from "@/lib/api";
 import AccuracyRing from "./AccuracyRing";
 
@@ -76,7 +77,7 @@ export default function NextPracticeCard() {
     // mechanics (and ScrollDiagnostics' `.hm-card` matcher) intact.
     <div className="hm-card !border-info-soft !bg-info-soft p-5 sm:p-6">
       <p className="mb-3 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
-        <span aria-hidden="true">🎯</span> Your Next Best Action
+        <TargetIcon className="h-3.5 w-3.5" aria-hidden="true" /> Your Next Best Action
       </p>
 
       <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:justify-between">
@@ -94,19 +95,19 @@ export default function NextPracticeCard() {
               <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-[var(--color-text-muted)]">
                 {top.estimated_minutes != null && (
                   <span className="flex items-center gap-1">
-                    <span aria-hidden="true">⏱</span> ~{top.estimated_minutes} min
+                    <ClockIcon className="h-3.5 w-3.5" aria-hidden="true" /> ~{top.estimated_minutes} min
                   </span>
                 )}
                 {top.question_count ? (
                   <span className="flex items-center gap-1">
-                    <span aria-hidden="true">📋</span> {top.question_count} Questions
+                    <DocumentIcon className="h-3.5 w-3.5" aria-hidden="true" /> {top.question_count} Questions
                   </span>
                 ) : null}
               </div>
             </>
           ) : (
             <>
-              <p className="text-lg font-extrabold text-[var(--color-text)]">You&apos;re all caught up 🎉</p>
+              <p className="text-lg font-extrabold text-[var(--color-text)]">You&apos;re all caught up</p>
               <p className="mt-1 text-sm text-[var(--color-text-muted)]">Try a fresh set of questions.</p>
             </>
           )}

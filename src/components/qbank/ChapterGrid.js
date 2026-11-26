@@ -14,7 +14,7 @@ import { themeForKey } from "@/lib/theme";
  * than each chapter cycling through a different color by position. The
  * color identifies "this belongs to Anatomy," not "this is the 3rd
  * chapter in the list." */
-export default function ChapterGrid({ chapters, subjectSlug, icon }) {
+export default function ChapterGrid({ chapters, subjectSlug, Icon }) {
   const theme = themeForKey(subjectSlug);
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -31,10 +31,10 @@ export default function ChapterGrid({ chapters, subjectSlug, icon }) {
           >
             <span className={`absolute -right-3 -top-3 h-12 w-12 rounded-full opacity-25 ${theme.corner}`} aria-hidden="true" />
             <span
-              className={`flex h-11 w-11 flex-none items-center justify-center rounded-full text-xl ${theme.iconBg} ${theme.fg}`}
+              className={`flex h-11 w-11 flex-none items-center justify-center rounded-full ${theme.iconBg} ${theme.fg}`}
               aria-hidden="true"
             >
-              {icon}
+              <Icon className="h-5 w-5" />
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-bold text-[var(--color-text)]">{chapter.name}</p>

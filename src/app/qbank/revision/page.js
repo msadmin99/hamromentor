@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
 import Header from "@/components/Header";
+import { CalendarIcon, CheckCircleIcon, RefreshIcon, TargetIcon, XCircleIcon } from "@/components/icons";
 import { MASTERY_META, SkeletonCard, stripHtml } from "@/components/qbank/revisionListShared";
 import RequireAuth from "@/components/RequireAuth";
 import RichContent from "@/components/RichContent";
@@ -20,10 +21,10 @@ import { useCourse } from "@/lib/course-context";
 // endpoints, no second mastery/revision system.
 const CATEGORIES = [
   { key: "overdue", label: "Overdue", icon: "⏰", statKey: "overdue", accent: "bg-brand-red-light text-brand-red" },
-  { key: "due_today", label: "Due Today", icon: "📅", statKey: "due_today", accent: "bg-info-soft text-info" },
-  { key: "weak", label: "Weak", icon: "🔴", statKey: "weak", accent: "bg-brand-red-light text-brand-red" },
-  { key: "recent_mistake", label: "Recent Mistakes", icon: "❌", statKey: "recent_mistakes", accent: "bg-warning-soft text-amber-700" },
-  { key: "repeated_mistake", label: "Repeated Mistakes", icon: "🔁", statKey: "repeated_mistakes", accent: "bg-violet-100 text-violet-600" },
+  { key: "due_today", label: "Due Today", Icon: CalendarIcon, statKey: "due_today", accent: "bg-info-soft text-info" },
+  { key: "weak", label: "Weak", Icon: TargetIcon, statKey: "weak", accent: "bg-brand-red-light text-brand-red" },
+  { key: "recent_mistake", label: "Recent Mistakes", Icon: XCircleIcon, statKey: "recent_mistakes", accent: "bg-warning-soft text-amber-700" },
+  { key: "repeated_mistake", label: "Repeated Mistakes", Icon: RefreshIcon, statKey: "repeated_mistakes", accent: "bg-violet-100 text-violet-600" },
 ];
 
 const TIME_OPTIONS = [5, 10, 20, 30];
@@ -127,7 +128,7 @@ function RevisionCenterContent() {
 
         {!statsLoading && !statsError && allCaughtUp && (
           <div className="hm-card p-8 text-center">
-            <p className="text-3xl">🎉</p>
+            <CheckCircleIcon className="mx-auto h-9 w-9 text-brand-green" aria-hidden="true" />
             <p className="mt-2 text-base font-bold text-[var(--color-text)]">Nothing due today</p>
             <p className="mt-1 text-sm text-[var(--color-text-muted)]">You are completely caught up.</p>
             <Link
@@ -251,8 +252,8 @@ function RevisionCenterContent() {
                       aria-expanded={activeCategory === cat.key}
                       className="flex w-full items-center gap-3 p-3.5 text-left"
                     >
-                      <span className={`flex h-9 w-9 flex-none items-center justify-center rounded-full text-lg ${cat.accent}`} aria-hidden="true">
-                        {cat.icon}
+                      <span className={`flex h-9 w-9 flex-none items-center justify-center rounded-full ${cat.accent}`} aria-hidden="true">
+                        <cat.Icon className="h-5 w-5" />
                       </span>
                       <span className="min-w-0 flex-1">
                         <p className="text-sm font-bold text-[var(--color-text)]">{cat.label}</p>

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
 import CourseSwitcher from "@/components/CourseSwitcher";
 import Header from "@/components/Header";
+import { ChartIcon } from "@/components/icons";
 import AccuracyRing from "@/components/qbank/AccuracyRing";
 import RequireAuth from "@/components/RequireAuth";
 import { api } from "@/lib/api";
@@ -253,7 +254,7 @@ function ProgressContent() {
 
         {!loading && !progressError && !dashboardError && bySubject.length === 0 && trend.length === 0 && (
           <div className="hm-card p-8 text-center">
-            <p className="text-2xl">📊</p>
+            <ChartIcon className="mx-auto h-7 w-7 text-[var(--color-text-muted)]" aria-hidden="true" />
             <p className="mt-2 text-sm font-semibold text-[var(--color-text)]">Not enough data yet</p>
             <p className="mt-1 text-xs text-[var(--color-text-muted)]">
               Practice a few questions and your progress will start showing up here.

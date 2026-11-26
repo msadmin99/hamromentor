@@ -48,7 +48,7 @@ const SUBJECT_ICONS = {
 // Falls back to the generic BookOpenIcon (matching the backend's own
 // generic 'book' default for a subject with no specific match) whenever the
 // name isn't recognised — never raw text, never nothing.
-function iconForSubject(subject) {
+export function iconForSubject(subject) {
   const key = subject.name?.trim().toUpperCase();
   return (key && SUBJECT_ICONS[key]) || BookOpenIcon;
 }

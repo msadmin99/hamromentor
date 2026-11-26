@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { CheckCircleIcon, DocumentIcon, TargetIcon } from "@/components/icons";
 
 /** Chapter drill-down hero — mirrors the reference "N MCQs / stats row /
  * SOLVE NOW" card, driven entirely by real Chapter data (mcq_count,
  * solved_count already computed server-side in ChapterSerializer). */
-export default function ChapterHero({ chapter, solveHref, icon, theme }) {
+export default function ChapterHero({ chapter, solveHref, Icon, theme }) {
   const total = chapter.mcq_count || 0;
   const solved = chapter.solved_count || 0;
   const pct = total > 0 ? Math.round((solved / total) * 100) : 0;
@@ -17,10 +18,10 @@ export default function ChapterHero({ chapter, solveHref, icon, theme }) {
       <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3.5">
           <span
-            className={`flex h-14 w-14 flex-none items-center justify-center rounded-full text-2xl ${theme.iconBg} ${theme.fg}`}
+            className={`flex h-14 w-14 flex-none items-center justify-center rounded-full ${theme.iconBg} ${theme.fg}`}
             aria-hidden="true"
           >
-            {icon}
+            <Icon className="h-6 w-6" />
           </span>
           <div className="min-w-0">
             <p className="text-xl font-extrabold text-[var(--color-text)] sm:text-2xl">{total} MCQs</p>
@@ -38,8 +39,8 @@ export default function ChapterHero({ chapter, solveHref, icon, theme }) {
 
       <div className="relative mt-5 grid grid-cols-3 divide-x divide-[var(--color-border)] border-t border-[var(--color-border)] pt-4">
         <div className="flex items-center gap-2 pr-2">
-          <span className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-brand-blue/10 text-sm text-brand-blue" aria-hidden="true">
-            📄
+          <span className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-brand-blue/10 text-brand-blue" aria-hidden="true">
+            <DocumentIcon className="h-4 w-4" />
           </span>
           <div className="min-w-0 leading-tight">
             <p className="text-base font-extrabold text-[var(--color-text)]">{total}</p>
@@ -47,8 +48,8 @@ export default function ChapterHero({ chapter, solveHref, icon, theme }) {
           </div>
         </div>
         <div className="flex items-center gap-2 px-2">
-          <span className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-brand-green-light text-sm text-brand-green" aria-hidden="true">
-            ✅
+          <span className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-brand-green-light text-brand-green" aria-hidden="true">
+            <CheckCircleIcon className="h-4 w-4" />
           </span>
           <div className="min-w-0 leading-tight">
             <p className="text-base font-extrabold text-[var(--color-text)]">{solved}</p>
@@ -56,8 +57,8 @@ export default function ChapterHero({ chapter, solveHref, icon, theme }) {
           </div>
         </div>
         <div className="flex items-center gap-2 pl-2">
-          <span className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-orange-100 text-sm text-orange-600" aria-hidden="true">
-            🎯
+          <span className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-orange-100 text-orange-600" aria-hidden="true">
+            <TargetIcon className="h-4 w-4" />
           </span>
           <div className="min-w-0 leading-tight">
             <p className="text-base font-extrabold text-[var(--color-text)]">{pct}%</p>

@@ -8,6 +8,8 @@ import RequireAuth from "@/components/RequireAuth";
 import ChapterHero from "@/components/qbank/ChapterHero";
 import TopicSchemaList from "@/components/qbank/TopicSchemaList";
 import PracticeCTA from "@/components/qbank/PracticeCTA";
+import { iconForSubject } from "@/components/qbank/SubjectGrid";
+import { BookOpenIcon } from "@/components/icons";
 import { ErrorCard } from "@/components/subscription/billingShared";
 import { api } from "@/lib/api";
 import { themeForKey } from "@/lib/theme";
@@ -49,7 +51,7 @@ function ChapterContent() {
       <div className="hm-page-narrow flex flex-col gap-4">
         {chapter && (
           <>
-            <ChapterHero chapter={chapter} solveHref={solveHref} icon={subject?.icon || "📘"} theme={theme} />
+            <ChapterHero chapter={chapter} solveHref={solveHref} Icon={subject ? iconForSubject(subject) : BookOpenIcon} theme={theme} />
 
             <TopicSchemaList
               topics={chapter.topics}

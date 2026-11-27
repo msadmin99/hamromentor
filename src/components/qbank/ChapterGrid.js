@@ -27,9 +27,15 @@ export default function ChapterGrid({ chapters, subjectSlug, Icon }) {
           <Link
             key={chapter.id}
             href={`/qbank/${subjectSlug}/${chapter.id}`}
-            className="hm-card relative flex items-center gap-3 overflow-hidden p-3.5 transition hover:-translate-y-0.5 hover:shadow-md"
+            className="hm-card relative flex items-center gap-3 p-3.5 transition hover:-translate-y-0.5 hover:shadow-md"
           >
-            <span className={`absolute -right-3 -top-3 h-12 w-12 rounded-full opacity-25 ${theme.corner}`} aria-hidden="true" />
+            {/* Clipped via its own non-transformed wrapper, not
+                overflow-hidden directly on this Link — see SubjectGrid.js's
+                identical fix for the Safari/WebKit clip+transform bug this
+                avoids. */}
+            <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]" aria-hidden="true">
+              <span className={`absolute -right-3 -top-3 h-12 w-12 rounded-full opacity-25 ${theme.corner}`} />
+            </span>
             <span
               className={`flex h-11 w-11 flex-none items-center justify-center rounded-full ${theme.iconBg} ${theme.fg}`}
               aria-hidden="true"

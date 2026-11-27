@@ -139,7 +139,7 @@ function BookmarksContent() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search bookmarked questions…"
-                className="hm-input pl-9"
+                className="hm-input !pl-9"
                 aria-label="Search bookmarked questions"
               />
             </div>

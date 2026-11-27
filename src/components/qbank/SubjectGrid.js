@@ -67,9 +67,16 @@ function SubjectCard({ subject, theme, Icon }) {
   return (
     <Link
       href={subject.has_access ? `/qbank/${subject.slug}` : "/plans"}
-      className="hm-card relative flex items-center gap-3 overflow-hidden p-3.5 transition hover:-translate-y-0.5 hover:shadow-md"
+      className="hm-card relative flex items-center gap-3 p-3.5 transition hover:-translate-y-0.5 hover:shadow-md"
     >
-      <span className={`absolute -right-3 -top-3 h-12 w-12 rounded-full opacity-25 ${theme.corner}`} aria-hidden="true" />
+      {/* Clipped via its own non-transformed wrapper, not overflow-hidden
+          directly on this Link — Safari/WebKit fails to clip overflow to
+          border-radius on an element that also has a `transform` (the
+          hover:-translate-y-0.5 above), which let this blob poke out past
+          the card's rounded corner on real phones. */}
+      <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]" aria-hidden="true">
+        <span className={`absolute -right-3 -top-3 h-12 w-12 rounded-full opacity-25 ${theme.corner}`} />
+      </span>
       {!subject.has_access && (
         <span className="absolute right-2 top-2 z-10 flex items-center gap-0.5 rounded-md bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-700">
           <LockIcon /> PRO

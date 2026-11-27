@@ -207,7 +207,7 @@ function MistakesContent() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search these questions…"
-                className="hm-input pl-9"
+                className="hm-input !pl-9"
                 aria-label="Search questions to review"
               />
             </div>

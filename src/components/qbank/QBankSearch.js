@@ -104,7 +104,7 @@ export default function QBankSearch() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search questions, topics, chapters…"
-          className="hm-input w-full pl-10"
+          className="hm-input w-full !pl-10"
           aria-label="Search the Question Bank"
         />
       </div>

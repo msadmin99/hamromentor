@@ -36,7 +36,16 @@ export default function BottomNav() {
           any ancestor's scroll context, which is the actual guarantee this
           bar needs. Removed from flow entirely — AppShell reserves matching
           bottom clearance on the scrollable content instead. */}
-      <nav aria-label="Primary navigation" className="fixed inset-x-0 bottom-0 z-20 flex border-t border-[var(--color-border)] bg-white/95 backdrop-blur pb-[env(safe-area-inset-bottom)] md:hidden">
+      {/* bg-white, not bg-white/95 + backdrop-blur: backdrop-filter is a
+          known GPU-heavy effect on budget/older phones, and this bar sits
+          fixed above a scrolling container underneath it the whole time —
+          exactly the combination flagged (as an untested hypothesis, "G.
+          Disable BottomNav blur") in ScrollDiagnostics.js's Phase 4
+          variants while investigating the QBank mobile blank-scroll
+          report. A solid background removes that compositing cost
+          entirely with no visible difference (the bar already sits on a
+          plain surface, not over photos/video). */}
+      <nav aria-label="Primary navigation" className="fixed inset-x-0 bottom-0 z-20 flex border-t border-[var(--color-border)] bg-white pb-[env(safe-area-inset-bottom)] md:hidden">
         {/* Desktop audit (2026-09-28): PRIMARY_TABS and the More menu
             (bookmarks, subscriptions, profile, Log out) all assume an
             authenticated student. Every other page reaching BottomNav is
